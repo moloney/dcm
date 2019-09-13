@@ -9,9 +9,10 @@ import click
 
 import toml
 
-from .util import make_edit_filter, aclosing
+from .util import aclosing
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel
+from .filt import make_edit_filter
 from .route import StaticRoute
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
@@ -509,7 +510,7 @@ def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
         query_res = QueryResult.from_json(query_res.read())
 
     # Handle edit options
-    filters = []
+    filt = None
     if edit_json is not None:
         edit_dict = json.load(edit_json)
         edit_json.close()
@@ -520,10 +521,10 @@ def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
             attr, val = edit_str.split('=')
             edit_dict[attr] = val
     if edit_dict:
-        filters.append(make_edit_filter(edit_dict))
+        filt = make_edit_filter(edit_dict)
 
     # Convert dests/filters to a StaticRoute
-    dest_route = StaticRoute(dests, filters)
+    dest_route = StaticRoute(dests, filt)
 
     # Handle validate option
     if validate:
