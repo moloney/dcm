@@ -718,11 +718,11 @@ class QueryResult:
         res = QueryResult(max_level)
         last_branch = None
         for dpath, sub_uids in self.walk(node):
-            # Optimization for when max_level < self._level, since we only need
-            # to add one data set from each "branch" of the tree
-            if dpath.uids[max_level] == last_branch:
-                continue
             if dpath.level == self._level:
+                # Optimization for when max_level < self._level, since we only need
+                # to add one data set from each "branch" of the tree
+                if dpath.uids[max_level] == last_branch:
+                    continue
                 res.add(self._data[dpath.uids[-1]])
                 last_branch = dpath.uids[max_level]
         return res
