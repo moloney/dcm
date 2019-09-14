@@ -763,9 +763,9 @@ class LocalEntity:
     async def _fwd_event(self, event):
         for filt, handler in self._event_handlers.items():
             if filt.matches(event):
-                log.debug(f"Calling async handler for {event.name} event")
+                log.debug(f"Calling async handler for {event} event")
                 return await handler(event)
-        log.warn(f"Can't find handler for the {event.name} event")
+        log.warn(f"Can't find handler for the {event} event")
         return 0x0122
 
     def _setup_listen_mgr(self, sync_cb, presentation_contexts):
