@@ -1,10 +1,13 @@
 '''Provides an abstraction around the DICOM query model and data hierarchy
 '''
 import asyncio, logging, json
-from collections import namedtuple, OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict
 from itertools import chain
 from functools import partial
 from enum import IntEnum
+from dataclasses import dataclass, field
+from typing import (Tuple, List, Dict, Any, Optional, Iterator, AsyncIterator,
+                    Callable, Union)
 
 from pydicom.dataset import Dataset
 from tree_format import format_tree
@@ -33,12 +36,12 @@ uid_elems = {QueryLevel.PATIENT : 'PatientID',
 '''Map QueryLevels to the DICOM keyword that gives the corresponding UID'''
 
 
-def get_uid(level, data_set):
+def get_uid(level: QueryLevel, data_set: Dataset) -> str:
     '''Get the UID from the `data_set` for the given `level`'''
     return getattr(data_set, uid_elems[level])
 
 
-def get_all_uids(data_set):
+def get_all_uids(data_set: Dataset) -> Tuple[str, ...]:
     uids = []
     for lvl in QueryLevel:
         lvl_uid = getattr(data_set, uid_elems[lvl], None)
@@ -48,41 +51,38 @@ def get_all_uids(data_set):
     return tuple(uids)
 
 
-DataNode = namedtuple('DataNode', 'level uid')
-'''Represents single node in data hierarchy'''
+@dataclass(frozen=True)
+class DataNode:
+    '''Identifies a node in the DICOM data hierarchy'''
+
+    level: QueryLevel
+    '''The level of the node in the hierarchy'''
+
+    uid: str
+    '''The unique id at the node's level in the hierarchy'''
 
 
+@dataclass(frozen=True)
 class DataPath:
-    '''Represents a path through the data hierarchy'''
-    def __init__(self, level, uids):
-        if level not in QueryLevel:
-            raise ValueError("Unknown level: %s" % level)
-        if len(uids) != level + 1:
-            raise ValueError("Expected %d UIDs, got %d" % (level + 1, len(uids)))
-        self._level = level
-        self._uids = uids
-        self._end = DataNode(level, uids[-1])
+    '''Identifies the path to a node in the DICOM data hierarchy'''
 
-    @property
-    def level(self):
-        return self._level
+    level: QueryLevel
+    '''The level of the node in the hierarchy'''
 
-    @property
-    def uids(self):
-        return self._uids
+    uids: Tuple[str, ...]
 
-    @property
-    def end(self):
-        return self._end
+    end: DataNode = field(init=False)
 
-    def __repr__(self):
-        return 'DataPath(%r, %r)' % (self._level, self._uids)
-
-    def __eq__(self, other):
-        return self._level == other._level and self._uids == other._uids
-
-    def __hash__(self, other):
-        return hash((self._level, self._uids))
+    def __post_init__(self) -> None:
+        if self.level not in QueryLevel:
+            raise ValueError("Unknown level: %s" % self.level)
+        if len(self.uids) != self.level + 1:
+            raise ValueError("Expected %d UIDs, got %d" % (self.level + 1,
+                                                           len(self.uids))
+                            )
+        object.__setattr__(self,
+                           'end',
+                           DataNode(self.level, self.uids[-1]))
 
 
 req_elems = {QueryLevel.PATIENT : ['PatientID',
@@ -99,24 +99,25 @@ req_elems = {QueryLevel.PATIENT : ['PatientID',
              QueryLevel.IMAGE : ['SOPInstanceUID',
                                  'InstanceNumber',
                                 ],
-             }
+            }
 '''Required attributes for each query level (accumulates at each level)'''
 
 
-opt_elems = {QueryLevel.PATIENT : ['NumberOfPatientRelatedStudies',
-                                   'NumberOfPatientRelatedSeries',
-                                   'NumberOfPatientRelatedInstances',
-                                  ],
-             QueryLevel.STUDY : ['StudyDescription',
-                                 'ModalitiesInStudy',
-                                 'NumberOfStudyRelatedSeries',
-                                 'NumberOfStudyRelatedInstances',
-                                ],
-             QueryLevel.SERIES : ['SeriesDescription',
-                                  'NumberOfSeriesRelatedInstances',
-                                 ],
-             QueryLevel.IMAGE : [],
-            }
+opt_elems: Dict[QueryLevel, List[str]] = \
+    {QueryLevel.PATIENT : ['NumberOfPatientRelatedStudies',
+                           'NumberOfPatientRelatedSeries',
+                           'NumberOfPatientRelatedInstances',
+                          ],
+     QueryLevel.STUDY : ['StudyDescription',
+                         'ModalitiesInStudy',
+                         'NumberOfStudyRelatedSeries',
+                         'NumberOfStudyRelatedInstances',
+                        ],
+     QueryLevel.SERIES : ['SeriesDescription',
+                          'NumberOfSeriesRelatedInstances',
+                         ],
+     QueryLevel.IMAGE : [],
+    }
 '''Optional attributes we always try to query (exclusive to each level)'''
 
 
@@ -143,18 +144,20 @@ level_identifiers = {QueryLevel.PATIENT : ['NumberOfPatientRelatedStudies',
 '''Maps query levels to elements that imply that level is needed'''
 
 
-def minimal_copy(ds):
+def minimal_copy(ds: Dataset) -> Dataset:
     '''Make reduced copy with only the attributes needed for a QueryResult'''
     res = Dataset()
     for attr in chain.from_iterable(chain(req_elems.values(),
-                                          opt_elems.values())):
+                                          opt_elems.values())
+                                   ):
         val = getattr(ds, attr, None)
         if val is not None:
             setattr(res, attr, val)
     return res
 
 
-def choose_level(qdat, default=QueryLevel.STUDY):
+def choose_level(qdat: Dataset, default: QueryLevel = QueryLevel.STUDY) -> QueryLevel:
+    '''Try to choose the correct level for a given query'''
     for lvl in reversed(QueryLevel):
         for attr in level_identifiers[lvl]:
             if hasattr(qdat, attr):
@@ -162,7 +165,8 @@ def choose_level(qdat, default=QueryLevel.STUDY):
     return default
 
 
-def get_subcount_attr(data_level, count_level):
+def get_subcount_attr(data_level: QueryLevel, count_level: QueryLevel) -> str:
+    ''''''
     if data_level == QueryLevel.IMAGE:
         raise ValueError("The data_level can not be IMAGE")
     if count_level == QueryLevel.PATIENT:
@@ -185,7 +189,7 @@ def get_subcount_attr(data_level, count_level):
     assert False
 
 
-def info_to_dataset(level, info):
+def info_to_dataset(level: QueryLevel, info: Dict[str, Any]) -> Dataset:
     '''Turn normalized `info` dict back into DICOM data set'''
     res = Dataset()
     for key, val in info.items():
@@ -229,12 +233,12 @@ class QueryResult:
         Initial DICOM datasets to add to the result
     '''
 
-    def __init__(self, level, data_sets=None):
+    def __init__(self, level : QueryLevel, data_sets : Optional[List[Dataset]] = None):
         if level not in QueryLevel:
             raise ValueError("Invalid query level")
         self._level = level
-        self._data = {}
-        self._levels = {}
+        self._data: Dict[str, Dataset] = {}
+        self._levels: Dict[QueryLevel, Dict[str, Any]] = {}
         for q_lvl in QueryLevel:
             self._levels[q_lvl] = {}
         if data_sets is not None:
@@ -242,38 +246,38 @@ class QueryResult:
                 self.add(ds)
 
     @property
-    def level(self):
+    def level(self) -> QueryLevel:
         '''The maximum depth of detail provided'''
         return self._level
 
-    def uids(self):
+    def uids(self) -> Iterator[str]:
         '''Generates the UIDs for each contained data set
         '''
         for uid in self._data.keys():
             yield uid
 
-    def __len__(self):
+    def __len__(self) -> int:
         '''Number of contained data sets'''
         return len(self._data)
 
-    def __getitem__(self, uid):
+    def __getitem__(self, uid: str) -> Dataset:
         '''Lookup contained data sets by uid'''
         return self._data[uid]
 
-    def __delitem__(self, uid):
+    def __delitem__(self, uid: str) -> None:
         '''Remove contained data sets by uid'''
         self.remove(self._data[uid])
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Dataset]:
         for ds in self._data.values():
             yield ds
 
-    def patients(self):
+    def patients(self) -> Iterator[str]:
         '''Genarates all PatientID values in this query result'''
         for pat_id in self._levels[QueryLevel.PATIENT]:
             yield pat_id
 
-    def studies(self, patient_id=None):
+    def studies(self, patient_id: Optional[str] = None) -> Iterator[str]:
         '''Genarates StudyUIDs in this query result, or for a specific patient
         '''
         if self._level < QueryLevel.STUDY:
@@ -285,7 +289,7 @@ class QueryResult:
         for study_uid in it:
             yield study_uid
 
-    def series(self, study_uid=None):
+    def series(self, study_uid: Optional[str] = None) -> Iterator[str]:
         '''Genarates SeriesUIDs in this query result, or for a specific study
         '''
         if self._level < QueryLevel.SERIES:
@@ -297,7 +301,7 @@ class QueryResult:
         for series_uid in it:
             yield series_uid
 
-    def instances(self, series_uid=None):
+    def instances(self, series_uid : Optional[str] = None) -> Iterator[str]:
         '''Generates InstanceUIDs for this query result, or a specific series
         '''
         if self._level < QueryLevel.IMAGE:
@@ -309,7 +313,7 @@ class QueryResult:
         for instance_uid in it:
             yield instance_uid
 
-    def add(self, data_set):
+    def add(self, data_set: Dataset) -> None:
         '''Add a data set to the query result
 
         Does nothing if an equivalent data set has already been added
@@ -348,7 +352,7 @@ class QueryResult:
                 break
             last_info = lvl_info
 
-    def remove(self, data_set):
+    def remove(self, data_set: Dataset) -> None:
         '''Remove a single data set'''
         if data_set not in self:
             raise KeyError("Data set not in QueryResult")
@@ -371,7 +375,7 @@ class QueryResult:
                 last_empty = False
             last_uid = lvl_uid
 
-    def __contains__(self, data_set):
+    def __contains__(self, data_set: Dataset) -> bool:
         '''Test if an equivalent data set has already been added
 
         Raises an InconsistentDataError if the data violates the current data
@@ -402,8 +406,10 @@ class QueryResult:
             last_info = lvl_info
         return res
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         '''True if the level, UIDs, and any sub-counts match'''
+        if not isinstance(other, QueryResult):
+            raise NotImplementedError
         if self._level != other._level:
             return False
         if self._data.keys() != other._data.keys():
@@ -436,7 +442,7 @@ class QueryResult:
                     return False
         return True
 
-    def equivalent(self, other):
+    def equivalent(self, other: QueryResult) -> bool:
         '''Slightly looser equality testing allows different levels
 
         Provided the lower level QueryResult has sub-counts that match the
@@ -450,17 +456,17 @@ class QueryResult:
             high, low = self, other
         for pth, low_sub_uids in low.walk():
             try:
-                high_info = high.get_path_info(pth)
+                high_info = high.path_info(pth)
             except KeyError:
                 return False
-            low_info = low.get_path_info(pth)
+            low_info = low.path_info(pth)
             if low_info != high_info:
                 return False
         return True
 
-    def children(self, node=None):
+    def children(self, node: Optional[DataNode] = None) -> Iterator[DataNode]:
         '''Generate child nodes of the given one'''
-        if node == None:
+        if node is None:
             child_lvl = QueryLevel.PATIENT
             itr = self._levels[QueryLevel.PATIENT].keys()
         else:
@@ -471,23 +477,23 @@ class QueryResult:
         for child_uid in itr:
             yield DataNode(child_lvl, child_uid)
 
-    def walk(self, start_node=None):
+    def walk(self, start_node: Optional[DataNode] = None) -> Iterator[Tuple[DataPath, List[str]]]:
         '''Generator that traverses the hierarchy in depth-first order
 
         Parameters
         ----------
-        start_node : DataNode
+        start_node
             Limit the traversal to the subtree rooted here
 
         Returns
         -------
-        curr_path : DataPath
+        curr_path
             Identifies the current traversal path
 
-        sub_uids : list
+        sub_uids
             List of uids for child nodes, can be trimmed to avoid traversing
         '''
-        uid_stack = []
+        uid_stack: List[str] = []
         if start_node is not None:
             curr_level = start_node.level
             next_nodes = [start_node]
@@ -515,7 +521,7 @@ class QueryResult:
             else:
                 uid_stack.pop()
 
-    def level_paths(self, level):
+    def level_paths(self, level: QueryLevel) -> Iterator[DataPath]:
         '''Generate all paths at the given level'''
         if level > self._level:
             raise InsufficientQueryLevelError()
@@ -526,7 +532,7 @@ class QueryResult:
             sub_uids.clear()
             yield curr_path
 
-    def get_path(self, node):
+    def get_path(self, node: DataNode) -> DataPath:
         '''Get path to the node in hierarchy'''
         if node.level > self._level:
             raise InsufficientQueryLevelError()
@@ -534,20 +540,21 @@ class QueryResult:
         parent_uid = self._levels[node.level][node.uid]['parent_uid']
         parent_lvl = node.level
         while parent_uid is not None:
-            parent_lvl -= 1
+            parent_lvl -= 1 # type: ignore
             parent = self._levels[parent_lvl][parent_uid]
             path.append(parent['level_uid'])
             parent_uid = parent['parent_uid']
         return DataPath(node.level, tuple(reversed(path)))
 
-    def _get_info(self, lvl_info):
-        res = OrderedDict()
+    def _get_info(self, lvl_info: Dict[str, Any]) -> Dict[str, Any]:
+        res = {}
         for key, val in lvl_info.items():
-            if key[0].upper():
+            if key[0].isupper():
                 res[key] = val
         return res
 
-    def node_info(self, node):
+    def node_info(self, node: Optional[DataNode]) -> Dict[str, Any]:
+        level: Union[QueryLevel, int]
         if node is not None:
             res = self._get_info(self._levels[node.level][node.uid])
             level = node.level
@@ -568,7 +575,7 @@ class QueryResult:
                 res['n_instances'] = n_instances
         return res
 
-    def path_info(self, data_path):
+    def path_info(self, data_path : DataPath) -> Dict[str, Any]:
         '''Get all meta data along a path
 
         Parameters
@@ -578,7 +585,7 @@ class QueryResult:
         '''
         if data_path.level > self._level:
             raise InsufficientQueryLevelError()
-        info = OrderedDict()
+        info: Dict[str, Any] = {}
         curr_dict = self._levels[QueryLevel.PATIENT]
         for lvl, uid in enumerate(data_path.uids):
             lvl_info = curr_dict[uid]
@@ -588,24 +595,24 @@ class QueryResult:
             curr_dict = lvl_info['children']
         return info
 
-    def path_data_set(self, data_path):
+    def path_data_set(self, data_path: DataPath) -> Dataset:
         '''Get a DICOM data set containing the meta data for the `data_path`'''
         if data_path.level == self.level:
             return self._data[data_path.end.uid]
         info = self.path_info(data_path)
         return info_to_dataset(data_path.level, info)
 
-    def n_patients(self):
+    def n_patients(self) -> int:
         '''Number of patients in the data
         '''
         return len(self._levels[QueryLevel.PATIENT])
 
-    def n_studies(self, node=None):
+    def n_studies(self, node: Optional[DataNode] = None) -> int:
         '''Number of studies in the data
 
         Parameters
         ----------
-        node : DataNode
+        node :
             Get the number of studies under this data node, or globally if None
         '''
         if node is not None:
@@ -625,12 +632,12 @@ class QueryResult:
             res += sub_res
         return res
 
-    def n_series(self, node=None):
+    def n_series(self, node: Optional[DataNode] = None) -> int:
         '''Number of series in the data
 
         Parameters
         ----------
-        node : DataNode
+        node :
             Get the number of series under this data node, or globally if None
         '''
         if node is not None:
@@ -654,12 +661,12 @@ class QueryResult:
             res += sub_res
         return res
 
-    def n_instances(self, node=None):
+    def n_instances(self, node : Optional[DataNode] = None) -> int:
         '''Number of instances in the data
 
         Parameters
         ----------
-        node : DataNode
+        node :
             Get the number of instances under this data node, globally if None
         '''
         if node is not None:
@@ -685,7 +692,7 @@ class QueryResult:
             res += sub_res
         return res
 
-    def get_count(self, level, node=None):
+    def get_count(self, level: QueryLevel, node: Optional[DataNode] = None) -> int:
         if level == QueryLevel.PATIENT:
             assert node is None
             return self.n_patients()
@@ -697,7 +704,7 @@ class QueryResult:
             return self.n_instances(node)
         assert False
 
-    def sub_query(self, node, max_level=None):
+    def sub_query(self, node : DataNode, max_level: Optional[QueryLevel] = None) -> QueryResult:
         '''Get a subset as its own QueryResult
 
         Parameters
@@ -727,11 +734,11 @@ class QueryResult:
                 last_branch = dpath.uids[max_level]
         return res
 
-    def level_sub_queries(self, level):
+    def level_sub_queries(self, level : QueryLevel) -> Iterator[QueryResult]:
         for dpath in self.level_paths(level):
             yield self.sub_query(dpath.end)
 
-    def __and__(self, other):
+    def __and__(self, other: QueryResult) -> QueryResult:
         '''Take intersection of two QueryResult objects'''
         if self._level != other._level:
             if self._level > other._level:
@@ -749,7 +756,7 @@ class QueryResult:
                 res.add(ds)
         return res
 
-    def __or__(self, other):
+    def __or__(self, other: QueryResult) -> QueryResult:
         '''Take union of two QueryResult objects'''
         res = QueryResult(min(self._level, other._level))
         for ds in self._data.values():
@@ -758,12 +765,12 @@ class QueryResult:
             res.add(ds)
         return res
 
-    def __ior__(self, other):
+    def __ior__(self, other: QueryResult) -> QueryResult:
         for ds in other._data.values():
             self.add(ds)
         return self
 
-    def __sub__(self, other):
+    def __sub__(self, other: QueryResult) -> QueryResult:
         '''Take difference between one QueryResult and another'''
         res = QueryResult(min(self._level, other._level))
         for dpath in self.level_paths(res._level):
@@ -789,10 +796,10 @@ class QueryResult:
                 for key, val in self_info.items():
                     if key not in sub_counts:
                         diff_info[key] = val
-                res.add(info_to_dataset(diff_info))
+                res.add(info_to_dataset(res.level, diff_info))
         return res
 
-    def __isub__(self, other):
+    def __isub__(self, other: QueryResult) -> QueryResult:
         if other._level < self._level:
             raise ValueError("Can't do in-place subtraction of lower level QueryResult")
         for dpath in self.level_paths(self._level):
@@ -828,10 +835,10 @@ class QueryResult:
                     setattr(ds, counter_attr, counter_diff)
         return self
 
-    def __xor__(self, other):
+    def __xor__(self, other: QueryResult) -> QueryResult:
         return (self - other) | (other - self)
 
-    def to_json(self):
+    def to_json(self) -> str:
         '''Dump a JSON representation of the heirarchy'''
         data = {'level' : self._level.name,
                 'patients' : self._levels[QueryLevel.PATIENT],
@@ -839,15 +846,14 @@ class QueryResult:
         return json.dumps(data, indent=4)
 
     @classmethod
-    def from_json(klass, json_str):
+    def from_json(klass, json_str: str) -> QueryResult:
         '''Create a QueryResult from a previous `to_json` call'''
         json_d = json.loads(json_str)
         level = getattr(QueryLevel, json_d['level'])
-
         res = klass(level)
         patients = json_d['patients']
         visit_q = list(patients.values())
-        visited_stack = []
+        visited_stack: List[Dict[str, Any]] = []
         while len(visit_q) != 0:
             info = visit_q.pop()
             if info is None:
@@ -872,20 +878,22 @@ class QueryResult:
                       '{n_series} series',
                       '{n_instances} instances')
 
-    _def_level_fmts = {None : _def_cntr_fmts,
-                       QueryLevel.PATIENT : (('ID: {PatientID}',
-                                              'Name: {PatientName}') +
-                                             _def_cntr_fmts[1:]),
-                       QueryLevel.STUDY : (('Date: {StudyDate}',
-                                            'Time: {StudyTime}') +
-                                           _def_cntr_fmts[2:]),
-                       QueryLevel.SERIES : (('{SeriesNumber:03d}',
-                                             '{SeriesDescription}',
-                                             '{Modality}') +
-                                            _def_cntr_fmts[3:]),
-                       QueryLevel.IMAGE : ('{InstanceNumber:05d}',
-                                           '{SOPInstanceUID}'),
-                      }
+    # Not sure why, buy mypy currently fails to infer the values type here
+    _def_level_fmts: Dict[Optional[QueryLevel], Tuple[str, ...]] = \
+        {None : _def_cntr_fmts,
+         QueryLevel.PATIENT : (('ID: {PatientID}',
+                                'Name: {PatientName}') +
+                               _def_cntr_fmts[1:]),
+         QueryLevel.STUDY : (('Date: {StudyDate}',
+                              'Time: {StudyTime}') +
+                             _def_cntr_fmts[2:]),
+         QueryLevel.SERIES : (('{SeriesNumber:03d}',
+                               '{SeriesDescription}',
+                               '{Modality}') +
+                              _def_cntr_fmts[3:]),
+         QueryLevel.IMAGE : ('{InstanceNumber:05d}',
+                             '{SOPInstanceUID}'),
+        }
     '''Default format for each line item in output from `to_tree`'''
 
     _def_sort_elems = {QueryLevel.PATIENT : 'PatientID',
@@ -894,12 +902,15 @@ class QueryResult:
                        QueryLevel.IMAGE : 'InstanceNumber',
                       }
 
-    def to_line(self, node, level_fmts=None, sep=' | ', missing='NA'):
+    def to_line(self,
+                node: Optional[DataNode] = None,
+                level_fmts: Optional[Dict[Optional[QueryLevel], Tuple[str, ...]]] = None,
+                sep: str = ' | ',
+                missing: str = 'NA') -> str:
         '''Get line of text describing a single node'''
+        level = None
         if node is not None:
             level = node.level
-        else:
-            level = None
         if level_fmts is not None:
             fmt_toks = level_fmts[level]
         else:
@@ -908,8 +919,9 @@ class QueryResult:
         node_info = defaultdict(lambda: missing, self.node_info(node))
         return line_fmt.format_map(node_info)
 
-    def _make_sorted_child_getter(self, sort_elems, max_level):
-        def sorted_child_getter(node):
+    def _make_sorted_child_getter(self, sort_elems: Dict[QueryLevel, str],
+                                  max_level: QueryLevel) -> Callable:
+        def sorted_child_getter(node: DataNode) -> Iterator[DataNode]:
             if node is not None and max_level == node.level:
                 return
             children = [x for x in self.children(node)]
@@ -921,8 +933,11 @@ class QueryResult:
                 yield child
         return sorted_child_getter
 
-    def to_tree(self, max_level=QueryLevel.IMAGE, level_fmts=None, sep=' | ',
-                missing='NA'):
+    def to_tree(self,
+                max_level: QueryLevel = QueryLevel.IMAGE,
+                level_fmts: Optional[Dict[Optional[QueryLevel], str]] = None,
+                sep: str = ' | ',
+                missing: str = 'NA') -> str:
         '''Produce a formatted text tree representation'''
         formatter = partial(self.to_line,
                             level_fmts=level_fmts,
@@ -932,7 +947,7 @@ class QueryResult:
                                                       max_level)
         return format_tree(None, formatter, child_getter)
 
-    def __str__(self):
+    def __str__(self) -> str:
         descr = 'Empty'
         if self.n_patients() > 1:
             descr = self.to_line(None)
@@ -944,7 +959,7 @@ class QueryResult:
         return '%s Level QR: %s' % (self.level.name, descr)
 
 
-async def chunk_qrs(qr_gen, chunk_size=10):
+async def chunk_qrs(qr_gen: AsyncIterator[QueryResult], chunk_size: int = 10) -> AsyncIterator[QueryResult]:
     '''Generator wrapper that aggregates QueryResults into larger chunks'''
     try:
         first = await qr_gen.__anext__()
