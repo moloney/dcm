@@ -2,3 +2,6 @@
 __pycache__
 .pytest_cache
 .eggs
+.mypy_cache/
+*.egg-info/
+
