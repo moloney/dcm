@@ -25,7 +25,7 @@ from pynetdicom import (AE, evt, build_context, DEFAULT_TRANSFER_SYNTAXES,
                         VerificationPresentationContexts,
                         sop_class)
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import StorageServiceClass, MRImageStorage
+from pynetdicom.sop_class import (StorageServiceClass, MRImageStorage)
 from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation
 
 
@@ -67,13 +67,35 @@ c_store_ext_sop_negs = [siemens_mr_sop_neg]
 #       associations with any given remote.
 
 
+QR_MODELS = {'PatientRoot' :
+                {'find' : sop_class.PatientRootQueryRetrieveInformationModelFind,
+                 'move' : sop_class.PatientRootQueryRetrieveInformationModelMove,
+                 'get' : sop_class.PatientRootQueryRetrieveInformationModelGet},
+             'StudyRoot' :
+                 {'find' : sop_class.StudyRootQueryRetrieveInformationModelFind,
+                  'move' : sop_class.StudyRootQueryRetrieveInformationModelMove,
+                  'get' : sop_class.StudyRootQueryRetrieveInformationModelGet},
+             'PatientStudyOnly' :
+                 {'find' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelFind,
+                  'move' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelMove,
+                  'get' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet},
+            }
+
+
 @dataclass(frozen=True)
 class DcmNode:
     '''DICOM network entity info'''
     host: str
+    '''Hostname of the node'''
+
     ae_title: str = 'ANYAE'
+    '''DICOM AE Title of the node'''
+
     port: int = 11112
-    query_models: tuple = ('S', 'P')
+    '''DICOM port for the node'''
+
+    qr_models: tuple = ('StudyRoot', 'PatientRoot')
+    '''Supported DICOM QR models for the node'''
 
     def __str__(self):
         return '%s:%s:%s' % (self.host, self.ae_title, self.port)
@@ -205,7 +227,7 @@ class IncomingDataReport:
     inconsistent: list = field(default_factory=list)
     duplicate: list = field(default_factory=list)
     keep_errors: bool = False
-    _done: field(init=False, repr=False) = False
+    _done: bool = field(default=False, init=False, repr=False)
 
     @property
     def done(self):
@@ -504,6 +526,18 @@ def _make_retrieve_cb(res_q):
     return retrieve_cb
 
 
+def is_specified(query, attr):
+    val = getattr(query, attr, '')
+    if val is not '' and '*' not in val:
+        return True
+    return False
+
+
+# TODO: Need to listen for association aborted events and handle them
+
+# TODO: Should we expose query_model as an input arg to query/move? Seems like
+#       we should be able to choose the appropriate one ourselves based on
+#       other inputs (the level / query / query_res)
 class LocalEntity:
     '''Low level interface to DICOM networking functionality
 
@@ -578,7 +612,7 @@ class LocalEntity:
         return level, query
 
     async def query(self, remote, level=None, query=None, query_res=None,
-                    query_model=None, report=None):
+                    report=None):
         '''Query the `remote` entity all at once
 
         See documentation for the `queries` method for details
@@ -589,13 +623,12 @@ class LocalEntity:
                                           level,
                                           query,
                                           query_res,
-                                          query_model,
                                           report):
             res |= sub_res
         return res
 
     async def queries(self, remote, level=None, query=None, query_res=None,
-                      query_model=None, report=None):
+                      report=None):
         '''Query the `remote` entity in an iterative manner
 
         Params
@@ -629,32 +662,38 @@ class LocalEntity:
         report.op_type = 'c-find'
         level, query = self._prep_query(level, query, query_res)
 
-        # If we are missing some required higher-level identifiers, we
-        # perform a recursive pre-query to get those first
-        if level == QueryLevel.SERIES and getattr(query, 'StudyInstanceUID', '') == '':
+        # Determine the query model
+        query_model = self._choose_qr_model(remote, 'find', level)
+
+        # If we are missing some required higher-level identifiers, we perform
+        # a recursive pre-query to get those first
+        if (level == QueryLevel.STUDY and query_model == 'PatientRoot' and
+            not is_specified(query, 'PatientID')
+           ):
+            if query_res is None:
+                log.debug("Performing recursive PATIENT level query against %s" %
+                          (remote,))
+                query_res = await self.query(remote,
+                                             QueryLevel.PATIENT,
+                                             query,
+                                             query_res)
+        if level == QueryLevel.SERIES and not is_specified(query, 'StudyInstanceUID'):
             if query_res is None or query_res.level < QueryLevel.STUDY:
                 log.debug("Performing recursive STUDY level query against %s" %
                           (remote,))
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    query_res = await self.query(remote,
-                                                 QueryLevel.STUDY,
-                                                 query,
-                                                 query_res)
-        elif level == QueryLevel.IMAGE and getattr(query, 'SeriesInstanceUID', '') == '':
+                query_res = await self.query(remote,
+                                             QueryLevel.STUDY,
+                                             query,
+                                             query_res)
+        elif level == QueryLevel.IMAGE and not is_specified(query, 'SeriesInstanceUID'):
             if query_res is None or query_res.level < QueryLevel.SERIES:
                 log.debug("Performing recursive SERIES level query against %s" %
                           (remote,))
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    query_res = await self.query(remote,
-                                                 QueryLevel.SERIES,
-                                                 query,
-                                                 query_res)
+                query_res = await self.query(remote,
+                                             QueryLevel.SERIES,
+                                             query,
+                                             query_res)
         log.debug("Performing %s level query against %s" % (level.name, remote))
-
-        # Determine the query model
-        query_model = self._choose_query_model(remote, level, query_model)
 
         # Add in any required and default optional elements to query
         for lvl in QueryLevel:
@@ -847,7 +886,7 @@ class LocalEntity:
         log.debug("Listener lock released")
 
     async def move(self, src, dest, query_res, transfer_syntax=None,
-                   query_model=None, report=None):
+                   report=None):
         '''Move DICOM files from one network entity to another'''
         if report is None:
             extern_report = False
@@ -861,10 +900,9 @@ class LocalEntity:
         loop = asyncio.get_running_loop()
         rep_q = janus.Queue(loop=loop)
         # Setup the association
-        query_model = self._choose_query_model(src, query_res.level, query_model)
+        query_model = self._choose_qr_model(src, 'move', query_res.level)
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        #import pdb ; pdb.set_trace()
         move_ae = AE(ae_title=self._local.ae_title)
         #TODO: Need different contexts here...
         assoc = move_ae.associate(src.host,
@@ -1069,25 +1107,21 @@ class LocalEntity:
                                                )
                 await send_q.put(ds)
 
-    def _choose_query_model(self, remote, level, query_model=None):
+
+    def _choose_qr_model(self, remote, op_type, level):
         '''Pick an appropriate query model'''
         if level == QueryLevel.PATIENT:
-            if 'P' not in remote.query_models:
-                raise UnsupportedQueryModelError()
-            if query_model is not None and query_model != 'P':
-                raise ValueError("Doing a PATIENT level query requires the "
-                                 "'P' query model")
-            return 'P'
-        if query_model is not None:
-            if query_model not in remote.query_models:
-                raise UnsupportedQueryModelError()
-            return query_model
+            for query_model in ('PatientRoot', 'PatientStudyOnly'):
+                if query_model in remote.qr_models:
+                    return QR_MODELS[query_model][op_type]
+            raise UnsupportedQueryModelError()
+        elif level == QueryLevel.STUDY:
+            for query_model in ('StudyRoot', 'PatientRoot', 'PatientStudyOnly'):
+                if query_model in remote.qr_models:
+                    return QR_MODELS[query_model][op_type]
+            raise UnsupportedQueryModelError()
         else:
-            if 'S' in remote.query_models:
-                return 'S'
-            elif 'P' in remote.query_models:
-                return 'P'
-            elif 'O' in remote.query_models:
-                return 'O'
-            else:
-                raise UnsupportedQueryModelError()
+            for query_model in ('StudyRoot', 'PatientRoot'):
+                if query_model in remote.qr_models:
+                    return QR_MODELS[query_model][op_type]
+            raise UnsupportedQueryModelError()
