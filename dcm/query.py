@@ -1,5 +1,6 @@
 '''Provides an abstraction around the DICOM query model and data hierarchy
 '''
+from __future__ import annotations
 import asyncio, logging, json
 from collections import OrderedDict, defaultdict
 from itertools import chain
