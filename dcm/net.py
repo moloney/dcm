@@ -1,11 +1,14 @@
 '''DICOM Networking'''
+from __future__ import annotations
 import asyncio, time, logging, warnings
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
 from functools import partial
 from dataclasses import dataclass, field
-from typing import List, Set, Dict, Tuple, Optional, FrozenSet
+from typing import (List, Set, Dict, Tuple, Optional, FrozenSet, Union, Any,
+                    AsyncIterator, Iterator, Callable, Awaitable, Type,
+                    TYPE_CHECKING)
 from pathlib import Path
 
 import janus
@@ -19,7 +22,8 @@ from pydicom.uid import (ExplicitVRLittleEndian,
                          ExplicitVRBigEndian,
                          UID)
 
-from pynetdicom import (AE, evt, build_context, DEFAULT_TRANSFER_SYNTAXES,
+from pynetdicom import (AE, Association, evt, build_context,
+                        DEFAULT_TRANSFER_SYNTAXES,
                         QueryRetrievePresentationContexts,
                         StoragePresentationContexts,
                         VerificationPresentationContexts,
@@ -27,6 +31,7 @@ from pynetdicom import (AE, evt, build_context, DEFAULT_TRANSFER_SYNTAXES,
 from pynetdicom.status import code_to_category
 from pynetdicom.sop_class import (StorageServiceClass, MRImageStorage)
 from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation
+from pynetdicom.transport import ThreadedAssociationServer
 
 
 from .info import __version__
@@ -94,10 +99,10 @@ class DcmNode:
     port: int = 11112
     '''DICOM port for the node'''
 
-    qr_models: tuple = ('StudyRoot', 'PatientRoot')
+    qr_models: Tuple[str, ...] = ('StudyRoot', 'PatientRoot')
     '''Supported DICOM QR models for the node'''
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '%s:%s:%s' % (self.host, self.ae_title, self.port)
 
 
@@ -107,7 +112,7 @@ class FailedAssociationError(Exception):
 
 class BatchDicomOperationError(Exception):
     '''Base class for errors from DICOM batch network operations'''
-    def __init__(self, op_errors):
+    def __init__(self, op_errors: List[Dataset]):
         self.op_errors = op_errors
 
 
@@ -115,27 +120,42 @@ class BatchDicomOperationError(Exception):
 class DicomOpReport:
     '''Track status results from DICOM operations'''
     provider: Optional[DcmNode] = None
+    '''The service provider'''
+
     user: Optional[DcmNode] = None
+    '''The service user'''
+
     op_type: Optional[str] = None
-    op_data: dict = field(default_factory=dict)
+    '''The type of operation performed'''
+
+    op_data: Dict[str, Any] = field(default_factory=dict)
+    '''Additional data describing the operation specifics'''
+
     n_success: int = 0
-    warnings: list = field(default_factory=list)
-    errors: list = field(default_factory=list)
+    '''Number of successful operations'''
+
+    warnings: List[Dataset] = field(default_factory=list)
+    '''List of data sets we got warning status for'''
+
+    errors: List[Dataset] = field(default_factory=list)
+    '''List of data sets we got error status for'''
+
     done: bool = False
+    '''Will be set to True when all sub-operations have completed'''
 
     @property
-    def n_errors(self):
+    def n_errors(self) -> int:
         return len(self.errors)
 
     @property
-    def n_warnings(self):
+    def n_warnings(self) -> int:
         return len(self.warnings)
 
     @property
-    def all_success(self):
+    def all_success(self) -> bool:
         return self.n_errors + self.n_warnings == 0
 
-    def add(self, status, data_set):
+    def add(self, status: Dataset, data_set: Dataset) -> None:
         if (not hasattr(status, 'Status') or
             code_to_category(status.Status) == 'Failure'
            ):
@@ -151,10 +171,10 @@ class DicomOpReport:
         else:
             self.n_success += 1
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.n_success + self.n_warnings + self.n_errors
 
-    def log_issues(self):
+    def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
         if self.n_errors != 0:
             log.error("Got %d error and %d warning statuses out of %d %s ops" %
@@ -163,12 +183,12 @@ class DicomOpReport:
             log.warning("Got %d warning statuses out of %d %s ops" %
                         (self.n_warnings, len(self), self.op_type))
 
-    def check_errors(self):
+    def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
         if self.n_errors != 0:
             raise BatchDicomOperationError(self.errors)
 
-    def clear(self):
+    def clear(self) -> None:
         '''Clear out all current operation results'''
         self.n_success = 0
         self.warnings = []
@@ -177,11 +197,13 @@ class DicomOpReport:
 
 class IncomingDataError(Exception):
     '''Captures errors detected in incoming data stream'''
-    def __init__(self, inconsistent, duplicate):
+    def __init__(self,
+                 inconsistent: List[Tuple[str, ...]],
+                 duplicate: List[Tuple[str, ...]]):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
 
-    def __str__(self):
+    def __str__(self) -> str:
         res = ['IncomingDataError:']
         for err_type in ('inconsistent', 'duplicate'):
             errors = getattr(self, err_type)
@@ -195,14 +217,19 @@ class IncomingDataError(Exception):
 
 class RetrieveError(Exception):
     '''Capture errors that happened during a retrieve operation'''
-    def __init__(self, inconsistent, duplicate, unexpected, missing, move_errors):
+    def __init__(self,
+                 inconsistent: Optional[List[Tuple[str,...]]],
+                 duplicate: Optional[List[Tuple[str,...]]],
+                 unexpected: Optional[List[Tuple[str,...]]],
+                 missing: Optional[QueryResult],
+                 move_errors: Optional[List[Dataset]]):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
         self.unexpected = unexpected
         self.missing = missing
         self.move_errors = move_errors
 
-    def __str__(self):
+    def __str__(self) -> str:
         res = ['RetrieveError:']
         for err_type in ('inconsistent', 'unexpected', 'duplicate', 'missing', 'move_errors'):
             errors = getattr(self, err_type)
@@ -224,17 +251,17 @@ class RetrieveError(Exception):
 @dataclass
 class IncomingDataReport:
     retrieved: QueryResult = field(default_factory=lambda: QueryResult(QueryLevel.IMAGE))
-    inconsistent: list = field(default_factory=list)
-    duplicate: list = field(default_factory=list)
+    inconsistent: List[Tuple[str, ...]] = field(default_factory=list)
+    duplicate: List[Tuple[str, ...]] = field(default_factory=list)
     keep_errors: bool = False
     _done: bool = field(default=False, init=False, repr=False)
 
     @property
-    def done(self):
+    def done(self) -> bool:
         return self._done
 
     @done.setter
-    def done(self, val):
+    def done(self, val: bool) -> None:
         if not val:
             raise ValueError("Setting `done` to False is not allowed")
         if self._done:
@@ -242,24 +269,24 @@ class IncomingDataReport:
         self._done = True
 
     @property
-    def n_errors(self):
+    def n_errors(self) -> int:
         res = 0
         if not self.keep_errors:
             res += len(self.inconsistent) + len(self.duplicate)
         return res
 
     @property
-    def n_warnings(self):
+    def n_warnings(self) -> int:
         res = 0
         if self.keep_errors:
             res += len(self.inconsistent) + len(self.duplicate)
         return res
 
     @property
-    def all_success(self):
+    def all_success(self) -> bool:
         return self.n_errors + self.n_warnings == 0
 
-    def add(self, data_set):
+    def add(self, data_set: Dataset) -> bool:
         assert not self.done
         try:
             dupe = data_set in self.retrieved
@@ -273,7 +300,7 @@ class IncomingDataReport:
         self.retrieved.add(data_set)
         return True
 
-    def log_issues(self):
+    def log_issues(self) -> None:
         '''Log any warnings and errors'''
         error_msg = []
         for err_type in ('inconsistent', 'duplicate'):
@@ -289,7 +316,7 @@ class IncomingDataReport:
                 log.error("Incoming data issues: %s" %
                           ' '.join(error_msg))
 
-    def check_errors(self):
+    def check_errors(self) -> None:
         if self.n_errors:
             raise IncomingDataError(self.inconsistent, self.duplicate)
 
@@ -299,26 +326,36 @@ class IncomingDataReport:
 class RetrieveReport(IncomingDataReport):
     '''Track details about a retrieve operation'''
     requested: Optional[QueryResult] = None
+    '''The data that was requested'''
+
     missing: Optional[QueryResult] = None
-    unexpected: list = field(default_factory=list)
+    '''Any requested data that was not recieved'''
+
+    unexpected: List[Tuple[str, ...]] = field(default_factory=list)
+    '''Any data sets that we received but did not expect'''
+
     move_report: DicomOpReport = field(default_factory=DicomOpReport)
+    '''Report on move operations'''
 
     @property
-    def done(self):
+    def done(self) -> bool:
+        '''Returns True when all sub-operations are complete'''
         return self._done
 
     @done.setter
-    def done(self, val):
+    def done(self, val: bool) -> None:
         if not val:
             raise ValueError("Setting `done` to False is not allowed")
         if self._done:
             raise ValueError("RetrieveReport was already marked done")
         assert self.move_report.done
+        assert self.requested is not None and self.retrieved is not None
         self.missing = self.requested - self.retrieved
         self._done = True
 
     @property
-    def n_errors(self):
+    def n_errors(self) -> int:
+        assert self.missing is not None
         res = self.move_report.n_errors
         if self._done:
             res += len(self.missing)
@@ -327,14 +364,15 @@ class RetrieveReport(IncomingDataReport):
         return res
 
     @property
-    def n_warnings(self):
+    def n_warnings(self) -> int:
         res = self.move_report.n_warnings
         if self.keep_errors:
             res += len(self.inconsistent) + len(self.unexpected) + len(self.duplicate)
         return res
 
-    def add(self, data_set):
+    def add(self, data_set: Dataset) -> bool:
         assert not self.done
+        assert self.requested is not None
         try:
             expected = data_set in self.requested
         except InconsistentDataError:
@@ -353,8 +391,9 @@ class RetrieveReport(IncomingDataReport):
         self.retrieved.add(minimal_copy(data_set))
         return True
 
-    def log_issues(self):
+    def log_issues(self) -> None:
         '''Log any warnings and errors'''
+        assert self.missing is not None
         self.move_report.log_issues()
         error_msg = []
         for err_type in ('inconsistent', 'unexpected', 'duplicate'):
@@ -372,7 +411,7 @@ class RetrieveReport(IncomingDataReport):
         if error_msg:
             log.error("Data errors during retrieval: %s" % ' '.join(error_msg))
 
-    def check_errors(self):
+    def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
         if self.n_errors != 0:
             raise RetrieveError(self.inconsistent if not self.keep_errors else [],
@@ -382,7 +421,13 @@ class RetrieveReport(IncomingDataReport):
                                 self.move_report.errors)
 
 
-def _query_worker(res_q, rep_q, assoc, level, queries, query_model, split_level=None):
+def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[str]]]],
+                  rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                  assoc: Association,
+                  level: QueryLevel,
+                  queries: Iterator[Dataset],
+                  query_model: sop_class.SOPClass,
+                  split_level: Optional[QueryLevel] = None) -> None:
     '''Worker function for performing queries in a separate thread
     '''
     if split_level is None:
@@ -397,7 +442,7 @@ def _query_worker(res_q, rep_q, assoc, level, queries, query_model, split_level=
 
     for query in queries:
         res = QueryResult(level)
-        missing_attrs = set()
+        missing_attrs: Set[str] = set()
         for status, rdat in assoc.send_c_find(query, query_model=query_model):
             rep_q.put((status, rdat))
             if rdat is None:
@@ -423,7 +468,11 @@ def _query_worker(res_q, rep_q, assoc, level, queries, query_model, split_level=
     rep_q.put(None)
 
 
-def _move_worker(rep_q, assoc, dest, query_res, query_model):
+def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                 assoc: Association,
+                 dest: DcmNode,
+                 query_res: QueryResult,
+                 query_model: sop_class.SOPClass) -> None:
     '''Worker function for perfoming move operations in another thread'''
     for d in query_res:
         d.QueryRetrieveLevel = query_res.level.name
@@ -437,7 +486,9 @@ def _move_worker(rep_q, assoc, dest, query_res, query_model):
     rep_q.put(None)
 
 
-def _send_worker(send_q, rep_q, assoc):
+def _send_worker(send_q: janus._SyncQueueProxy[Optional[Dataset]],
+                 rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                 assoc: Association) -> None:
     '''Worker function for performing move operations in another thread'''
     while True:
         ds = send_q.get()
@@ -458,9 +509,12 @@ class UnsupportedQueryModelError(Exception):
 class EventFilter:
     '''Define a filter that matches a subset of pynetdicom events'''
     event_types: Optional[FrozenSet[evt.InterventionEvent]] = None
-    ae_titles: Optional[FrozenSet[str]] = None
+    '''Set of event types we want to match'''
 
-    def matches(self, event):
+    ae_titles: Optional[FrozenSet[str]] = None
+    '''Set of AE Titles we want to match'''
+
+    def matches(self, event: evt.Event) -> bool:
         '''Test if the `event` matches the filter'''
         # TODO: The _event attr is made public as 'evt' in future pynetdicom
         if self.event_types is not None and event._event not in self.event_types:
@@ -471,7 +525,7 @@ class EventFilter:
                 return False
         return True
 
-    def collides(self, other):
+    def collides(self, other: EventFilter) -> bool:
         '''Test if this filter collides with the `other` filter'''
         evt_collision = remote_collision = False
         if self.event_types is None or other.event_types is None:
@@ -486,10 +540,23 @@ class EventFilter:
         return evt_collision and remote_collision
 
 
-class FilteredListenerLockBase(asyncio.Future):
+
+#_FutureType: Type[asyncio.Future[None]] = asyncio.Future
+#_FutureType: Type[asyncio.Future[None]] = NewType('_FutureType', asyncio.Future)
+#_FutureType = TypeVar('_FutureType', asyncio.Future)
+
+if TYPE_CHECKING:
+    _FutureType = asyncio.Future[None]
+else:
+    _FutureType = asyncio.Future
+
+class FilteredListenerLockBase(_FutureType):
     '''Base class for creating event filter aware lock types with fifolock'''
+
+    event_filter: EventFilter
+
     @classmethod
-    def is_compatible(cls, holds):
+    def is_compatible(cls, holds: Dict[Type[FilteredListenerLockBase], int]) -> bool:
         for lock_type, n_holds in holds.items():
             if n_holds > 0 and cls.event_filter.collides(lock_type.event_filter):
                 return False
@@ -504,9 +571,11 @@ default_evt_pc_map = {evt.EVT_C_ECHO : VerificationPresentationContexts,
 '''
 
 
-def make_sync_to_async_cb(async_cb, loop):
+def make_sync_to_async_cb(async_cb: Callable[[evt.Event], Awaitable[int]],
+                          loop: asyncio.AbstractEventLoop
+                         ) -> Callable[[evt.Event], int]:
     '''Return sync callback that bridges to an async callback'''
-    def sync_cb(event):
+    def sync_cb(event: evt.Event) -> int:
         # Calling get_event_loop from sync code can return the wrong loop
         # sometimes, in which case the below code hangs without error.
         # This assertion should catch that issue.
@@ -519,35 +588,44 @@ def make_sync_to_async_cb(async_cb, loop):
 
 # TODO: Do data validation here, and if requested return error status when
 #       we detect issues with the incoming data
-def _make_retrieve_cb(res_q):
-    async def retrieve_cb(event):
+def _make_retrieve_cb(res_q: asyncio.Queue[Tuple[Dataset, Dataset]]
+                     ) -> Callable[[evt.Event], Awaitable[int]]:
+    async def retrieve_cb(event: evt.Event) -> int:
         await res_q.put((event.dataset, event.file_meta))
         return 0x0 # Success
     return retrieve_cb
 
 
-def is_specified(query, attr):
+def is_specified(query: Dataset, attr: str) -> bool:
     val = getattr(query, attr, '')
-    if val is not '' and '*' not in val:
+    if val != '' and '*' not in val:
         return True
     return False
 
 
+SOPList = List[sop_class.SOPClass]
+
 # TODO: Need to listen for association aborted events and handle them
 
-# TODO: Should we expose query_model as an input arg to query/move? Seems like
-#       we should be able to choose the appropriate one ourselves based on
-#       other inputs (the level / query / query_res)
 class LocalEntity:
     '''Low level interface to DICOM networking functionality
 
     Params
     ------
-    local : DcmNode
+    local
         The local DICOM network node properties
+
+    transfer_syntaxes
+        The transfer syntaxes to use for any data transfers
+
+    max_threads
+        Size of thread pool
     '''
 
-    def __init__(self, local, transfer_syntaxes=None, max_threads=8):
+    def __init__(self,
+                 local: DcmNode,
+                 transfer_syntaxes: Optional[SOPList] = None,
+                 max_threads: int = 8):
         self._local = local
         if transfer_syntaxes is None:
             self._default_ts = DEFAULT_TRANSFER_SYNTAXES
@@ -555,15 +633,16 @@ class LocalEntity:
             self._default_ts = transfer_syntaxes
         self._thread_pool = ThreadPoolExecutor(max_threads)
         self._listener_lock = FifoLock()
-        self._lock_types = {}
-        self._event_handlers = {}
-        self._listen_mgr = None
+        self._lock_types: Dict[EventFilter, type] = {}
+        self._event_handlers: Dict[EventFilter, Callable[[evt.Event], Awaitable[int]]] = {}
+        self._listen_mgr: Optional[ThreadedAssociationServer] = None
 
     @property
-    def local(self):
+    def local(self) -> DcmNode:
+        '''DcmNode for our local entity'''
         return self._local
 
-    async def echo(self, remote):
+    async def echo(self, remote: DcmNode) -> bool:
         '''Perfrom an "echo" against `remote` to test connectivity
 
         Returns True if successful, else False.
@@ -587,7 +666,11 @@ class LocalEntity:
             return True
         return False
 
-    def _prep_query(self, level, query, query_res):
+    def _prep_query(self,
+                    level: Optional[QueryLevel],
+                    query: Optional[Union[Dataset, Dict[str, Any]]],
+                    query_res : Optional[QueryResult]
+                   ) -> Tuple[QueryLevel, Dataset]:
         '''Resolve/check `level` and `query` args for query methods'''
         # Build up our base query dataset
         if query is None:
@@ -611,8 +694,12 @@ class LocalEntity:
             raise ValueError("Unknown 'level' for query: %s" % level)
         return level, query
 
-    async def query(self, remote, level=None, query=None, query_res=None,
-                    report=None):
+    async def query(self,
+                    remote: DcmNode,
+                    level: Optional[QueryLevel] = None,
+                    query: Optional[Union[Dataset, Dict[str, Any]]] = None,
+                    query_res: Optional[QueryResult] = None,
+                    report: Optional[DicomOpReport] = None) -> QueryResult:
         '''Query the `remote` entity all at once
 
         See documentation for the `queries` method for details
@@ -627,29 +714,34 @@ class LocalEntity:
             res |= sub_res
         return res
 
-    async def queries(self, remote, level=None, query=None, query_res=None,
-                      report=None):
+    async def queries(self,
+                      remote: DcmNode,
+                      level: Optional[QueryLevel] = None,
+                      query: Optional[Union[Dataset, Dict[str, Any]]] = None,
+                      query_res: Optional[QueryResult] = None,
+                      report: Optional[DicomOpReport] = None
+                     ) -> AsyncIterator[QueryResult]:
         '''Query the `remote` entity in an iterative manner
 
         Params
         ------
-        remote : DcmNode
+        remote
             The network node we are querying
 
-        level : QueryLevel
+        level
             The level of detail we want to query
 
             If not provided, we try to automatically determine the most
             appropriate level based on the `query`, then the `query_res`,
             and finally fall back to using `QueryLevel.STUDY`.
 
-        query : dicom.Dataset or dict
+        query
             Specifies the DICOM attributes we want to query with/for
 
-        query_res : QueryResult
+        query_res
             A query result that we want to refine
 
-        report : DicomOpReport
+        report
             If provided, will store status report from DICOM operations
         '''
         if report is None:
@@ -731,8 +823,8 @@ class LocalEntity:
 
         # Build a queue for results from query thread
         loop = asyncio.get_running_loop()
-        res_q = janus.Queue(loop=loop)
-        rep_q = janus.Queue(loop=loop)
+        res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue(loop=loop)
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(loop=loop)
 
         # Build an AE to perform the query
         qr_ae = AE(ae_title=self._local.ae_title)
@@ -754,16 +846,17 @@ class LocalEntity:
                 asyncio.create_task(self._report_builder(rep_q.async_q,
                                                          report)
                                    )
-            query_fut = loop.run_in_executor(self._thread_pool,
-                                             partial(_query_worker,
-                                                     res_q.sync_q,
-                                                     rep_q.sync_q,
-                                                     assoc,
-                                                     level,
-                                                     queries,
-                                                     query_model,
-                                                    )
-                                             )
+            query_fut = asyncio.ensure_future(loop.run_in_executor(self._thread_pool,
+                                                                   partial(_query_worker,
+                                                                           res_q.sync_q,
+                                                                           rep_q.sync_q,
+                                                                           assoc,
+                                                                           level,
+                                                                           queries,
+                                                                           query_model,
+                                                                          )
+                                                                   )
+                                              )
             qr_fut_done = False
             qr_fut_exception = None
             assoc_released = False
@@ -799,7 +892,7 @@ class LocalEntity:
             report.log_issues()
             report.check_errors()
 
-    async def _fwd_event(self, event):
+    async def _fwd_event(self, event: evt.Event) -> int:
         for filt, handler in self._event_handlers.items():
             if filt.matches(event):
                 log.debug(f"Calling async handler for {event} event")
@@ -807,7 +900,10 @@ class LocalEntity:
         log.warn(f"Can't find handler for the {event} event")
         return 0x0122
 
-    def _setup_listen_mgr(self, sync_cb, presentation_contexts):
+    def _setup_listen_mgr(self,
+                          sync_cb: Callable[[evt.Event], Any],
+                          presentation_contexts: SOPList,
+                         ) -> None:
         log.debug("Starting a threaded listener")
         # TODO: How to handle presentation contexts in generic way?
         ae = AE(ae_title=self._local.ae_title)
@@ -821,14 +917,15 @@ class LocalEntity:
             log.debug(f"Binding to event {evt_type}")
             self._listen_mgr.bind(evt_type, sync_cb)
 
-    async def _cleanup_listen_mgr(self):
+    async def _cleanup_listen_mgr(self) -> None:
         log.debug("Cleaning up threaded listener")
+        assert self._listen_mgr is not None
         try:
             self._listen_mgr.shutdown()
         finally:
             self._listen_mgr = None
 
-    def _get_lock_type(self, event_filter):
+    def _get_lock_type(self, event_filter: EventFilter) -> type:
         lock_type = self._lock_types.get(event_filter)
         if lock_type is None:
             lock_type = type('FilteredListenerLock',
@@ -838,7 +935,11 @@ class LocalEntity:
         return lock_type
 
     @asynccontextmanager
-    async def listen(self, handler, event_filter=None, presentation_contexts=None):
+    async def listen(self,
+                     handler: Callable[[evt.Event], Awaitable[int]],
+                     event_filter: Optional[EventFilter] = None,
+                     presentation_contexts: Optional[SOPList] = None
+                    ) -> AsyncIterator[None]:
         '''Listen for incoming DICOM network events
 
         The async callback `handler` will be called for each DICOM network
@@ -885,8 +986,12 @@ class LocalEntity:
                     await self._cleanup_listen_mgr()
         log.debug("Listener lock released")
 
-    async def move(self, src, dest, query_res, transfer_syntax=None,
-                   report=None):
+    async def move(self,
+                   src: DcmNode,
+                   dest: DcmNode,
+                   query_res: QueryResult,
+                   transfer_syntax: Optional[SOPList] = None,
+                   report: DicomOpReport = None) -> None:
         '''Move DICOM files from one network entity to another'''
         if report is None:
             extern_report = False
@@ -898,7 +1003,7 @@ class LocalEntity:
         report.op_type = 'c-move'
         report.op_data = {'dest' : dest}
         loop = asyncio.get_running_loop()
-        rep_q = janus.Queue(loop=loop)
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(loop=loop)
         # Setup the association
         query_model = self._choose_qr_model(src, 'move', query_res.level)
         if transfer_syntax is None:
@@ -934,21 +1039,25 @@ class LocalEntity:
             report.log_issues()
             report.check_errors()
 
-    async def retrieve(self, remote, query_res, report=None, keep_errors=False):
+    async def retrieve(self,
+                       remote: DcmNode,
+                       query_res: QueryResult,
+                       report: RetrieveReport = None,
+                       keep_errors: bool = False) -> AsyncIterator[Dataset]:
         '''Generate data sets from `remote` based on `query_res`.
 
         Parameters
         ----------
-        remote : DcmNode
+        remote
             The remote DICOM network node we want to get data from
 
-        query_res : QueryResult
+        query_res
             The data we want to retrieve
 
-        report : RetrieveReport
+        report
             If provided this will be populated asynchronously
 
-        keep_errors : bool
+        keep_errors
             Generate data sets even if we detect issues with them
 
             By default inconsistent, unexpected, and duplicate data are skipped
@@ -962,7 +1071,7 @@ class LocalEntity:
         event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)),
                                    ae_titles=frozenset((remote.ae_title,))
                                   )
-        res_q = asyncio.Queue()
+        res_q: asyncio.Queue[Tuple[Dataset, Dataset]] = asyncio.Queue()
         retrieve_cb = _make_retrieve_cb(res_q)
         async with self.listen(retrieve_cb, event_filter):
             move_task = asyncio.create_task(self.move(remote,
@@ -997,7 +1106,10 @@ class LocalEntity:
             log.debug("About to check errors")
             report.check_errors()
 
-    async def download(self, remote, query_res, dest_dir):
+    async def download(self,
+                       remote: DcmNode,
+                       query_res: QueryResult,
+                       dest_dir: Union[str, Path]) -> List[str]:
         '''Uses `retrieve` method to download data and saves it to `dest_dir`
         '''
         # TODO: Handle collisions/overwrites
@@ -1011,7 +1123,10 @@ class LocalEntity:
             out_files.append(out_path)
         return out_files
 
-    async def _report_builder(self, res_q, report):
+    # TODO: Update type annotation once we have report inheritance hierarchy
+    async def _report_builder(self,
+                              res_q: janus._AsyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                              report: Any) -> None:
         while True:
             res = await res_q.get()
             if res is None:
@@ -1021,18 +1136,22 @@ class LocalEntity:
             report.add(status, data_set)
 
     @asynccontextmanager
-    async def send(self, remote, transfer_syntax=None, report=None):
+    async def send(self,
+                   remote: DcmNode,
+                   transfer_syntax: Optional[SOPList] = None,
+                   report: Optional[DicomOpReport] = None
+                   ) -> AsyncIterator[janus._AsyncQueueProxy[Dataset]]:
         '''Produces a queue where you can put data sets to be sent to `remote`
 
         Parameters
         ----------
-        remote : DcmNode
+        remote
             The remote node we are sending the data to
 
-        transfer_syntax:
+        transfer_syntax
             The DICOM transfer syntax to use for the transfer
 
-        report: DicomOpReport
+        report
             If provided, the results of the send operations will be put here
 
             This report will be updated throughout the transfer and can be
@@ -1055,8 +1174,8 @@ class LocalEntity:
         report.user = self._local
         report.op_type = 'c-store'
         loop = asyncio.get_running_loop()
-        send_q = janus.Queue(10, loop=loop)
-        rep_q = janus.Queue(10, loop=loop)
+        send_q: janus.Queue[Dataset] = janus.Queue(10, loop=loop)
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10, loop=loop)
         send_ae = AE(ae_title=self._local.ae_title)
         log.debug(f"About to associate with {remote} to send data")
         assoc = send_ae.associate(remote.host,
@@ -1095,7 +1214,10 @@ class LocalEntity:
             report.log_issues()
             report.check_errors()
 
-    async def upload(self, remote, src_paths, transfer_syntax=None):
+    async def upload(self,
+                     remote: DcmNode,
+                     src_paths: List[str],
+                     transfer_syntax: Optional[SOPList] = None) -> None:
         '''Uses `send` method to upload data from local `src_paths`'''
         loop = asyncio.get_running_loop()
         async with self.send(remote, transfer_syntax) as send_q:
@@ -1107,8 +1229,10 @@ class LocalEntity:
                                                )
                 await send_q.put(ds)
 
-
-    def _choose_qr_model(self, remote, op_type, level):
+    def _choose_qr_model(self,
+                         remote: DcmNode,
+                         op_type: str,
+                         level: QueryLevel) -> sop_class.SOPClass:
         '''Pick an appropriate query model'''
         if level == QueryLevel.PATIENT:
             for query_model in ('PatientRoot', 'PatientStudyOnly'):

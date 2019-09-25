@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 class _AllElems:
     '''Sentinal representing all elements'''
-    __slots__ = tuple()
+    # TODO: Better way to handle type annotation here?
+    __slots__ : Tuple[None] = tuple() # type: ignore
     def __repr__(self):
         return 'AllElems'
 
@@ -295,8 +296,8 @@ class DataCollection:
     '''Collection of dicom data that can include inconsistent/duplicate data
     '''
     qr: QueryResult
-    inconsistent: List = field(default_factory=list)
-    duplicate: List = field(default_factory=list)
+    inconsistent: List[Dataset] = field(default_factory=list)
+    duplicate: List[Dataset] = field(default_factory=list)
 
 
 class DataTransform:

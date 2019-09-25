@@ -921,7 +921,8 @@ class QueryResult:
         return line_fmt.format_map(node_info)
 
     def _make_sorted_child_getter(self, sort_elems: Dict[QueryLevel, str],
-                                  max_level: QueryLevel) -> Callable:
+                                  max_level: QueryLevel
+                                  ) -> Callable[[DataNode], Iterator[DataNode]]:
         def sorted_child_getter(node: DataNode) -> Iterator[DataNode]:
             if node is not None and max_level == node.level:
                 return
@@ -960,7 +961,8 @@ class QueryResult:
         return '%s Level QR: %s' % (self.level.name, descr)
 
 
-async def chunk_qrs(qr_gen: AsyncIterator[QueryResult], chunk_size: int = 10) -> AsyncIterator[QueryResult]:
+async def chunk_qrs(qr_gen: AsyncIterator[QueryResult],
+                    chunk_size: int = 10) -> AsyncIterator[QueryResult]:
     '''Generator wrapper that aggregates QueryResults into larger chunks'''
     try:
         first = await qr_gen.__anext__()
