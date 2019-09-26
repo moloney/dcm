@@ -966,7 +966,7 @@ async def chunk_qrs(qr_gen: AsyncIterator[QueryResult],
     '''Generator wrapper that aggregates QueryResults into larger chunks'''
     try:
         first = await qr_gen.__anext__()
-    except asyncio.AsyncStopIteration:
+    except StopAsyncIteration:
         return
     level = first.level
     res = QueryResult(level)
