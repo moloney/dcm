@@ -41,6 +41,7 @@ class LocalDataChunk(DataChunk):
             f = str(f)
             ds = await loop.run_in_executor(None, read_f, f)
             if not is_valid_dicom(ds):
+                log.info("Skipping invalid dicom file: %s", f)
                 continue
             self._file_idx[ds.SOPInstanceUID] = f
             yield ds
