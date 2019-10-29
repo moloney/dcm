@@ -28,6 +28,7 @@ install_requires = ['pydicom >= 1.0',
                     'tree-format',
                     'janus',
                     'fifolock',
+                    'typing_extensions',
                    ]
 dependency_links = ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']
 tests_require = ['pytest', 'pytest-asyncio']
