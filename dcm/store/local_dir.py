@@ -55,6 +55,8 @@ def _dir_crawl_worker(res_q, root_path, recurse=True, file_ext='dcm',
         glob_comps.append('*')
     glob_exp = os.path.join(*glob_comps)
     for path in iglob(glob_exp, recursive=recurse):
+        if not os.path.isfile(path):
+            continue
         curr_files.append(path)
         if len(curr_files) == max_chunk:
             res_q.put(LocalDataChunk(curr_files))
