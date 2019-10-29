@@ -174,7 +174,7 @@ class LocalDir(DataBucket):
                                         )
         while True:
             try:
-                chunk = await asyncio.wait_for(res_q.async_q.get(), timeout=10.0)
+                chunk = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
             except asyncio.TimeoutError:
                 # Check if the worker thread exited prematurely
                 if crawl_fut.done():
