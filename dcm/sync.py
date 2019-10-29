@@ -148,24 +148,31 @@ class ProxyTransferReport(StaticTransferReport):
     @property
     def n_errors(self):
         rrep = self.retrieve_report
-        rrep_n_err = rrep.n_errors
-        if not rrep.keep_errors:
-            rrep_n_err -= len(rrep.inconsistent) + len(rrep.duplicate)
+        if rrep is None:
+            rrep_n_err = 0
+        else:
+            rrep_n_err = rrep.n_errors
+            if not rrep.keep_errors:
+                rrep_n_err -= len(rrep.inconsistent) + len(rrep.duplicate)
         return super().n_errors + rrep_n_err
 
     @property
     def n_warnings(self):
         rrep = self.retrieve_report
-        rrep_n_warn = rrep.n_warnings
-        if rrep.keep_errors:
-            rrep_n_warn -= len(rrep.inconsistent) + len(rrep.duplicate)
+        if rrep is None:
+            rrep_n_warn = 0
+        else:
+            rrep_n_warn = rrep.n_warnings
+            if rrep.keep_errors:
+                rrep_n_warn -= len(rrep.inconsistent) + len(rrep.duplicate)
         return super().n_warnings + rrep_n_warn
 
     def log_issues(self):
         '''Produce log messages for any warning/error statuses'''
         # TODO: Clear dupe/inconsist in retrieve report here?
         super().log_issues()
-        self.retrieve_report.log_issues()
+        if self.retrieve_report is not None:
+            self.retrieve_report.log_issues()
 
     def check_errors(self):
         '''Raise an exception if any errors have occured so far'''
@@ -182,20 +189,21 @@ class ProxyTransferReport(StaticTransferReport):
             # chance to correct errors. If the error isn't fixed it will be
             # captured in trans_err already
             rrep = self.retrieve_report
-            rrep_n_err = rrep.n_errors
-            if not rrep.keep_errors:
-                rrep_n_err -= len(rrep.inconsistent) + len(rrep.duplicate)
-            if rrep_n_err:
+            if rrep is not None:
+                rrep_n_err = rrep.n_errors
                 if not rrep.keep_errors:
-                    rrep = deepcopy(rrep)
-                    rrep.inconsistent.clear()
-                    rrep.duplicate.clear()
-                try:
-                    rrep.check_errors()
-                except RetrieveError as e:
-                    trans_err.retrieve_error = e
-                else:
-                    assert False
+                    rrep_n_err -= len(rrep.inconsistent) + len(rrep.duplicate)
+                if rrep_n_err:
+                    if not rrep.keep_errors:
+                        rrep = deepcopy(rrep)
+                        rrep.inconsistent.clear()
+                        rrep.duplicate.clear()
+                    try:
+                        rrep.check_errors()
+                    except RetrieveError as e:
+                        trans_err.retrieve_error = e
+                    else:
+                        assert False
 
             raise trans_err
 
