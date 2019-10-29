@@ -9,12 +9,20 @@ import janus
 
 from . import DataChunk, DataBucket
 from ..net import IMPLEMENTATION_UID
+from ..query import uid_elems
 
 
 log = logging.getLogger(__name__)
 
 
 read_f = partial(pydicom.dcmread, force=True)
+
+
+def is_valid_dicom(ds):
+    for uid_elem in uid_elems.values():
+        if not hasattr(ds, uid_elem):
+            return False
+    return True
 
 
 class LocalDataChunk(DataChunk):
@@ -32,6 +40,8 @@ class LocalDataChunk(DataChunk):
         for f in self._files:
             f = str(f)
             ds = await loop.run_in_executor(None, read_f, f)
+            if not is_valid_dicom(ds):
+                continue
             self._file_idx[ds.SOPInstanceUID] = f
             yield ds
 
