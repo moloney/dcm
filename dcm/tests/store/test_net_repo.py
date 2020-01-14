@@ -24,6 +24,8 @@ async def test_gen_chunks(dcmtk_test_nodes):
         print(chunk.qr)
         async for dcm in chunk.gen_data():
             print(dcm)
+            print("****************************")
+            print(chunk.report.done)
             n_dcm_gen += 1
     assert n_dcm_gen == len(init_qr)
 

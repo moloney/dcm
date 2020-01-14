@@ -2,15 +2,13 @@
 from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
-from typing import (Callable, Optional, Tuple, List, Set, Iterator, Iterable,
-                    Hashable, Union, Any, ClassVar, Type, FrozenSet, TypeVar, Dict)
-from typing_extensions import Final
-from enum import Enum
+from typing import Callable, Optional, Tuple, List, Any, Dict
 
 from pydicom import Dataset, DataElement
 from pydicom.uid import generate_uid
 
 from .util import DuplicateDataError
+from .lazyset import LazySet, FrozenLazySet, AllElems
 from .query import (QueryLevel, QueryResult, DataNode, get_uid, uid_elems,
                     QueryLevelMismatchError, InconsistentDataError)
 
@@ -18,236 +16,21 @@ from .query import (QueryLevel, QueryResult, DataNode, get_uid, uid_elems,
 log = logging.getLogger(__name__)
 
 
-class _AllElems(Enum):
-    token = 0
-AllElems: Final = _AllElems.token
-
-#class _AllElems:
-#    '''Sentinal representing all elements'''
-#    # TODO: Better way to handle type annotation here?
-#    __slots__ : Tuple[None] = tuple() # type: ignore
-#    def __repr__(self) -> str:
-#        return 'AllElems'
-#
-#AllElems = _AllElems()
-
-
-class LazyEnumerationError(Exception):
-    '''Raised when attempting to iterate a LazySet that can't be enumerated
-    '''
-
-
-T = TypeVar('T', bound='_BaseLazySet')
-
-
-class _BaseLazySet:
-    '''Common functionality for LazySet and FrozenLazySet'''
-
-    _set_type: ClassVar[Union[Type[Set[Any]], Type[FrozenSet[Any]]]] = set
-
-    _elems: Union[Set[Any], FrozenSet[Any], _AllElems]
-
-    _exclude: Union[Set[Any], FrozenSet[Any], _AllElems]
-
-    def __init__(self,
-                 elems: Optional[Union[_BaseLazySet, Set[Any], FrozenSet[Any], Iterable[Hashable], _AllElems]] = None,
-                 exclude: Optional[Union[Set[Any], FrozenSet[Any], Iterable[Hashable], _AllElems]] = None):
-        if exclude is None:
-            if isinstance(elems, _BaseLazySet):
-                if elems._elems is AllElems:
-                    self._elems = elems._elems
-                elif isinstance(elems._elems, self._set_type):
-                    self._elems = elems._elems.copy()
-                else:
-                    self._elems = self._set_type(elems._elems)
-                if elems._exclude is AllElems:
-                    self._exclude = elems._exclude
-                elif isinstance(elems._exclude, self._set_type):
-                    self._exclude = elems._exclude.copy()
-                else:
-                    self._exclude = self._set_type(elems._exclude)
-            else:
-                self._exclude = self._set_type()
-                if elems is None:
-                    self._elems = self._set_type()
-                else:
-                    if elems is AllElems:
-                        self._elems = elems
-                    elif isinstance(elems, self._set_type):
-                        self._elems = elems.copy() # type: ignore
-                    else:
-                        self._elems = self._set_type(elems)
-        else:
-            if elems is not AllElems:
-                raise ValueError("The 'elems' must be set to AllElems if "
-                                 "'exclude' is not None")
-            if exclude is AllElems:
-                self._elems = self._set_type()
-                self._exclude = self._set_type()
-            else:
-                self._elems = elems
-                if isinstance(exclude, self._set_type):
-                    self._exclude = exclude.copy() # type: ignore
-                else:
-                    self._exclude = self._set_type(exclude)
-
-    def __contains__(self, elem: Hashable) -> bool:
-        if self._elems is AllElems:
-            assert self._exclude is not AllElems
-            return elem not in self._exclude
-        return elem in self._elems
-
-    def __repr__(self) -> str:
-        return f'{type(self)}({self._elems}, exclude={self._exclude})'
-
-    def __str__(self) -> str:
-        if self._elems is AllElems:
-            res = 'All Elements'
-            if self._exclude:
-                assert self._exclude is not AllElems
-                res += 'exclude %s' % set(self._exclude)
-        else:
-            res = str(set(self._elems))
-        return res
-
-    def __and__(self: T, other: _BaseLazySet) -> T:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                return type(self)(AllElems, self._exclude | other._exclude)
-            return type(self)(self._elems - other._exclude)
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            return type(self)(other._elems - self._exclude)
-        return type(self)(self._elems & other._elems)
-
-    def __or__(self: T, other: _BaseLazySet) -> T:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                return type(self)(AllElems, self._exclude & other._exclude)
-            return type(self)(AllElems, other._exclude - self._elems)
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            return type(self)(AllElems, self._exclude - other._elems)
-        return type(self)(self._elems | other._elems)
-
-    def __sub__(self: T, other: _BaseLazySet) -> T:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                return type(self)(AllElems, self._exclude | other._exclude)
-            return type(self)(self._elems & other._exclude)
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            return type(self)(AllElems, self._exclude | other._elems)
-        return type(self)(self._elems - other._elems)
-
-    def __bool__(self) -> bool:
-        return self._elems is AllElems or len(self._elems) != 0
-
-    def __iter__(self) -> Iterator[Hashable]:
-        if self._elems is AllElems:
-            raise LazyEnumerationError
-        for elem in self._elems:
-            yield elem
-
-    def __len__(self) -> int:
-        if self._elems is AllElems:
-            raise LazyEnumerationError
-        return len(self._elems)
-
-    def excludes(self) -> Iterator[Hashable]:
-        if self._exclude is AllElems:
-            raise LazyEnumerationError
-        for elem in self._exclude:
-            yield elem
-
-    def is_enumerable(self) -> bool:
-        return self._elems is not AllElems
-
-    def collides(self, other: _BaseLazySet) -> bool:
-        return not (self & other)
-
-
-class LazySet(_BaseLazySet):
-    '''Set like object that can contain all elements without enumerating them
-
-    Can also represent exclusive sets (everything except...)
-    '''
-
-    _set_type = set
-
-    def __iand__(self, other: _BaseLazySet) -> LazySet:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                self._exclude |= other._exclude
-            else:
-                self._elems -= other._exclude
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            self._elems = other._elems - self._exclude
-            self._exclude = set()
-        else:
-            self._elems &= other._elems
-        return self
-
-    def __ior__(self, other: _BaseLazySet) -> LazySet:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                self._exclude = self._exclude & other._exclude
-            else:
-                self._exclude = other._exclude - self._elems
-                self._elems = AllElems
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            self._exclude -= other._elems
-        else:
-            self._elems |= other._elems
-        return self
-
-    def __isub__(self, other: _BaseLazySet) -> LazySet:
-        if other._elems is AllElems:
-            assert other._exclude is not AllElems
-            if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                self._exclude |= other._exclude
-            else:
-                self._elems &= other._exclude
-        elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            self._exclude |= other._elems
-        else:
-            self._elems -= other._elems
-        return self
-
-
-class FrozenLazySet(_BaseLazySet):
-    '''Frozen LazySet'''
-
-    _set_type = frozenset
-
-
 uid_elem_set = FrozenLazySet(uid_elems.values())
 
 
 @dataclass(frozen=True)
 class _BaseFilter:
-    read_elems: FrozenLazySet = field(default_factory=lambda: FrozenLazySet(AllElems))
+    read_elems: FrozenLazySet[str] = field(default_factory=lambda: FrozenLazySet(AllElems))
     '''Elements the function needs to read to make any modifications'''
 
-    write_elems: FrozenLazySet = field(default_factory=lambda: FrozenLazySet(AllElems))
+    write_elems: FrozenLazySet[str] = field(default_factory=lambda: FrozenLazySet(AllElems))
     '''Elements that might be modified by the function'''
 
-    # TODO: Invertible is misleading, you could "invert" from a fan-out
-    invertible_elems: FrozenLazySet = field(default_factory=FrozenLazySet)
+    # TODO: Invertible is misleading, you could "invert" from a fan-out mapping
+    #       (one input gets multiple outputs) but we don't want to include that
+    #       here.
+    invertible_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet)
     '''Elements where values are only modified in isolated/deterministic way
 
     The same input value for these elements should always get the same output
@@ -258,11 +41,11 @@ class _BaseFilter:
         raise NotImplementedError
 
     @property
-    def uninvertible_elems(self) -> FrozenLazySet:
+    def uninvertible_elems(self) -> FrozenLazySet[str]:
         return self.write_elems - self.invertible_elems
 
     @property
-    def invertible_uids(self) -> FrozenLazySet:
+    def invertible_uids(self) -> FrozenLazySet[str]:
         return uid_elem_set - self.uninvertible_elems
 
 
@@ -295,7 +78,7 @@ class Filter(_BaseFilter, _SingleFilter):
     def __call__(self, data_set: Dataset) -> Dataset:
         return self.func(data_set)
 
-    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet]:
+    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
         return ([self.func], self.read_elems)
 
 
@@ -309,10 +92,10 @@ class _MultiFilter:
 class MultiFilter(_BaseFilter, _MultiFilter):
 
     def __post_init__(self) -> None:
-        read_elems = LazySet()
-        write_elems = LazySet()
-        invertible_elems = LazySet()
-        uninvertible = LazySet()
+        read_elems: LazySet[str] = LazySet()
+        write_elems: LazySet[str] = LazySet()
+        invertible_elems: LazySet[str] = LazySet()
+        uninvertible: LazySet[str] = LazySet()
         for filt in self.filters:
             read_elems |= filt.read_elems
             write_elems |= filt.write_elems
@@ -323,9 +106,9 @@ class MultiFilter(_BaseFilter, _MultiFilter):
         object.__setattr__(self, 'write_elems',  FrozenLazySet(write_elems))
         object.__setattr__(self, 'invertible_elems',  FrozenLazySet(invertible_elems))
 
-    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet]:
+    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
         funcs = []
-        dep_elems = LazySet()
+        dep_elems: LazySet[str] = LazySet()
         for filt in self.filters:
             if (dep_elems & filt.write_elems) or (elems & filt.write_elems):
                 funcs.append(filt.func)
@@ -361,6 +144,13 @@ class DataTransform:
     `old` and `new` (which should be treated as read-only) plus the methods
     below.
     '''
+
+    old: QueryResult
+    '''Pre-transform data'''
+
+    new: QueryResult
+    '''Post-transform data'''
+
     def add(self, old_ds: Dataset, new_ds: Dataset) -> None:
         '''Add pre/post transformed data set
 
@@ -496,7 +286,7 @@ class FilterTransform(DataTransform):
         return DataCollection(res, inconsist, dupes)
 
 
-def get_transform(qr: QueryResult, filt: _BaseFilter) -> DataTransform:
+def get_transform(qr: QueryResult, filt: Optional[_BaseFilter]) -> DataTransform:
     if filt is None:
         return DummyTransform(qr)
     else:

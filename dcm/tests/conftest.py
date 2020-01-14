@@ -8,6 +8,7 @@ from pytest import fixture, mark
 
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode
+from ..store.local_dir import LocalDir
 
 
 logging_opts = {}
@@ -65,12 +66,12 @@ def dicom_files_w_qr(dicom_files):
     return (dicom_files, qr)
 
 
-local_nodes = [DcmNode('localhost', 'DCMTESTAE1', 43293),
-               DcmNode('localhost', 'DCMTESTAE2', 43294),
-               DcmNode('localhost', 'DCMTESTAE3', 43295)]
+local_nodes = [DcmNode('localhost', 'DCMTESTAE1', 63987),
+               DcmNode('localhost', 'DCMTESTAE2', 63988),
+               DcmNode('localhost', 'DCMTESTAE3', 63989)]
 
 
-dcmtk_base_port = 37592
+dcmtk_base_port = 62765
 
 
 dcmtk_base_name = 'DCMTKAE'
@@ -118,6 +119,9 @@ def mk_dcmtk_config(dcmtk_node, store_dir, clients=None):
                                     client_names=client_names,
                                    )
 
+
+# TODO: Allow the included files to be defined as a QR. Provide higher level
+#       fixture that provides LocalDir or NetRepo
 
 # TODO: We should return a query_result for the initial files instead of a list
 @fixture
@@ -185,6 +189,11 @@ def select_files(dicom_files, file_req, full_qr):
                 res_files.append(path)
         res = (res_files, file_req)
     return res
+
+
+@fixture
+def local_dir(request, dicom_files):
+    ''''''
 
 
 def make_local_factory(local_dir, random_drop_thresh=0.0):

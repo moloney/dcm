@@ -1,4 +1,5 @@
 '''Command line interface'''
+from __future__ import annotations
 import sys, os, logging, json, textwrap
 import asyncio
 
@@ -14,6 +15,7 @@ from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel
 from .filt import make_edit_filter
 from .route import StaticRoute
+from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .sync import TransferPlanner, make_basic_validator
@@ -71,6 +73,14 @@ def parse_target(in_str, local_node=None, conf_nodes=None, out_fmt=None,
     return NetRepo(local_node, remote)
 
 
+def make_route(dest_strs, filt, method, local_node, conf_nodes, out_fmt,
+               no_recurse, file_ext):
+    dests = [parse_target(d_str, local_node, conf_nodes, out_fmt, no_recurse, file_ext)
+             for d_str in dest_strs]
+    return StaticRoute(tuple(dests), filt=filt, methods=(method,))
+
+
+
 def node_from_conf(conf_dict, default_host=None, default_ae='ANYAE',
                    default_port=104):
     res = DcmNode(conf_dict.get('host', default_host),
@@ -117,6 +127,7 @@ class PerformedQueryFilter(logging.Filter):
            ):
             return False
         return True
+
 
 debug_filters = {'query_responses' : QueryResponseFilter(),
                  'performed_queries' : PerformedQueryFilter(),
@@ -340,7 +351,6 @@ def _cancel_all_tasks(loop):
             })
 
 
-
 def aio_run(main, *, debug=False):
     """Run a coroutine.
 
@@ -391,7 +401,7 @@ def aio_run(main, *, debug=False):
             loop.close()
 
 
-async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, proxy, keep_errors):
+async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, keep_errors):
     # Perform initial query if needed
     if len(query) > 0:
         log.info("Querying source for initial data list")
@@ -414,7 +424,8 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
     planner = TransferPlanner(src,
                               [dest_route],
                               trust_level=trust_level,
-                              force_all=force_all)
+                              force_all=force_all,
+                              keep_errors=keep_errors)
 
     # Perform the sync or dry run
     log.info("Syncing data from '%s' to '%s'" %
@@ -423,27 +434,25 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
     if dry_run:
         log.info("Starting dry run")
         async for transfer in planner.gen_transfers(query_res):
-            print('%s > %s' % (transfer.chunk, transfer.routes))
+            print('%s > %s' % (transfer.chunk, transfer.method_routes_map))
         log.info("Finished dry run")
     else:
         log.info("Starting data sync")
-        async with planner.executor(validators, proxy, keep_errors) as ex:
+        async with planner.executor(validators) as ex:
             report = ex.report
             async with aclosing(planner.gen_transfers(query_res)) as tgen:
                 async for transfer in tgen:
                     await ex.exec_transfer(transfer)
+        #import pdb ; pdb.set_trace()
         report.log_issues()
         report.check_errors()
         log.info("Finished data sync")
-
 
 
 @click.command()
 @click.pass_obj
 @click.argument('src')
 @click.argument('dests', nargs=-1)
-@click.option('--proxy', '-p', is_flag=True, default=False,
-              help="Retrieve data locally and then forward to destinations")
 @click.option('--query', '-q', multiple=True,
               help="Only sync data matching the query")
 @click.option('--query-res',
@@ -453,12 +462,15 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
               help="Modify DICOM attribute in the synced data")
 @click.option('--edit-json', type=click.File('rb'),
               help="Specify attribute modifications as JSON")
-@click.option('--trust-level',
+@click.option('--trust-level', type=click.Choice([q.name for q in QueryLevel], case_sensitive=False), default='IMAGE',
               help="If sub-component counts match at this query level, assume "
               "the data matches. Improves performance but sacrifices accuracy")
 @click.option('--force-all', '-f', is_flag=True, default=False,
               help="Force all data on src to be transfered, even if it "
               "appears to already exist on the dest")
+@click.option('--method', '-m', help="Transfer method to use", default='PROXY',
+              type=click.Choice([m.name for m in TransferMethod],
+                                case_sensitive=False))
 @click.option('--validate', is_flag=True, default=False,
               help="All synced data is retrieved back from the dests and "
               "compared to the original data. Differing elements produce "
@@ -475,8 +487,8 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
               help="Don't recurse into input directories")
 @click.option('--file-ext', default='dcm',
               help="File extension for local input directories")
-def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
-         trust_level, force_all, validate, keep_errors, dry_run, local,
+def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
+         force_all, method, validate, keep_errors, dry_run, local,
          dir_format, no_recurse, file_ext):
     '''Synchronize DICOM data between network nodes and/or directories
     '''
@@ -495,13 +507,6 @@ def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
                        out_fmt=dir_format,
                        no_recurse=no_recurse,
                        file_ext=file_ext)
-    dests = [parse_target(x,
-                          local_node=local,
-                          conf_nodes=params['remote_nodes'],
-                          out_fmt=dir_format,
-                          no_recurse=no_recurse,
-                          file_ext=file_ext)
-             for x in dests]
 
     # Handle query-result options
     if query_res is None and not sys.stdin.isatty():
@@ -524,7 +529,15 @@ def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
         filt = make_edit_filter(edit_dict)
 
     # Convert dests/filters to a StaticRoute
-    dest_route = StaticRoute(dests, filt)
+    method = TransferMethod[method.upper()]
+    dest_route = make_route(dests,
+                            filt,
+                            method,
+                            local,
+                            params['remote_nodes'],
+                            dir_format,
+                            no_recurse,
+                            file_ext)
 
     # Handle validate option
     if validate:
@@ -533,17 +546,10 @@ def sync(params, src, dests, proxy, query, query_res, edit, edit_json,
         validators = None
 
     # Handle trust-level option
-    if trust_level is not None:
-        trust_level = trust_level.upper()
-        for q_lvl in QueryLevel:
-            if q_lvl.name == trust_level:
-                trust_level = q_lvl
-                break
-        else:
-            cli_error("Invalid level: %s" % trust_level)
+    trust_level = QueryLevel[trust_level.upper()]
 
     aio_run(_do_sync(src, dests, query, query_res, dest_route, trust_level,
-                     force_all, dry_run, validators, proxy, keep_errors))
+                     force_all, dry_run, validators, keep_errors))
 
 
 async def _netdump_cb(event):
@@ -572,8 +578,6 @@ def netdump(params, local):
         local = params['local_node']
     net_ent = LocalEntity(local)
     asyncio.run(_netdump(net_ent), debug=True)
-
-
 
 
 

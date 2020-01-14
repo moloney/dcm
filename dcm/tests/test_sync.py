@@ -81,7 +81,8 @@ async def test_bucket_sync(dcmtk_test_nodes):
     dest2_repo = NetRepo(local_nodes[0], dest2)
     dest3_repo = NetRepo(local_nodes[0], dest3)
     static_route = StaticRoute([dest1_repo])
-    dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
+    dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo),
+                             required_elems=['PatientID'])
     dests = [static_route, dyn_route]
     tp = TransferPlanner(src_bucket, dests)
     async with tp.executor() as e:

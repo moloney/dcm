@@ -1,7 +1,7 @@
 '''Provides an abstraction around the DICOM query model and data hierarchy
 '''
 from __future__ import annotations
-import asyncio, logging, json
+import logging, json
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from functools import partial
@@ -218,6 +218,8 @@ class InconsistentDataError(DicomDataError):
     '''The data set violates the established patient/study/series heirarchy'''
 
 
+# TODO: We need an optional 'src' property, so we don't have to repeat it in
+#       commands we pipe this to. Allow it to be overridden and possibly None.
 class QueryResult:
     '''High level representation of a collection of DICOM data sets
 
@@ -234,7 +236,9 @@ class QueryResult:
         Initial DICOM datasets to add to the result
     '''
 
-    def __init__(self, level : QueryLevel, data_sets : Optional[List[Dataset]] = None):
+    def __init__(self,
+                 level : QueryLevel,
+                 data_sets : Optional[List[Dataset]] = None):
         if level not in QueryLevel:
             raise ValueError("Invalid query level")
         self._level = level
@@ -272,6 +276,11 @@ class QueryResult:
     def __iter__(self) -> Iterator[Dataset]:
         for ds in self._data.values():
             yield ds
+
+    def clear(self) -> None:
+        '''Clear all contained data sets'''
+        for uid in self._data:
+            del self[uid]
 
     def patients(self) -> Iterator[str]:
         '''Genarates all PatientID values in this query result'''
@@ -608,7 +617,7 @@ class QueryResult:
         '''
         return len(self._levels[QueryLevel.PATIENT])
 
-    def n_studies(self, node: Optional[DataNode] = None) -> int:
+    def n_studies(self, node: Optional[DataNode] = None) -> Optional[int]:
         '''Number of studies in the data
 
         Parameters
@@ -633,7 +642,7 @@ class QueryResult:
             res += sub_res
         return res
 
-    def n_series(self, node: Optional[DataNode] = None) -> int:
+    def n_series(self, node: Optional[DataNode] = None) -> Optional[int]:
         '''Number of series in the data
 
         Parameters
@@ -662,7 +671,7 @@ class QueryResult:
             res += sub_res
         return res
 
-    def n_instances(self, node : Optional[DataNode] = None) -> int:
+    def n_instances(self, node : Optional[DataNode] = None) -> Optional[int]:
         '''Number of instances in the data
 
         Parameters
@@ -693,7 +702,11 @@ class QueryResult:
             res += sub_res
         return res
 
-    def get_count(self, level: QueryLevel, node: Optional[DataNode] = None) -> int:
+    def get_count(self,
+                  level: QueryLevel,
+                  node: Optional[DataNode] = None
+                  ) -> Optional[int]:
+        '''Get number of nodes at the `level` in the subtree under `node`'''
         if level == QueryLevel.PATIENT:
             assert node is None
             return self.n_patients()

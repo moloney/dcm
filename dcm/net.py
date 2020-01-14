@@ -1,6 +1,6 @@
 '''DICOM Networking'''
 from __future__ import annotations
-import asyncio, time, logging, warnings
+import asyncio, time, logging, warnings, enum
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
@@ -8,7 +8,7 @@ from functools import partial
 from dataclasses import dataclass, field
 from typing import (List, Set, Dict, Tuple, Optional, FrozenSet, Union, Any,
                     AsyncIterator, Iterator, Callable, Awaitable, Type,
-                    TYPE_CHECKING)
+                    TYPE_CHECKING, cast)
 from pathlib import Path
 
 import janus
@@ -38,6 +38,7 @@ from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
+from .util import IndividualReport
 
 
 log = logging.getLogger(__name__)
@@ -86,7 +87,6 @@ QR_MODELS = {'PatientRoot' :
                   'get' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet},
             }
 
-
 @dataclass(frozen=True)
 class DcmNode:
     '''DICOM network entity info'''
@@ -106,10 +106,6 @@ class DcmNode:
         return '%s:%s:%s' % (self.host, self.ae_title, self.port)
 
 
-class FailedAssociationError(Exception):
-    '''We were unable to associate with a remote network node'''
-
-
 class BatchDicomOperationError(Exception):
     '''Base class for errors from DICOM batch network operations'''
     def __init__(self, op_errors: List[Dataset]):
@@ -117,8 +113,9 @@ class BatchDicomOperationError(Exception):
 
 
 @dataclass
-class DicomOpReport:
+class DicomOpReport(IndividualReport):
     '''Track status results from DICOM operations'''
+
     provider: Optional[DcmNode] = None
     '''The service provider'''
 
@@ -131,17 +128,23 @@ class DicomOpReport:
     op_data: Dict[str, Any] = field(default_factory=dict)
     '''Additional data describing the operation specifics'''
 
-    n_success: int = 0
-    '''Number of successful operations'''
-
-    warnings: List[Dataset] = field(default_factory=list)
+    warnings: List[Dataset] = field(default_factory=list, init=False)
     '''List of data sets we got warning status for'''
 
-    errors: List[Dataset] = field(default_factory=list)
+    errors: List[Dataset] = field(default_factory=list, init=False)
     '''List of data sets we got error status for'''
 
-    done: bool = False
-    '''Will be set to True when all sub-operations have completed'''
+    _n_success: int = field(default=0, init=False)
+
+    _n_input: int = field(default=0, init=False)
+
+    @property
+    def n_input(self) -> int:
+        return self._n_input
+
+    @property
+    def n_success(self) -> int:
+        return self._n_success
 
     @property
     def n_errors(self) -> int:
@@ -150,10 +153,6 @@ class DicomOpReport:
     @property
     def n_warnings(self) -> int:
         return len(self.warnings)
-
-    @property
-    def all_success(self) -> bool:
-        return self.n_errors + self.n_warnings == 0
 
     def add(self, status: Dataset, data_set: Dataset) -> None:
         if (not hasattr(status, 'Status') or
@@ -169,10 +168,8 @@ class DicomOpReport:
             self.warnings.append((status, data_set))
             log.debug("%s op got warning status: %s" % (self.op_type, status))
         else:
-            self.n_success += 1
-
-    def __len__(self) -> int:
-        return self.n_success + self.n_warnings + self.n_errors
+            self._n_success += 1
+        self._n_input += 1
 
     def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
@@ -190,16 +187,22 @@ class DicomOpReport:
 
     def clear(self) -> None:
         '''Clear out all current operation results'''
-        self.n_success = 0
+        self._n_success = 0
         self.warnings = []
         self.errors = []
+
+
+class IncomingErrorType(enum.Enum):
+    INCONSISTENT = enum.auto()
+    DUPLICATE = enum.auto()
+    UNEXPECTED = enum.auto()
 
 
 class IncomingDataError(Exception):
     '''Captures errors detected in incoming data stream'''
     def __init__(self,
-                 inconsistent: List[Tuple[str, ...]],
-                 duplicate: List[Tuple[str, ...]]):
+                 inconsistent: Optional[List[Tuple[str, ...]]],
+                 duplicate: Optional[List[Tuple[str, ...]]]):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
 
@@ -215,7 +218,116 @@ class IncomingDataError(Exception):
         return ' '.join(res)
 
 
-class RetrieveError(Exception):
+@dataclass
+class IncomingDataReport(IndividualReport):
+    '''Generic incoming data report'''
+
+    retrieved: QueryResult = field(default_factory=lambda: QueryResult(QueryLevel.IMAGE))
+    '''Track the valid incoming data'''
+
+    inconsistent: List[Tuple[str, ...]] = field(default_factory=list)
+    '''Track the inconsistent incoming data'''
+
+    duplicate: List[Tuple[str, ...]] = field(default_factory=list)
+    '''Track the duplicate incoming data'''
+
+    _keep_errors: Tuple[IncomingErrorType, ...] = field(default=tuple(), init=False)
+
+
+    @property
+    def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
+        '''Whether or not we are forwarding inconsistent/duplicate data'''
+        return self._keep_errors
+
+    @keep_errors.setter
+    def keep_errors(self, val: Union[bool, Tuple[IncomingErrorType, ...]]) -> None:
+        if val == True:
+            self._keep_errors = tuple(IncomingErrorType)
+        elif val == False:
+            self._keep_errors = tuple()
+        else:
+            val = cast(Tuple[IncomingErrorType, ...], val)
+            self._keep_errors = val
+
+    @property
+    def n_input(self) -> int:
+        return len(self.retrieved) + len(self.inconsistent) + len(self.duplicate)
+
+    @property
+    def n_success(self) -> int:
+        res = len(self.retrieved)
+        return res
+
+    @property
+    def n_errors(self) -> int:
+        res = 0
+        if IncomingErrorType.INCONSISTENT not in self.keep_errors:
+            res += len(self.inconsistent)
+        if IncomingErrorType.DUPLICATE not in self.keep_errors:
+            res += len(self.duplicate)
+        return res
+
+    @property
+    def n_warnings(self) -> int:
+        res = 0
+        if IncomingErrorType.INCONSISTENT in self.keep_errors:
+            res += len(self.inconsistent)
+        if IncomingErrorType.DUPLICATE in self.keep_errors:
+            res += len(self.duplicate)
+        return res
+
+    def add(self, data_set: Dataset) -> bool:
+        '''Add an incoming data set, returns True if it should should be used
+        '''
+        assert not self.done
+        try:
+            dupe = data_set in self.retrieved
+        except InconsistentDataError:
+            self.inconsistent.append(get_all_uids(data_set))
+            return IncomingErrorType.INCONSISTENT in self.keep_errors
+        else:
+            if dupe:
+                self.duplicate.append(get_all_uids(data_set))
+                return IncomingErrorType.DUPLICATE in self.keep_errors
+        self.retrieved.add(data_set)
+        return True
+
+    def log_issues(self) -> None:
+        '''Log any warnings and errors'''
+        error_msg = []
+        warn_msg = []
+        for err_type in IncomingErrorType:
+            err_attr = err_type.name.lower()
+            if not hasattr(self, err_attr):
+                continue
+            errors = getattr(self, err_attr)
+            n_errors = len(errors)
+            msg = f"{n_errors} {err_type}"
+            if n_errors != 0:
+                if err_type in self.keep_errors:
+                    warn_msg.append(msg)
+                else:
+                    error_msg.append(msg)
+        if warn_msg:
+            log.warn("Incoming data issues: %s" % ' '.join(warn_msg))
+        if error_msg:
+            log.error("Incoming data issues: %s" % ' '.join(error_msg))
+
+    def check_errors(self) -> None:
+        if self.n_errors:
+            kwargs = {}
+            if IncomingErrorType.INCONSISTENT not in self.keep_errors:
+                kwargs['inconsistent'] = self.inconsistent
+            if IncomingErrorType.DUPLICATE not in self.keep_errors:
+                kwargs['duplicate'] = self.duplicate
+            raise IncomingDataError(**kwargs)
+
+    def clear(self) -> None:
+        self.inconsistent = []
+        self.duplicate = []
+
+
+class RetrieveError(IncomingDataError):
     '''Capture errors that happened during a retrieve operation'''
     def __init__(self,
                  inconsistent: Optional[List[Tuple[str,...]]],
@@ -241,87 +353,7 @@ class RetrieveError(Exception):
         return ' '.join(res)
 
 
-# TODO: Do we need this split out from RetrieveReport? It doesn't capture much
-#       of interest that doesn't already get captured in the TransferReport
-#       since we use DataTransforms there (to catch incoming vs outgoing data)
-#       which will also capture data that was inconsistent/duplicate and then
-#       got fixed by the filters.
-#
-#
-@dataclass
-class IncomingDataReport:
-    retrieved: QueryResult = field(default_factory=lambda: QueryResult(QueryLevel.IMAGE))
-    inconsistent: List[Tuple[str, ...]] = field(default_factory=list)
-    duplicate: List[Tuple[str, ...]] = field(default_factory=list)
-    keep_errors: bool = False
-    _done: bool = field(default=False, init=False, repr=False)
-
-    @property
-    def done(self) -> bool:
-        return self._done
-
-    @done.setter
-    def done(self, val: bool) -> None:
-        if not val:
-            raise ValueError("Setting `done` to False is not allowed")
-        if self._done:
-            raise ValueError("Report was already marked done")
-        self._done = True
-
-    @property
-    def n_errors(self) -> int:
-        res = 0
-        if not self.keep_errors:
-            res += len(self.inconsistent) + len(self.duplicate)
-        return res
-
-    @property
-    def n_warnings(self) -> int:
-        res = 0
-        if self.keep_errors:
-            res += len(self.inconsistent) + len(self.duplicate)
-        return res
-
-    @property
-    def all_success(self) -> bool:
-        return self.n_errors + self.n_warnings == 0
-
-    def add(self, data_set: Dataset) -> bool:
-        assert not self.done
-        try:
-            dupe = data_set in self.retrieved
-        except InconsistentDataError:
-            self.inconsistent.append(get_all_uids(data_set))
-            return False
-        else:
-            if dupe:
-                self.duplicate.append(get_all_uids(data_set))
-                return False
-        self.retrieved.add(data_set)
-        return True
-
-    def log_issues(self) -> None:
-        '''Log any warnings and errors'''
-        error_msg = []
-        for err_type in ('inconsistent', 'duplicate'):
-            errors = getattr(self, err_type)
-            n_errors = len(errors)
-            if n_errors != 0:
-                error_msg.append('%d %s' % (n_errors, err_type))
-        if error_msg:
-            if self.keep_errors:
-                log.warn("Incoming data issues: %s" %
-                         ' '.join(error_msg))
-            else:
-                log.error("Incoming data issues: %s" %
-                          ' '.join(error_msg))
-
-    def check_errors(self) -> None:
-        if self.n_errors:
-            raise IncomingDataError(self.inconsistent, self.duplicate)
-
-
-# TODO: Do we need a clear method here?
+# TODO: Update this to use new keep_errors setup.
 @dataclass
 class RetrieveReport(IncomingDataReport):
     '''Track details about a retrieve operation'''
@@ -339,7 +371,6 @@ class RetrieveReport(IncomingDataReport):
 
     @property
     def done(self) -> bool:
-        '''Returns True when all sub-operations are complete'''
         return self._done
 
     @done.setter
@@ -354,71 +385,78 @@ class RetrieveReport(IncomingDataReport):
         self._done = True
 
     @property
+    def n_expected(self) -> Optional[int]:
+        if self.requested is None:
+            return None
+        return self.requested.n_instances()
+
+    @property
+    def n_input(self) -> int:
+        return super().n_input + len(self.unexpected)
+
+    @property
     def n_errors(self) -> int:
-        assert self.missing is not None
-        res = self.move_report.n_errors
+        res = super().n_errors + self.move_report.n_errors
         if self._done:
+            assert self.missing is not None
             res += len(self.missing)
-        if not self.keep_errors:
-            res += len(self.inconsistent) + len(self.unexpected) + len(self.duplicate)
+        if IncomingErrorType.UNEXPECTED not in self._keep_errors:
+            res += len(self.unexpected)
         return res
 
     @property
     def n_warnings(self) -> int:
-        res = self.move_report.n_warnings
-        if self.keep_errors:
-            res += len(self.inconsistent) + len(self.unexpected) + len(self.duplicate)
+        res = super().n_warnings + self.move_report.n_warnings
+        if IncomingErrorType.UNEXPECTED in self._keep_errors:
+            res += len(self.unexpected)
         return res
 
     def add(self, data_set: Dataset) -> bool:
-        assert not self.done
+        assert not self._done
         assert self.requested is not None
         try:
             expected = data_set in self.requested
         except InconsistentDataError:
             self.inconsistent.append(get_all_uids(data_set))
-            return False
+            return IncomingErrorType.INCONSISTENT in self._keep_errors
         else:
             if not expected:
                 self.unexpected.append(get_all_uids(data_set))
-                return False
-        # TODO: In theory this next line could also raise an
-        #       InconsistentDataError, not sure how likely that is...
+                return IncomingErrorType.UNEXPECTED in self._keep_errors
         if data_set in self.retrieved:
             self.duplicate.append(get_all_uids(data_set))
-            return False
+            return IncomingErrorType.DUPLICATE in self._keep_errors
         # TODO: Can we avoid duplicate work making min copies here and in the store report?
         self.retrieved.add(minimal_copy(data_set))
         return True
 
     def log_issues(self) -> None:
         '''Log any warnings and errors'''
-        assert self.missing is not None
+        super().log_issues()
         self.move_report.log_issues()
-        error_msg = []
-        for err_type in ('inconsistent', 'unexpected', 'duplicate'):
-            errors = getattr(self, err_type)
-            n_errors = len(errors)
-            if n_errors != 0:
-                error_msg.append('%d %s' % (n_errors, err_type))
-        if error_msg and self.keep_errors:
-            log.warn("Data errors during retrieval: %s" % ' '.join(error_msg))
-            error_msg = []
         if self._done:
+            assert self.missing is not None
             n_missing = len(self.missing)
             if n_missing != 0:
-                error_msg.append('%d missing' % n_missing)
-        if error_msg:
-            log.error("Data errors during retrieval: %s" % ' '.join(error_msg))
+                log.error('Incoming data issues: {n_missing} missing')
 
     def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
         if self.n_errors != 0:
-            raise RetrieveError(self.inconsistent if not self.keep_errors else [],
-                                self.duplicate if not self.keep_errors else [],
-                                self.unexpected if not self.keep_errors else [],
+            raise RetrieveError(self.inconsistent if IncomingErrorType.INCONSISTENT in self._keep_errors else [],
+                                self.duplicate if IncomingErrorType.DUPLICATE in self._keep_errors else [],
+                                self.unexpected if IncomingErrorType.UNEXPECTED in self._keep_errors else [],
                                 self.missing,
                                 self.move_report.errors)
+
+    def clear(self) -> None:
+        super().clear()
+        self.move_report.clear()
+        self.unexpected = []
+
+
+class FailedAssociationError(Exception):
+    '''We were unable to associate with a remote network node'''
 
 
 def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[str]]]],
@@ -540,15 +578,11 @@ class EventFilter:
         return evt_collision and remote_collision
 
 
-
-#_FutureType: Type[asyncio.Future[None]] = asyncio.Future
-#_FutureType: Type[asyncio.Future[None]] = NewType('_FutureType', asyncio.Future)
-#_FutureType = TypeVar('_FutureType', asyncio.Future)
-
 if TYPE_CHECKING:
     _FutureType = asyncio.Future[None]
 else:
     _FutureType = asyncio.Future
+
 
 class FilteredListenerLockBase(_FutureType):
     '''Base class for creating event filter aware lock types with fifolock'''
@@ -605,8 +639,8 @@ def is_specified(query: Dataset, attr: str) -> bool:
 
 SOPList = List[sop_class.SOPClass]
 
-# TODO: Need to listen for association aborted events and handle them
 
+# TODO: Need to listen for association aborted events and handle them
 class LocalEntity:
     '''Low level interface to DICOM networking functionality
 
@@ -668,18 +702,13 @@ class LocalEntity:
 
     def _prep_query(self,
                     level: Optional[QueryLevel],
-                    query: Optional[Union[Dataset, Dict[str, Any]]],
+                    query: Optional[Dataset],
                     query_res : Optional[QueryResult]
                    ) -> Tuple[QueryLevel, Dataset]:
         '''Resolve/check `level` and `query` args for query methods'''
         # Build up our base query dataset
         if query is None:
             query = Dataset()
-        elif not isinstance(query, Dataset):
-            qdict = query
-            query = Dataset()
-            for key, val in qdict.items():
-                setattr(query, key, val)
         else:
             query = deepcopy(query)
 
@@ -697,7 +726,7 @@ class LocalEntity:
     async def query(self,
                     remote: DcmNode,
                     level: Optional[QueryLevel] = None,
-                    query: Optional[Union[Dataset, Dict[str, Any]]] = None,
+                    query: Optional[Dataset] = None,
                     query_res: Optional[QueryResult] = None,
                     report: Optional[DicomOpReport] = None) -> QueryResult:
         '''Query the `remote` entity all at once
@@ -717,7 +746,7 @@ class LocalEntity:
     async def queries(self,
                       remote: DcmNode,
                       level: Optional[QueryLevel] = None,
-                      query: Optional[Union[Dataset, Dict[str, Any]]] = None,
+                      query: Optional[Dataset] = None,
                       query_res: Optional[QueryResult] = None,
                       report: Optional[DicomOpReport] = None
                      ) -> AsyncIterator[QueryResult]:
@@ -1043,7 +1072,8 @@ class LocalEntity:
                        remote: DcmNode,
                        query_res: QueryResult,
                        report: RetrieveReport = None,
-                       keep_errors: bool = False) -> AsyncIterator[Dataset]:
+                       keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False
+                      ) -> AsyncIterator[Dataset]:
         '''Generate data sets from `remote` based on `query_res`.
 
         Parameters
@@ -1064,10 +1094,12 @@ class LocalEntity:
         '''
         if report is None:
             extern_report = False
-            report = RetrieveReport(requested=query_res)
+            report = RetrieveReport()
         else:
-            report.requested = query_res
             extern_report = True
+        report.requested = query_res
+        # TODO: Stop ignoring type errors here once mypy fixes issue #3004
+        report.keep_errors = keep_errors # type: ignore
         event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)),
                                    ae_titles=frozenset((remote.ae_title,))
                                   )
@@ -1090,7 +1122,7 @@ class LocalEntity:
                         continue
                 # Add the data set to our report and handle errors
                 success = report.add(ds)
-                if not success and not keep_errors:
+                if not success:
                     continue
                 # Add the file_meta to the data set and yield it
                 file_meta.ImplementationVersionName = __version__
