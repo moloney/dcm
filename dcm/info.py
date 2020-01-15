@@ -29,8 +29,9 @@ install_requires = ['pydicom >= 1.0',
                     'fifolock',
                     'typing_extensions',
                     ]
-dependency_links = ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']
-tests_require = ['pytest', 'pytest-asyncio']
+dependency_links = \
+    ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']
+tests_require = ['pytest', 'pytest-asyncio', 'pytest-mypy']
 
 # Extra requirements for building documentation
 extras_requires = {'doc':  ["sphinx", "numpydoc"]}
