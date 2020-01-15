@@ -50,17 +50,16 @@ def normalize(data_set, elem_filter=None):
     return res
 
 
-default_conversions = {'PN' : str,
-                       'UI' : str,
-                       'CS' : str,
-                       'DS' : str,
-                       'IS' : int,
-                       'AT' : tuple,
-                       'OW' : bytes_or_text,
-                       'OB' : bytes_or_text,
-                       'OW or OB' : bytes_or_text,
-                       'OB or OW' : bytes_or_text,
-                       'UN' : bytes_or_text,
-                       'SQ' : normalize,
-                      }
-
+default_conversions = {'PN': str,
+                       'UI': str,
+                       'CS': str,
+                       'DS': str,
+                       'IS': int,
+                       'AT': tuple,
+                       'OW': bytes_or_text,
+                       'OB': bytes_or_text,
+                       'OW or OB': bytes_or_text,
+                       'OB or OW': bytes_or_text,
+                       'UN': bytes_or_text,
+                       'SQ': normalize,
+                       }

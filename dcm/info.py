@@ -1,4 +1,3 @@
-import sys
 
 _version_major = 0
 _version_minor = 1
@@ -29,13 +28,12 @@ install_requires = ['pydicom >= 1.0',
                     'janus',
                     'fifolock',
                     'typing_extensions',
-                   ]
+                    ]
 dependency_links = ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']
 tests_require = ['pytest', 'pytest-asyncio']
 
 # Extra requirements for building documentation
-extras_requires = {'doc':  ["sphinx", "numpydoc"],
-                  }
+extras_requires = {'doc':  ["sphinx", "numpydoc"]}
 
 
 NAME                = 'dcm'

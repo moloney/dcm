@@ -7,7 +7,7 @@ from typing import Optional, AsyncIterator, Dict, Any
 from pydicom import Dataset
 import janus
 
-from . import TransferMethod, DcmNetChunk, DataBucket, DcmRepo
+from . import TransferMethod, DcmNetChunk, DcmRepo
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport
 
@@ -33,7 +33,7 @@ class NetRepo(DcmRepo):
         self.chunk_size = chunk_size
 
     def __getstate__(self) -> Dict[str, Any]:
-        state = {k : v for k, v in self.__dict__.items() if k != '_local_ent'}
+        state = {k: v for k, v in self.__dict__.items() if k != '_local_ent'}
         state['local'] = self._local_ent._local
         return state
 
@@ -69,13 +69,16 @@ class NetRepo(DcmRepo):
             else:
                 query = deepcopy(query)
                 query.update(self._base_query)
-        return await self._local_ent.query(self._remote, level, query, query_res)
+        return await self._local_ent.query(self._remote,
+                                           level,
+                                           query,
+                                           query_res)
 
     def queries(self,
-                      level: Optional[QueryLevel] = None,
-                      query: Optional[Dataset] = None,
-                      query_res: Optional[QueryResult] = None,
-                     ) -> AsyncIterator[QueryResult]:
+                level: Optional[QueryLevel] = None,
+                query: Optional[Dataset] = None,
+                query_res: Optional[QueryResult] = None,
+                ) -> AsyncIterator[QueryResult]:
         '''Returns async generator that produces partial QueryResult objects'''
         if level is None:
             if query_res is not None:
@@ -96,7 +99,7 @@ class NetRepo(DcmRepo):
 
     async def gen_query_chunks(self,
                                query_res: QueryResult
-                              ) -> AsyncIterator[DcmNetChunk]:
+                               ) -> AsyncIterator[DcmNetChunk]:
         '''Generate chunks of data corresponding to `query_res`
         '''
         curr_qr = QueryResult(query_res.level)
@@ -128,21 +131,21 @@ class NetRepo(DcmRepo):
     @asynccontextmanager
     async def send(self,
                    report: Optional[DicomOpReport] = None
-                  ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
         async with self._local_ent.send(self._remote, report=report) as send_q:
             yield send_q
 
     def retrieve(self,
                  query_res: QueryResult,
-                 report: Optional[RetrieveReport] = None) -> AsyncIterator[Dataset]:
-
-       return self._local_ent.retrieve(self._remote, query_res, report)
+                 report: Optional[RetrieveReport] = None
+                 ) -> AsyncIterator[Dataset]:
+        return self._local_ent.retrieve(self._remote, query_res, report)
 
     async def oob_transfer(self,
                            method: TransferMethod,
                            chunk: DcmNetChunk,
                            report: Optional[DicomOpReport] = None
-                          ) -> None:
+                           ) -> None:
         '''Perform out-of-band transfer instead of proxying data'''
         if method != TransferMethod.REMOTE_COPY:
             raise ValueError("Unsupported transfer method: %s" % method)
