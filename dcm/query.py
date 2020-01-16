@@ -2,18 +2,19 @@
 '''
 from __future__ import annotations
 import logging, json
+from copy import deepcopy
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from functools import partial
 from enum import IntEnum
 from dataclasses import dataclass, field
 from typing import (Tuple, List, Dict, Any, Optional, Iterator, AsyncIterator,
-                    Callable, Union)
+                    Callable, Union, Set)
 
 from pydicom.dataset import Dataset
 from tree_format import format_tree
 
-from .util import DicomDataError
+from .util import DicomDataError, Serializable, serializer
 from .normalize import normalize
 
 
@@ -218,8 +219,56 @@ class InconsistentDataError(DicomDataError):
     '''The data set violates the established patient/study/series heirarchy'''
 
 
-# TODO: We need an optional 'src' property, so we don't have to repeat it in
-#       commands we pipe this to. Allow it to be overridden and possibly None.
+@serializer
+@dataclass
+class QueryProv:
+    '''Track how a QueryResult was created
+
+    Allows consumers to avoid duplicate work, and users can avoid repeating
+    themselves when chaining operations
+    '''
+
+    src: Optional[Serializable] = None
+    '''The source of this query result'''
+
+    queried_attrs: Optional[Set[str]] = None
+    '''The attributes that were queried for'''
+
+    removed_existing_on: Optional[Serializable] = None
+    '''A remote we queried and removed any data that already exists on it'''
+
+    def __bool__(self) -> bool:
+        return any(getattr(self, a) is not None
+                   for a in ('src', 'queried_attrs', 'removed_existing_on'))
+
+    def merged(self, other: QueryProv, keep_attrs: bool) -> QueryProv:
+        result = QueryProv()
+        if self.src == other.src:
+            result.src = self.src
+        if (keep_attrs and
+            self.queried_attrs is not None and
+            other.queried_attrs is not None
+           ):
+            result.queried_attrs = self.queried_attrs & other.queried_attrs
+        if self.removed_existing_on == other.removed_existing_on:
+            result.removed_existing_on = self.removed_existing_on
+        return result
+
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        return {'src': self.src,
+                'queried_attrs': list(self.queried_attrs) if self.queried_attrs is not None else None,
+                'removed_existing_on': self.removed_existing_on
+               }
+
+    @classmethod
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryProv:
+        return cls(json_dict['src'],
+                   set(json_dict['queried_attrs']),
+                   json_dict['removed_existing_on'])
+
+
+@serializer
 class QueryResult:
     '''High level representation of a collection of DICOM data sets
 
@@ -229,16 +278,20 @@ class QueryResult:
 
     Parameters
     ----------
-    level : QueryLevel
+    level
         The max level in the hierarchy we have data for
 
-    data_sets : Iterable
+    data_sets
         Initial DICOM datasets to add to the result
+
+    prov
+        Optional provenance information about how this QueryResult was built
     '''
 
     def __init__(self,
                  level : QueryLevel,
-                 data_sets : Optional[List[Dataset]] = None):
+                 data_sets : Optional[List[Dataset]] = None,
+                 prov : Optional[QueryProv] = None):
         if level not in QueryLevel:
             raise ValueError("Invalid query level")
         self._level = level
@@ -249,6 +302,10 @@ class QueryResult:
         if data_sets is not None:
             for ds in data_sets:
                 self.add(ds)
+        if prov is None:
+            self.prov = QueryProv()
+        else:
+            self.prov = prov
 
     @property
     def level(self) -> QueryLevel:
@@ -729,14 +786,18 @@ class QueryResult:
         max_level : QueryLevel
             The level of detail to include in the result
         '''
+        prov = QueryProv(self.prov.src,
+                         removed_existing_on=self.prov.removed_existing_on)
         if node.level > self._level:
             raise InsufficientQueryLevelError()
         if max_level is None:
             max_level = self._level
+            if self.prov.queried_attrs is not None:
+                prov.queried_attrs = self.prov.queried_attrs.copy()
         else:
             if max_level < node.level:
                 raise ValueError("The max_level is lower than the node level")
-        res = QueryResult(max_level)
+        res = QueryResult(max_level, prov=prov)
         last_branch = None
         for dpath, sub_uids in self.walk(node):
             if dpath.level == self._level:
@@ -764,7 +825,7 @@ class QueryResult:
                 pref, non_pref = other, self
             else:
                 pref, non_pref = self, other
-        res = QueryResult(max(self._level, other._level))
+        res = QueryResult(max(self._level, other._level), prov=deepcopy(pref.prov))
         for ds in pref._data.values():
             if ds in non_pref:
                 res.add(ds)
@@ -772,7 +833,11 @@ class QueryResult:
 
     def __or__(self, other: QueryResult) -> QueryResult:
         '''Take union of two QueryResult objects'''
-        res = QueryResult(min(self._level, other._level))
+        if not self.prov and len(self._data) == 0:
+            self.prov = other.prov
+        else:
+            prov = self.prov.merged(other.prov, self._level == other._level)
+        res = QueryResult(min(self._level, other._level), prov=prov)
         for ds in self._data.values():
             res.add(ds)
         for ds in other._data.values():
@@ -780,13 +845,20 @@ class QueryResult:
         return res
 
     def __ior__(self, other: QueryResult) -> QueryResult:
+        '''In place union between two QueryResult'''
+        if other._level < self._level:
+            raise ValueError("Can't do in-place intersection with lower level QueryResult")
+        if not self.prov and len(self._data) == 0:
+            self.prov = other.prov
+        else:
+            self.prov = self.prov.merged(other.prov, True)
         for ds in other._data.values():
             self.add(ds)
         return self
 
     def __sub__(self, other: QueryResult) -> QueryResult:
         '''Take difference between one QueryResult and another'''
-        res = QueryResult(min(self._level, other._level))
+        res = QueryResult(min(self._level, other._level), prov=self.prov)
         for dpath in self.level_paths(res._level):
             dnode = dpath.end
             try:
@@ -852,20 +924,19 @@ class QueryResult:
     def __xor__(self, other: QueryResult) -> QueryResult:
         return (self - other) | (other - self)
 
-    def to_json(self) -> str:
+    def to_json_dict(self) -> Dict[str, Any]:
         '''Dump a JSON representation of the heirarchy'''
-        data = {'level' : self._level.name,
+        return {'level' : self._level.name,
                 'patients' : self._levels[QueryLevel.PATIENT],
+                'prov': self.prov
                }
-        return json.dumps(data, indent=4)
 
     @classmethod
-    def from_json(klass, json_str: str) -> QueryResult:
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryResult:
         '''Create a QueryResult from a previous `to_json` call'''
-        json_d = json.loads(json_str)
-        level = getattr(QueryLevel, json_d['level'])
-        res = klass(level)
-        patients = json_d['patients']
+        level = getattr(QueryLevel, json_dict['level'])
+        res = cls(level, prov=json_dict['prov'])
+        patients = json_dict['patients']
         visit_q = list(patients.values())
         visited_stack: List[Dict[str, Any]] = []
         while len(visit_q) != 0:

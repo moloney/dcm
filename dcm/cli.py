@@ -10,7 +10,7 @@ import click
 
 import toml
 
-from .util import aclosing
+from .util import aclosing, serializer
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel
 from .filt import make_edit_filter
@@ -323,8 +323,13 @@ def query(params, remote, query, level, query_res, local, out_format,
     if out_format == 'tree':
         out = qr.to_tree()
     elif out_format == 'json':
-        out = qr.to_json()
+        out = serializer.dumps(qr, indent=4)
     click.echo(out)
+
+
+# TODO: Add a "get_missing" command and expose that as part of Python API too,
+#       instead of having it hidden away in private method of TransferPlanner
+#
 
 
 def _cancel_all_tasks(loop):
@@ -512,7 +517,7 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = QueryResult.from_json(query_res.read())
+        query_res = serializer.loads(query_res.read())
 
     # Handle edit options
     filt = None

@@ -1,11 +1,11 @@
 '''DICOM Networking'''
 from __future__ import annotations
-import asyncio, time, logging, warnings, enum
+import asyncio, time, logging, warnings, enum, json
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
 from functools import partial
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import (List, Set, Dict, Tuple, Optional, FrozenSet, Union, Any,
                     AsyncIterator, Iterator, Callable, Awaitable, Type,
                     TYPE_CHECKING, cast)
@@ -38,7 +38,7 @@ from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
-from .util import IndividualReport
+from .util import IndividualReport, serializer, Serializable
 
 
 log = logging.getLogger(__name__)
@@ -87,6 +87,7 @@ QR_MODELS = {'PatientRoot' :
                   'get' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet},
             }
 
+@serializer
 @dataclass(frozen=True)
 class DcmNode:
     '''DICOM network entity info'''
@@ -104,6 +105,14 @@ class DcmNode:
 
     def __str__(self) -> str:
         return '%s:%s:%s' % (self.host, self.ae_title, self.port)
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> DcmNode:
+        return cls(**json_dict)
+
 
 
 class BatchDicomOperationError(Exception):
@@ -832,6 +841,9 @@ class LocalEntity:
         # Set the QueryRetrieveLevel
         query.QueryRetrieveLevel = level.name
 
+        # Pull out a list of the attributes we are querying on
+        queried_attrs = set(e.keyword for e in query)
+
         # If QueryResult was given we potentially generate multiple
         # queries, one for each dataset referenced by the QueryResult
         if query_res is None:
@@ -845,6 +857,7 @@ class LocalEntity:
                         if lvl > path.level:
                             break
                         setattr(q, uid_elems[lvl], path.uids[lvl])
+                        queried_attrs.add(uid_elems[lvl])
                     queries.append(q)
                     sub_uids.clear()
             log.debug("QueryResult expansion results in %d sub-queries" %
@@ -910,6 +923,8 @@ class LocalEntity:
                         if missing_attr not in auto_attrs:
                             warnings.warn(f"Remote node {remote} doesn't "
                                           "support querying on {missing_attr}")
+                    qr.prov.src = remote
+                    qr.prov.queried_attrs = queried_attrs.copy()
                     yield qr
             await query_fut
             await rep_builder_task

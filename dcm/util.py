@@ -1,11 +1,13 @@
 '''Various utility functions'''
 from __future__ import annotations
-import os
+import os, json
+
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
 from typing import (AsyncGenerator, Any, AsyncIterator, Dict, List, TypeVar,
                     Optional, Union, Generic, Iterator, Tuple, KeysView,
-                    ValuesView, ItemsView)
+                    ValuesView, ItemsView, Type)
+from typing_extensions import Protocol
 
 from pydicom import Dataset
 
@@ -24,6 +26,52 @@ class DicomDataError(Exception):
 
 class DuplicateDataError(DicomDataError):
     '''A duplicate dataset was found'''
+
+
+
+class Serializable(Protocol):
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    @classmethod
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> Serializable:
+        raise NotImplementedError
+
+
+class _Serializer:
+    '''Defines class decorator for registering JSON serializable objects
+
+    Adapted from: https://stackoverflow.com/questions/51975664/serialize-and-deserialize-objects-from-user-defined-classes'''
+    def __init__(self, classname_key: str = '__class__'):
+        self._key = classname_key
+        self._classes: Dict[str, Type[Serializable]] = {}
+
+    def __call__(self, class_: Any) -> Any:
+        assert hasattr(class_, 'to_json_dict') and hasattr(class_, 'from_json_dict')
+        self._classes[class_.__name__] = class_
+        return class_
+
+    def decoder_hook(self, d: Dict[str, Any]) -> Union[Dict[str, Any], Serializable]:
+        classname = d.pop(self._key, None)
+        if classname:
+            return self._classes[classname].from_json_dict(d)
+        return d
+
+    def encoder_default(self, obj: Serializable) -> Dict[str, Any]:
+        d = obj.to_json_dict()
+        d[self._key] = type(obj).__name__
+        return d
+
+    def dumps(self, obj: Serializable, **kwargs: Any) -> str:
+        return json.dumps(obj, default=self.encoder_default, **kwargs)
+
+    def loads(self, json_str: str) -> Serializable:
+        return json.loads(json_str, object_hook=self.decoder_hook)
+
+
+serializer = _Serializer()
+'''Class decorator for registering JSON serializable objects'''
 
 
 class Report:
@@ -290,7 +338,7 @@ def fstr_eval(f_str: str,
         The variables available when evaluating the string
 
     raw_string:
-        Evaluate as a raw literal (don't escape \). Defaults to False.
+        Evaluate as a raw literal (don't escape \\). Defaults to False.
     """
     # Prefix all local variables with _ to reduce collisions in case
     # eval is called in the local namespace.
