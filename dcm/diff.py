@@ -86,4 +86,3 @@ def diff_data_sets(left: Dataset, right: Dataset) -> List[DataDiff]:
                 diffs.append(DataDiff(l_elem.tag, l_elem, r_elem))
             l_elem = r_elem = None
     return diffs
-
