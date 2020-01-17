@@ -591,8 +591,7 @@ class Router:
     async def pre_route(self,
                         src: DataRepo[Any, Any],
                         query: Union[Dict[str, Any], Dataset] = None,
-                        query_res: QueryResult = None,
-                        req_queried: bool = False
+                        query_res: QueryResult = None
                        ) -> Dict[Tuple[StaticRoute,...], QueryResult]:
         '''Pre-calculate any dynamic routing for data on `src`
 
@@ -610,11 +609,6 @@ class Router:
         query_res
             A QueryResult that defines the data to route
 
-        req_queried
-            Pass True if the `query_res` tried to get all `required_elems`
-
-            Any attempts to query for missing elements will be skipped
-
         Returns
         -------
         result : dict
@@ -626,7 +620,7 @@ class Router:
             raise ValueError("Can't pre-route at IMAGE level")
 
         # Try to get required DICOM elements by doing a query if needed
-        query, query_res = await self._fill_qr(src, query, query_res, req_queried)
+        query, query_res = await self._fill_qr(src, query, query_res)
 
         # Nothing to do...
         if len(self._dynamic) == 0:
@@ -796,22 +790,30 @@ class Router:
     async def _fill_qr(self,
                        src: DataRepo[Any, Any],
                        query: Optional[Dataset],
-                       query_res: Optional[QueryResult],
-                       req_queried: bool
+                       query_res: Optional[QueryResult]
                       ) -> Tuple[Dataset, QueryResult]:
+        '''Perform a query against the src if needed'''
         if query is None:
             query = Dataset()
-        needs_query = False
         req_elems = self.required_elems
         if query_res is None:
-            needs_query = True
             level = self._route_level
         else:
             level = query_res.level
             if level < self._route_level:
-                needs_query = True
                 level = self._route_level
-            elif req_elems and req_elems.is_enumerable() and not req_queried:
+            elif not req_elems:
+                # Nothing we need to query for
+                return (query, query_res)
+            elif req_elems.is_enumerable():
+                if (query_res.prov.queried_elems is not None and
+                    all(e in query_res.prov.queried_elems for e in req_elems)
+                   ):
+                    # All required elems were already queried for
+                    return (query, query_res)
+                # Check if all required elems already exist
+                # TODO: Iterating every data set seems wasteful...
+                needs_query = False
                 for ds in query_res:
                     for elem in req_elems:
                         if elem not in ds:
@@ -820,7 +822,6 @@ class Router:
                             break
                 if not needs_query:
                     return (query, query_res)
-        # TODO: The `query` could be a dataset, can't assume dict
         if req_elems.is_enumerable():
             for e in req_elems:
                 setattr(query, e, '')

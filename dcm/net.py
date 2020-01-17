@@ -842,7 +842,7 @@ class LocalEntity:
         query.QueryRetrieveLevel = level.name
 
         # Pull out a list of the attributes we are querying on
-        queried_attrs = set(e.keyword for e in query)
+        queried_elems = set(e.keyword for e in query)
 
         # If QueryResult was given we potentially generate multiple
         # queries, one for each dataset referenced by the QueryResult
@@ -857,7 +857,7 @@ class LocalEntity:
                         if lvl > path.level:
                             break
                         setattr(q, uid_elems[lvl], path.uids[lvl])
-                        queried_attrs.add(uid_elems[lvl])
+                        queried_elems.add(uid_elems[lvl])
                     queries.append(q)
                     sub_uids.clear()
             log.debug("QueryResult expansion results in %d sub-queries" %
@@ -924,7 +924,7 @@ class LocalEntity:
                             warnings.warn(f"Remote node {remote} doesn't "
                                           "support querying on {missing_attr}")
                     qr.prov.src = remote
-                    qr.prov.queried_attrs = queried_attrs.copy()
+                    qr.prov.queried_elems = queried_elems.copy()
                     yield qr
             await query_fut
             await rep_builder_task

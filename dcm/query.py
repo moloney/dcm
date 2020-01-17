@@ -231,7 +231,7 @@ class QueryProv:
     src: Optional[Serializable] = None
     '''The source of this query result'''
 
-    queried_attrs: Optional[Set[str]] = None
+    queried_elems: Optional[Set[str]] = None
     '''The attributes that were queried for'''
 
     removed_existing_on: Optional[Serializable] = None
@@ -239,17 +239,17 @@ class QueryProv:
 
     def __bool__(self) -> bool:
         return any(getattr(self, a) is not None
-                   for a in ('src', 'queried_attrs', 'removed_existing_on'))
+                   for a in ('src', 'queried_elems', 'removed_existing_on'))
 
     def merged(self, other: QueryProv, keep_attrs: bool) -> QueryProv:
         result = QueryProv()
         if self.src == other.src:
             result.src = self.src
         if (keep_attrs and
-            self.queried_attrs is not None and
-            other.queried_attrs is not None
+            self.queried_elems is not None and
+            other.queried_elems is not None
            ):
-            result.queried_attrs = self.queried_attrs & other.queried_attrs
+            result.queried_elems = self.queried_elems & other.queried_elems
         if self.removed_existing_on == other.removed_existing_on:
             result.removed_existing_on = self.removed_existing_on
         return result
@@ -257,14 +257,14 @@ class QueryProv:
 
     def to_json_dict(self) -> Dict[str, Any]:
         return {'src': self.src,
-                'queried_attrs': list(self.queried_attrs) if self.queried_attrs is not None else None,
+                'queried_elems': list(self.queried_elems) if self.queried_elems is not None else None,
                 'removed_existing_on': self.removed_existing_on
                }
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryProv:
         return cls(json_dict['src'],
-                   set(json_dict['queried_attrs']),
+                   set(json_dict['queried_elems']),
                    json_dict['removed_existing_on'])
 
 
@@ -792,8 +792,8 @@ class QueryResult:
             raise InsufficientQueryLevelError()
         if max_level is None:
             max_level = self._level
-            if self.prov.queried_attrs is not None:
-                prov.queried_attrs = self.prov.queried_attrs.copy()
+            if self.prov.queried_elems is not None:
+                prov.queried_elems = self.prov.queried_elems.copy()
         else:
             if max_level < node.level:
                 raise ValueError("The max_level is lower than the node level")
