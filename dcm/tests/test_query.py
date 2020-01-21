@@ -184,7 +184,6 @@ def test_json(hierarchy_data):
     qr1 = QueryResult(level)
     for ds in data_sets:
         qr1.add(ds)
-    json_str = qr1.to_json()
-    qr2 = QueryResult.from_json(json_str)
+    json_dict = qr1.to_json_dict()
+    qr2 = QueryResult.from_json_dict(json_dict)
     assert qr1 == qr2
-

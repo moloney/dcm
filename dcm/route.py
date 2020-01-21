@@ -489,6 +489,7 @@ class SendAssociationCache:
             self._cache[dest] = cache_entry
         else:
             cache_entry.last_use = datetime.now()
+            send_q = cache_entry.send_q
         await send_q.put(ds)
         return res
 

@@ -6,7 +6,7 @@ from ..net import LocalEntity
 from ..route import StaticRoute, DynamicRoute, Router
 from ..store.net_repo import NetRepo
 
-from .conftest import (local_nodes, dicom_files, has_dcmtk, dcmtk_test_nodes, make_local_factory, DATA_DIR)
+from .conftest import (dicom_files, has_dcmtk, make_local_factory, DATA_DIR)
 
 
 def make_lookup(dest1, dest2):
@@ -19,16 +19,13 @@ def make_lookup(dest1, dest2):
 
 
 @has_dcmtk
-@mark.parametrize('dcmtk_test_nodes', [['all', None, None, None]], indirect=True)
-def test_pre_route(dcmtk_test_nodes):
-    src, file_set, _ = dcmtk_test_nodes[0]
-    dest1, _, _ = dcmtk_test_nodes[1]
-    dest2, _, _ = dcmtk_test_nodes[2]
-    dest3, _, _ = dcmtk_test_nodes[3]
-    src_repo = NetRepo(local_nodes[0], src)
-    dest1_repo = NetRepo(local_nodes[0], dest1)
-    dest2_repo = NetRepo(local_nodes[0], dest2)
-    dest3_repo = NetRepo(local_nodes[0], dest3)
+@mark.parametrize('node_subsets', [['all', None, None, None]])
+def test_pre_route(make_local_node, make_dcmtk_net_repo, node_subsets):
+    local_node = make_local_node()
+    src_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
     router = Router([static_route, dyn_route])

@@ -1,4 +1,5 @@
 import os, time, shutil, random, tarfile, logging
+from copy import deepcopy
 import subprocess as sp
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -8,6 +9,7 @@ from pytest import fixture, mark
 
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode
+from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
 
 
@@ -42,8 +44,8 @@ DICOM_TAR = DATA_DIR / 'dicom.tar.bz2'
 
 @fixture(scope='session')
 def dicom_dir():
-    '''Decompress DICOM files into a temp directory and return their paths'''
-    with TemporaryDirectory(prefix='dcm') as temp_dir:
+    '''Decompress DICOM files into a temp directory'''
+    with TemporaryDirectory(prefix='dcm-test') as temp_dir:
         # Unpack tar to temp dir and yield list of paths
         with tarfile.open(DICOM_TAR, "r:bz2") as tf:
             tf.extractall(temp_dir)
@@ -57,6 +59,26 @@ def dicom_files(dicom_dir):
     return [x for x in dicom_dir.glob('**/*.dcm')]
 
 
+@fixture
+def data_subset():
+    return 'all'
+
+
+@fixture()
+def dicom_data(dicom_files, data_subset):
+    '''QueryResult and list of (path, dataset) tuples matching `data_subset`'''
+    res_data = []
+    res_qr = QueryResult(QueryLevel.IMAGE)
+    if data_subset is None:
+        return (res_qr, res_data)
+    for dcm_path in dicom_files:
+        ds = pydicom.dcmread(str(dcm_path))
+        if data_subset == 'all' or ds in data_subset:
+            res_data.append((dcm_path, ds))
+            res_qr.add(ds)
+    return (res_qr, res_data)
+
+# TODO: get rid of this in favor of above func
 @fixture()
 def dicom_files_w_qr(dicom_files):
     qr = QueryResult(QueryLevel.IMAGE)
@@ -66,9 +88,35 @@ def dicom_files_w_qr(dicom_files):
     return (dicom_files, qr)
 
 
-local_nodes = [DcmNode('localhost', 'DCMTESTAE1', 63987),
-               DcmNode('localhost', 'DCMTESTAE2', 63988),
-               DcmNode('localhost', 'DCMTESTAE3', 63989)]
+@fixture
+def make_local_dir(dicom_data):
+    '''Factory fixture to build LocalDir stores'''
+    curr_dirs = []
+    with TemporaryDirectory(prefix='dcm-test') as temp_dir:
+        temp_dir = Path(temp_dir)
+        def _make_local_dir(subset='all', **kwargs):
+            store_dir = temp_dir / f'store_dir{len(curr_dirs)}'
+            os.makedirs(store_dir)
+            curr_dirs.append(store_dir)
+            init_qr, init_data = dicom_data
+            for dcm_path, _ in init_data:
+                print(f"Copying a file: {dcm_path} -> {store_dir}")
+                shutil.copy(dcm_path, store_dir)
+            return (LocalDir(store_dir, **kwargs), init_qr, store_dir)
+        yield _make_local_dir
+
+
+@fixture
+def make_local_node(base_port=63987, base_name='DCMTESTAE'):
+    '''Factory fixture to make a local DcmNode with a unqiue port/ae_title'''
+    local_idx = [0]
+    def _make_local_node():
+        res = DcmNode('localhost',
+                      f'{base_name}{local_idx[0]}',
+                      base_port + local_idx[0])
+        local_idx[0] += 1
+        return res
+    return _make_local_node
 
 
 dcmtk_base_port = 62765
@@ -99,10 +147,8 @@ AETable END
 client_line_tmpl = "{name} = ({node.ae_title}, {node.host}, {node.port})"
 
 
-def mk_dcmtk_config(dcmtk_node, store_dir, clients=None):
+def mk_dcmtk_config(dcmtk_node, store_dir, clients):
     '''Make config file for DCMTK test node'''
-    if clients is None:
-        clients = local_nodes
     client_names = []
     client_lines = []
     for node_idx, node in enumerate(clients):
@@ -118,6 +164,81 @@ def mk_dcmtk_config(dcmtk_node, store_dir, clients=None):
                                     client_lines=client_lines,
                                     client_names=client_names,
                                    )
+
+
+@fixture
+def make_dcmtk_nodes(dicom_data):
+    '''Factory fixture for building dcmtk nodes'''
+    procs = []
+    full_qr, full_data = dicom_data
+    with TemporaryDirectory() as tmp_dir:
+        tmp_dir = Path(tmp_dir)
+        def _make_dcmtk_node(clients, subset='all'):
+            node_idx = len(procs)
+            port = dcmtk_base_port + node_idx
+            ae_title = dcmtk_base_name + str(node_idx)
+            dcmtk_node = DcmNode('localhost', ae_title, port)
+            node_dir = tmp_dir / ae_title
+            db_dir = node_dir / 'db'
+            conf_file = db_dir / 'dcmqrscp.cfg'
+            test_store_dir = db_dir / 'TEST_STORE'
+            os.makedirs(test_store_dir)
+            full_conf = mk_dcmtk_config(dcmtk_node, test_store_dir, clients)
+            with open(conf_file, 'wt') as conf_fp:
+                conf_fp.write(full_conf)
+            if subset == 'all':
+                init_files = [p for p, _ in full_data]
+                init_qr = deepcopy(full_qr)
+            else:
+                init_files = []
+                init_qr = QueryResult(QueryLevel.IMAGE)
+                if subset is not None:
+                    for in_path, ds in full_data:
+                        if ds in subset:
+                            out_path = test_store_dir / in_path.name
+                            shutil.copy(in_path, out_path)
+                            init_files.append(out_path)
+                            init_qr.add(ds)
+            # Index any initial files into the dcmtk db
+            if init_files:
+                sp.run(['dcmqridx', str(test_store_dir)] + init_files)
+            # Fire up a dcmqrscp process
+            dcmqrscp_args = ['dcmqrscp', '-c', str(conf_file)]
+            if 'dcmtk_level' in logging_opts:
+                dcmqrscp_args += ['-ll', logging_opts['dcmtk_level']]
+            procs.append(sp.Popen(dcmqrscp_args))
+            time.sleep(1)
+            return (dcmtk_node, init_qr, test_store_dir)
+
+        try:
+            yield _make_dcmtk_node
+        finally:
+            for proc in procs:
+                proc.terminate()
+
+
+@fixture
+def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
+    def _make_net_repo(local_node=None, clients=[], subset='all'):
+        if local_node is None:
+            local_node = make_local_node()
+        dcmtk_node, init_qr, store_dir = make_dcmtk_nodes([local_node]+clients,
+                                                          subset)
+        return (NetRepo(local_node, dcmtk_node), init_qr, store_dir)
+    return _make_net_repo
+
+#@fixture
+#def make_store(make_dcmtk_nodes, dicom_data):
+#    '''Factory fixture for building data stores'''
+#    def _make_store(subset, cls, kwargs):
+#        if cls == NetRepo:
+#            dcmtk_node, _, _ = make_dcmtk_nodes(subset)
+#            res = NetRepo()
+#        elif cls == LocalDir:
+#            pass
+#
+#
+#    yield _make_store
 
 
 # TODO: Allow the included files to be defined as a QR. Provide higher level
@@ -160,7 +281,7 @@ def dcmtk_test_nodes(request, dicom_files_w_qr):
                 init_files = []
                 init_qr = QueryResult(QueryLevel.IMAGE)
             dcmqrscp_args = ['dcmqrscp', '-c', str(conf_file)]
-            if 'dcmrk_level' in logging_opts:
+            if 'dcmtk_level' in logging_opts:
                 dcmqrscp_args += ['-ll', logging_opts['dcmtk_level']]
             procs.append(sp.Popen(dcmqrscp_args))
             results.append((dcmtk_node, init_qr, test_store_dir))
@@ -171,6 +292,9 @@ def dcmtk_test_nodes(request, dicom_files_w_qr):
         finally:
             for proc in procs:
                 proc.terminate()
+
+
+
 
 
 def select_files(dicom_files, file_req, full_qr):
@@ -189,11 +313,6 @@ def select_files(dicom_files, file_req, full_qr):
                 res_files.append(path)
         res = (res_files, file_req)
     return res
-
-
-@fixture
-def local_dir(request, dicom_files):
-    ''''''
 
 
 def make_local_factory(local_dir, random_drop_thresh=0.0):
@@ -218,5 +337,4 @@ def make_local_factory(local_dir, random_drop_thresh=0.0):
             out_files.append(out_file)
         return out_files
     return local_factory
-
 

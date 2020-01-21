@@ -8,32 +8,33 @@ from pytest import fixture, mark
 from ..query import QueryLevel
 from ..net import DcmNode, LocalEntity
 
-from .conftest import (local_nodes, dicom_files, dicom_files_w_qr, has_dcmtk, dcmtk_test_nodes, DATA_DIR)
+from .conftest import has_dcmtk
 
 
 @has_dcmtk
-def test_echo(dcmtk_test_nodes):
-    remote, _, _ = dcmtk_test_nodes[0]
-    local = LocalEntity(local_nodes[0])
+def test_echo(make_local_node, make_dcmtk_nodes):
+    local_node = make_local_node()
+    remote, _, _ = make_dcmtk_nodes([local_node], None)
+    local = LocalEntity(local_node)
     result = asyncio.run(local.echo(remote))
     assert result
 
 
 @has_dcmtk
-@mark.parametrize('dcmtk_test_nodes', [['all']], indirect=True)
-def test_query(dcmtk_test_nodes):
-    remote, init_qr, _ = dcmtk_test_nodes[0]
-    local = LocalEntity(local_nodes[0])
+def test_query(make_local_node, make_dcmtk_nodes):
+    local_node = make_local_node()
+    remote, init_qr, _ = make_dcmtk_nodes([local_node], 'all')
+    local = LocalEntity(local_node)
     remote_qr = asyncio.run(local.query(remote, level=QueryLevel.IMAGE))
     assert len(remote_qr) != 0
     assert remote_qr == init_qr
 
 
 @has_dcmtk
-@mark.parametrize('dcmtk_test_nodes', [['all']], indirect=True)
-def test_download(dcmtk_test_nodes):
-    remote, init_qr, _ = dcmtk_test_nodes[0]
-    local = LocalEntity(local_nodes[0])
+def test_download(make_local_node, make_dcmtk_nodes):
+    local_node = make_local_node()
+    remote, init_qr, _ = make_dcmtk_nodes([local_node], 'all')
+    local = LocalEntity(local_node)
     qr = asyncio.run(local.query(remote))
     with TemporaryDirectory() as dest_dir:
         dest_dir = Path(dest_dir)
@@ -44,21 +45,23 @@ def test_download(dcmtk_test_nodes):
 
 
 @has_dcmtk
-def test_upload(dcmtk_test_nodes, dicom_files):
-    remote, _, store_dir = dcmtk_test_nodes[0]
-    local = LocalEntity(local_nodes[0])
+def test_upload(make_local_node, make_dcmtk_nodes, dicom_files):
+    local_node = make_local_node()
+    remote, _, store_dir = make_dcmtk_nodes([local_node], None)
+    local = LocalEntity(local_node)
     asyncio.run(local.upload(remote, dicom_files))
     store_dir = Path(store_dir)
     stored_files = [x for x in store_dir.glob('**/*.dcm')]
     assert len(stored_files) == len(dicom_files)
 
 
+@has_dcmtk
 @mark.asyncio
-@mark.parametrize('dcmtk_test_nodes', [['all', 'all']], indirect=True)
-async def test_interleaved_retrieve(dcmtk_test_nodes):
-    local = LocalEntity(local_nodes[0])
-    remote1, init_qr1, _ = dcmtk_test_nodes[0]
-    remote2, init_qr2, _ = dcmtk_test_nodes[1]
+async def test_interleaved_retrieve(make_local_node, make_dcmtk_nodes):
+    local_node = make_local_node()
+    local = LocalEntity(local_node)
+    remote1, init_qr1, _ = make_dcmtk_nodes([local_node], 'all')
+    remote2, init_qr2, _ = make_dcmtk_nodes([local_node], 'all')
     qr1 = await local.query(remote1)
     qr2 = await local.query(remote2)
     r_gen1 = local.retrieve(remote1, qr1)

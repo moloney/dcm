@@ -9,7 +9,7 @@ from ..sync import TransferPlanner
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
 
-from .conftest import (local_nodes, dicom_files, has_dcmtk, dcmtk_test_nodes, make_local_factory, DATA_DIR)
+from .conftest import (dicom_files, has_dcmtk, dcmtk_test_nodes, make_local_factory, DATA_DIR)
 
 
 def make_lookup(dest1, dest2):
@@ -22,18 +22,15 @@ def make_lookup(dest1, dest2):
 
 
 
-@mark.parametrize('dcmtk_test_nodes', [['all', None, None, None]], indirect=True)
+@mark.parametrize('node_subsets', [['all', None, None, None]])
 @mark.asyncio
 @has_dcmtk
-async def test_gen_transfers(dcmtk_test_nodes):
-    src, file_set, _ = dcmtk_test_nodes[0]
-    dest1, _, _ = dcmtk_test_nodes[1]
-    dest2, _, _ = dcmtk_test_nodes[2]
-    dest3, _, _ = dcmtk_test_nodes[3]
-    src_repo = NetRepo(local_nodes[0], src)
-    dest1_repo = NetRepo(local_nodes[0], dest1)
-    dest2_repo = NetRepo(local_nodes[0], dest2)
-    dest3_repo = NetRepo(local_nodes[0], dest3)
+async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, node_subsets):
+    local_node = make_local_node()
+    src_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
     dests = [static_route, dyn_route]
@@ -43,18 +40,15 @@ async def test_gen_transfers(dcmtk_test_nodes):
             pass
 
 
-@mark.parametrize('dcmtk_test_nodes', [['all', None, None, None]], indirect=True)
+@mark.parametrize('node_subsets', [['all', None, None, None]])
 @mark.asyncio
 @has_dcmtk
-async def test_repo_sync(dcmtk_test_nodes):
-    src, file_set, _ = dcmtk_test_nodes[0]
-    dest1, _, dest1_dir = dcmtk_test_nodes[1]
-    dest2, _, dest2_dir = dcmtk_test_nodes[2]
-    dest3, _, dest3_dir = dcmtk_test_nodes[3]
-    src_repo = NetRepo(local_nodes[0], src)
-    dest1_repo = NetRepo(local_nodes[0], dest1)
-    dest2_repo = NetRepo(local_nodes[0], dest2)
-    dest3_repo = NetRepo(local_nodes[0], dest3)
+async def test_repo_sync(make_local_node, make_dcmtk_net_repo, node_subsets):
+    local_node = make_local_node()
+    src_repo, full_qr, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
     dests = [static_route, dyn_route]
@@ -65,21 +59,19 @@ async def test_repo_sync(dcmtk_test_nodes):
     dest1_dir = Path(dest1_dir)
     found_files = [x for x in dest1_dir.glob('**/*.dcm')]
     print(found_files)
-    assert len(found_files) == len(file_set)
+    assert len(found_files) == len(full_qr)
     #TODO: Check that dynamic routing worked correctly
 
 
-@mark.parametrize('dcmtk_test_nodes', [[None, None, None]], indirect=True)
+@mark.parametrize('node_subsets', [['all', None, None, None]])
 @mark.asyncio
 @has_dcmtk
-async def test_bucket_sync(dcmtk_test_nodes):
-    src_bucket = LocalDir(DATA_DIR)
-    dest1, _, dest1_dir = dcmtk_test_nodes[0]
-    dest2, _, dest2_dir = dcmtk_test_nodes[1]
-    dest3, _, dest3_dir = dcmtk_test_nodes[2]
-    dest1_repo = NetRepo(local_nodes[0], dest1)
-    dest2_repo = NetRepo(local_nodes[0], dest2)
-    dest3_repo = NetRepo(local_nodes[0], dest3)
+async def test_bucket_sync(make_local_dir, make_local_node, make_dcmtk_net_repo, node_subsets):
+    src_bucket, init_qr, _ = make_local_dir('all', max_chunk=2)
+    local_node = make_local_node()
+    dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo),
                              required_elems=['PatientID'])
@@ -91,4 +83,4 @@ async def test_bucket_sync(dcmtk_test_nodes):
     dest1_dir = Path(dest1_dir)
     found_files = [x for x in dest1_dir.glob('**/*.dcm')]
     print(found_files)
-    #assert len(found_files) == len(file_set)
+    assert len(found_files) == len(init_qr)
