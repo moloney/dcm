@@ -679,6 +679,12 @@ class TransferPlanner:
                 else:
                     full_matching |= old_matching
 
+            log.debug(f"missing: {missing}")
+            log.debug(f"matching: {matching}")
+            log.debug(f"old_matching: {old_matching}")
+            log.debug(f"curr_matching: {curr_matching}")
+            log.debug(f"full_matchig: {full_matching}")
+
             # Reduce the source qr to only data that matches on at least one dest
             if full_matching is not None:
                 curr_src_qr = curr_src_qr & full_matching
