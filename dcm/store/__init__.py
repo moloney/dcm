@@ -97,6 +97,10 @@ class DcmNetChunk(RepoChunk):
         self.qr = qr
         self.report = RetrieveReport()
 
+    def __repr__(self) -> str:
+        return f'DcmNetChunk({self.repo}, {self.qr})'
+
+
 class LocalIncomingDataError(IncomingDataError):
     '''Captures errors detected in incoming data stream'''
     def __init__(self,

@@ -270,9 +270,15 @@ class TransferExecutor:
     def __init__(self,
                  router: Router,
                  keep_errors: Tuple[IncomingErrorType, ...],
-                 validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None
+                 validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
+                 report: Optional[MultiListReport[TransferReportTypes]] = None
                 ):
-        self.report: MultiListReport[TransferReportTypes] = MultiListReport()
+        if report is None:
+            self.report: MultiListReport[TransferReportTypes] = MultiListReport()
+            self._extern_report = False
+        else:
+            self.report = report
+            self._extern_report = True
         self._router = router
         self._validators = validators
         self._keep_errors = keep_errors
@@ -290,7 +296,9 @@ class TransferExecutor:
 
     async def close(self) -> None:
         # TODO: Some clean up to do here?
-        pass
+        if not self._extern_report:
+            self.report.log_issues()
+            self.report.check_errors()
 
     async def _do_dynamic_transfer(self, transfer: DynamicTransfer) -> None:
         # TODO: We could keep this context manager open until the
@@ -344,6 +352,7 @@ class TransferExecutor:
                     if filt_ds is not None:
                         for q in sub_queues:
                             await q.put(filt_ds)
+        report.done = True
 
     async def _do_static_transfer(self, transfer: StaticTransfer) -> None:
         # TODO: Can't automatically overlap the proxy and out-of-band transfers
@@ -548,13 +557,15 @@ class TransferPlanner:
     @asynccontextmanager
     async def executor(self,
                        validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
+                       report: Optional[MultiListReport[TransferReportTypes]] = None
                       ) -> AsyncIterator[TransferExecutor]:
         '''Produces a TransferExecutor for executing a series of transfers'''
         # TODO: Just make the executor a contexmanager and return it here
         try:
             executor = TransferExecutor(self._router,
                                         self._keep_errors,
-                                        validators)
+                                        validators,
+                                        report)
             yield executor
         finally:
             await executor.close()
@@ -679,12 +690,6 @@ class TransferPlanner:
                 else:
                     full_matching |= old_matching
 
-            log.debug(f"missing: {missing}")
-            log.debug(f"matching: {matching}")
-            log.debug(f"old_matching: {old_matching}")
-            log.debug(f"curr_matching: {curr_matching}")
-            log.debug(f"full_matchig: {full_matching}")
-
             # Reduce the source qr to only data that matches on at least one dest
             if full_matching is not None:
                 curr_src_qr = curr_src_qr & full_matching
@@ -695,7 +700,7 @@ class TransferPlanner:
                 set_missing = None
                 for df in df_set:
                     if set_missing is None:
-                        set_missing = missing[df]
+                        set_missing = deepcopy(missing[df])
                     else:
                         set_missing = set_missing & missing[df]
                 assert set_missing is not None
@@ -732,12 +737,13 @@ async def sync_data(src : DataBucket[Any],
                     trust_level: QueryLevel = QueryLevel.IMAGE,
                     force_all: bool = False,
                     validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
-                    keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False) -> None:
+                    keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                    report: Optional[MultiListReport[TransferReportTypes]] = None) -> None:
     '''Convienance function to build TransferPlanner and execute all transfers
     '''
     # TODO: Allow an external report here?
     planner = TransferPlanner(src, dests, trust_level, force_all, keep_errors)
-    async with planner.executor(validators) as ex:
+    async with planner.executor(validators, report) as ex:
         report = ex.report
         async for transfer in planner.gen_transfers(query_res):
             await ex.exec_transfer(transfer)

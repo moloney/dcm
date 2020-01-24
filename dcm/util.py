@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os, json
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, astuple
 from contextlib import asynccontextmanager
 from typing import (AsyncGenerator, Any, AsyncIterator, Dict, List, TypeVar,
                     Optional, Union, Generic, Iterator, Tuple, KeysView,
@@ -73,7 +73,7 @@ class _Serializer:
 serializer = _Serializer()
 '''Class decorator for registering JSON serializable objects'''
 
-
+@dataclass
 class Report:
     '''Abstract base class for all reports'''
 
@@ -123,7 +123,15 @@ class Report:
     def clear(self) -> None:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        lines = [f'{self.__class__.__name__}:']
+        for f in fields(self):
+            f_name = f.name
+            val_str = str(getattr(self, f_name)).replace('\n', '\n\t')
+            lines.append(f'\t{f_name}: {val_str}')
+        return '\n'.join(lines)
 
+@dataclass
 class IndividualReport(Report):
     '''An individual report that needs to be marked done when complete'''
     _done: bool = False
@@ -153,6 +161,7 @@ class MultiError(Exception):
 R = TypeVar('R', bound=Union[IndividualReport, 'MultiReport[Any]'])
 
 
+@dataclass
 class MultiReport(Report, Generic[R]):
     '''Abstract base class for all MultiReports'''
     def gen_reports(self) -> Iterator[R]:
@@ -189,6 +198,13 @@ class MultiReport(Report, Generic[R]):
         '''Produce log messages for any warning/error statuses'''
         for report in self.gen_reports():
             report.log_issues()
+
+    def __str__(self) -> str:
+        lines = [f'{self.__class__.__name__}:']
+        for rep in self.gen_reports():
+            rep_str = str(rep).replace('\n', '\n\t')
+            lines.append(f'\t* {rep_str}')
+        return '\n'.join(lines)
 
 
 @dataclass
@@ -300,6 +316,13 @@ class MultiDictReport(MultiReport[R], Generic[K, R]):
                 incomplete[key] = sub_report
                 sub_report.clear()
         self.sub_reports = incomplete
+
+    def __str__(self) -> str:
+        lines = [f'{self.__class__.__name__}:']
+        for key, rep in self.sub_reports.items():
+            rep_str = str(rep).replace('\n', '\n\t')
+            lines.append(f'\t{rep_str}')
+        return '\n'.join(lines)
 
 
 PathInputType = Union[bytes, str, 'os.PathLike']

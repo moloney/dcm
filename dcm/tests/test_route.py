@@ -6,7 +6,7 @@ from ..net import LocalEntity
 from ..route import StaticRoute, DynamicRoute, Router
 from ..store.net_repo import NetRepo
 
-from .conftest import (dicom_files, has_dcmtk, make_local_factory, DATA_DIR)
+from .conftest import has_dcmtk
 
 
 def make_lookup(dest1, dest2):

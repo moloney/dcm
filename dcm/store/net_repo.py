@@ -43,8 +43,8 @@ class NetRepo(DcmRepo):
         for attr, val in state.items():
             setattr(self, attr, val)
 
-    def __str__(self) -> str:
-        return f'NetRepo(self._remote)'
+    def __repr__(self) -> str:
+        return f'NetRepo({self._local_ent.local}, {self._remote})'
 
     @property
     def remote(self) -> DcmNode:

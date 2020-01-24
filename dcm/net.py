@@ -447,7 +447,7 @@ class RetrieveReport(IncomingDataReport):
             assert self.missing is not None
             n_missing = len(self.missing)
             if n_missing != 0:
-                log.error('Incoming data issues: {n_missing} missing')
+                log.error(f'Incoming data issues: {n_missing} missing')
 
     def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
@@ -515,6 +515,15 @@ def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[s
     rep_q.put(None)
 
 
+def _make_move_request(ds: Dataset) -> Dataset:
+    res = Dataset()
+    for uid_attr in uid_elems.values():
+        uid_val = getattr(ds, uid_attr, None)
+        if uid_val is not None:
+            setattr(res, uid_attr, uid_val)
+    return res
+
+
 def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
                  assoc: Association,
                  dest: DcmNode,
@@ -522,9 +531,10 @@ def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]]
                  query_model: sop_class.SOPClass) -> None:
     '''Worker function for perfoming move operations in another thread'''
     for d in query_res:
-        d.QueryRetrieveLevel = query_res.level.name
-        log.debug("Sending move request:\n%s" % d)
-        responses = assoc.send_c_move(d,
+        move_req = _make_move_request(d)
+        move_req.QueryRetrieveLevel = query_res.level.name
+        log.debug("Sending move request:\n%s" % move_req)
+        responses = assoc.send_c_move(move_req,
                                       dest.ae_title,
                                       query_model=query_model)
         time.sleep(0.01)

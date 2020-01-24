@@ -9,8 +9,8 @@ from ..conftest import has_dcmtk
 @has_dcmtk
 @mark.asyncio
 @mark.parametrize('data_subset', [None, 'all'])
-async def test_gen_chunks(make_dcmtk_net_repo):
-    net_repo, init_qr, _ = make_dcmtk_net_repo(subset='all')
+async def test_gen_chunks(make_dcmtk_net_repo, data_subset):
+    net_repo, init_qr, _ = make_dcmtk_net_repo(subset=data_subset)
     n_dcm_gen = 0
     async for chunk in net_repo.gen_chunks():
         async for dcm in chunk.gen_data():
@@ -33,7 +33,7 @@ async def test_send(dicom_files, make_dcmtk_net_repo):
 @has_dcmtk
 @mark.asyncio
 @mark.parametrize('data_subset', [None, 'all'])
-async def test_query(make_dcmtk_net_repo):
-    net_repo, init_qr, _ = make_dcmtk_net_repo(subset='all')
+async def test_query(make_dcmtk_net_repo, data_subset):
+    net_repo, init_qr, _ = make_dcmtk_net_repo(subset=data_subset)
     qr = await net_repo.query(level=QueryLevel.IMAGE)
     assert init_qr == qr

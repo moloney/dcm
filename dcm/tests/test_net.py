@@ -55,6 +55,25 @@ def test_upload(make_local_node, make_dcmtk_nodes, dicom_files):
     assert len(stored_files) == len(dicom_files)
 
 
+@mark.parametrize('subset_spec',
+                  ['all',
+                   None,
+                   'PATIENT-0/STUDY-0',
+                   'PATIENT-0/STUDY-0/SERIES-0',
+                   'PATIENT-0/STUDY-0/SERIES-0/IMAGE-0'])
+@has_dcmtk
+@mark.asyncio
+async def test_retrieve(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset_spec):
+    local_node = make_local_node()
+    local = LocalEntity(local_node)
+    remote, init_qr, _ = make_dcmtk_nodes([local_node], 'all')
+    ret_qr, ret_data = get_dicom_subset(subset_spec)
+    res = []
+    async for ds in local.retrieve(remote, ret_qr):
+        res.append(ds)
+    assert len(res) == len(ret_data)
+
+
 @has_dcmtk
 @mark.asyncio
 async def test_interleaved_retrieve(make_local_node, make_dcmtk_nodes):
