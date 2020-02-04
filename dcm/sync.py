@@ -49,9 +49,9 @@ class StaticTransfer(Transfer):
     method_routes_map: Dict[TransferMethod, Tuple[StaticRoute, ...]]
 
     @property
-    def proxy_filter_dest_map(self) -> Dict[Optional[Filter], Tuple[DataBucket[Any], ...]]:
+    def proxy_filter_dest_map(self) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
         '''Get dict mapping filters to destinations for proxy transfers'''
-        filter_dest_map: Dict[Optional[Filter], Set[DataBucket[Any]]] = {}
+        filter_dest_map: Dict[Optional[Filter], Set[DataBucket[Any, Any]]] = {}
         routes = self.method_routes_map.get(TransferMethod.PROXY, tuple())
         for route in routes:
             filt = route.filt
@@ -61,7 +61,7 @@ class StaticTransfer(Transfer):
                 filter_dest_map[filt].update(route.dests)
         return {k : tuple(v) for k, v in filter_dest_map.items()}
 
-    def get_dests(self, method: TransferMethod) -> Tuple[DataBucket[Any], ...]:
+    def get_dests(self, method: TransferMethod) -> Tuple[DataBucket[Any, Any], ...]:
         res = set()
         for route in self.method_routes_map.get(method, []):
             for dest in route.dests:
@@ -71,7 +71,7 @@ class StaticTransfer(Transfer):
 
 
 @dataclass
-class StaticStoreReport(MultiDictReport[DataBucket[Any], StoreReportType]):
+class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
     '''Transfer report that only captures storage'''
 
 
@@ -103,7 +103,7 @@ class StaticProxyTransferReport(ProxyReport):
         return self.store_reports.n_input
 
     def add_store_report(self,
-                         dest: DataBucket[Any],
+                         dest: DataBucket[Any, Any],
                          store_report: StoreReportType) -> None:
         '''Add a DicomOpReport or LocalWriteReport to keep track of'''
         assert dest not in self.store_reports
@@ -326,7 +326,7 @@ class TransferExecutor:
             d_q_map = {}
             for dest in dests:
                 #TODO: Might be a LocalWriteReport
-                store_rep = DicomOpReport()
+                store_rep = dest.get_empty_send_report()
                 report.add_store_report(dest, store_rep)
                 d_q_map[dest] = await stack.enter_async_context(dest.send(report=store_rep))
             async for ds in transfer.chunk.gen_data():
@@ -412,7 +412,7 @@ DestType = Union[DataBucket, Route]
 #       of simultaneous associations for any given client, which will prevent
 #       certain overlapping schemes from working.
 class TransferPlanner:
-    '''Plans efficient transfer scheme for data from `src` along `routes`
+    '''Plans efficient transfer scheme for data from the `src` to `dests`
 
     Data will only be retrieved locally from `src` at most once and then
     forwarded to all destinations that need it.
@@ -439,7 +439,7 @@ class TransferPlanner:
         Don't skip data that already exists on the destinations
     '''
     def __init__(self,
-                 src: DataBucket[Any],
+                 src: DataBucket[Any, Any],
                  dests: List[DestType],
                  trust_level: QueryLevel = QueryLevel.IMAGE,
                  force_all: bool = False,
@@ -458,7 +458,7 @@ class TransferPlanner:
 
         # Make sure all dests are Route objects
         self._routes = []
-        plain_dests: List[DataBucket[Any]] = []
+        plain_dests: List[DataBucket[Any, Any]] = []
         for dest in dests:
             if isinstance(dest, Route):
                 self._routes.append(dest)
@@ -492,10 +492,6 @@ class TransferPlanner:
         query_res
             Only transfer data that matches this QueryResult
         '''
-        # TODO: Should we automatically be overlapping out-of-band transfers
-        #       with each other and the normal 'proxy' transfers? Can that be
-        #       detected as a consumer of this function currently, or do we
-        #       need to return tuples of transfers with the same QR?
         if not isinstance(self._src, DataRepo) and query_res is not None:
             raise RepoRequiredError("Can't pass in query_res with naive "
                                     "data source")
@@ -507,12 +503,6 @@ class TransferPlanner:
             _chunk_keep_errors.add(IncomingErrorType.INCONSISTENT)
             _chunk_keep_errors.add(IncomingErrorType.DUPLICATE)
         chunk_keep_errors = tuple(_chunk_keep_errors)
-
-        # TODO: You can't reuse the same chunk in multiple transfers! Would
-        #       need to deepcopy, or refactor so all transfer methods and
-        #       dests are bundled into a single Transfer object. The latter
-        #       approach would allow us to automatically overlap normal transfers
-        #       with out-of-band ones too.
 
         n_trans = 0
         if not isinstance(self._src, DataRepo) or not self._router.can_pre_route:
@@ -611,8 +601,8 @@ class TransferPlanner:
 
         # Pair up dests with filters and split into two groups, those we can
         # check for missing data and those we can not
-        dest_filt_tuples: List[Tuple[DataBucket[Any], Optional[Filter]]] = []
-        checkable: List[Tuple[DataRepo[Any, Any], Optional[Filter]]] = []
+        dest_filt_tuples: List[Tuple[DataBucket[Any, Any], Optional[Filter]]] = []
+        checkable: List[Tuple[DataRepo[Any, Any, Any], Optional[Filter]]] = []
         non_checkable = []
         df_trans_map = {}
         for route in static_routes:
@@ -627,7 +617,7 @@ class TransferPlanner:
                 dest_filt_tuples.append(df_tuple)
                 df_trans_map[df_tuple] = get_transform(src_qr, filt)
                 if isinstance(dest, DataRepo) and can_invert_uids:
-                    df_tuple = cast(Tuple[DataRepo[Any, Any], Optional[Filter]], df_tuple)
+                    df_tuple = cast(Tuple[DataRepo[Any, Any, Any], Optional[Filter]], df_tuple)
                     checkable.append(df_tuple)
                 else:
                     non_checkable.append(df_tuple)
@@ -637,7 +627,7 @@ class TransferPlanner:
             return {tuple(static_routes) : [query_res]}
 
         # We group data going to same sets of destinations
-        res: Dict[Tuple[Tuple[DataRepo[Any, Any], Optional[Filter]], ...], List[QueryResult]] = {}
+        res: Dict[Tuple[Tuple[DataRepo[Any, Any, Any], Optional[Filter]], ...], List[QueryResult]] = {}
         for n_dest in reversed(range(1, len(checkable)+1)):
             for df_set in itertools.combinations(checkable, n_dest):
                 if df_set not in res:
@@ -647,7 +637,6 @@ class TransferPlanner:
         # (i.e. entire missing patients, then stuides, etc.)
         curr_matching = {df : df_trans_map[df].new for df in checkable}
         curr_src_qr = src_qr
-        #curr_qr_trans = src_qr_trans #TODO: How to update this?
         for curr_level in QueryLevel:
             if len(curr_src_qr) == 0:
                 break
@@ -666,6 +655,7 @@ class TransferPlanner:
             full_matching: Optional[QueryResult] = None
             for df in checkable:
                 dest, filt = df
+                log.debug("Checking for missing data on dest: %s", dest)
                 assert isinstance(dest, DataRepo)
                 curr_qr_trans = df_trans_map[df]
                 dest_qr = await dest.query(level=curr_level,
@@ -719,7 +709,7 @@ class TransferPlanner:
         for df_set, qr_list in res.items():
             if len(qr_list) == 0:
                 continue
-            filt_dest_map: Dict[Optional[Filter], List[DataBucket[Any]]] = {}
+            filt_dest_map: Dict[Optional[Filter], List[DataBucket[Any, Any]]] = {}
             for dest, filt in df_set:
                 if filt not in filt_dest_map:
                     filt_dest_map[filt] = []
@@ -731,7 +721,7 @@ class TransferPlanner:
         return sr_res
 
 
-async def sync_data(src : DataBucket[Any],
+async def sync_data(src : DataBucket[Any, Any],
                     dests : List[DestType],
                     query_res: Optional[QueryResult] = None,
                     trust_level: QueryLevel = QueryLevel.IMAGE,
@@ -741,7 +731,6 @@ async def sync_data(src : DataBucket[Any],
                     report: Optional[MultiListReport[TransferReportTypes]] = None) -> None:
     '''Convienance function to build TransferPlanner and execute all transfers
     '''
-    # TODO: Allow an external report here?
     planner = TransferPlanner(src, dests, trust_level, force_all, keep_errors)
     async with planner.executor(validators, report) as ex:
         report = ex.report

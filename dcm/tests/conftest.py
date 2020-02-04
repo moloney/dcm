@@ -1,4 +1,4 @@
-import os, time, shutil, random, tarfile, logging
+import os, time, shutil, random, tarfile, logging, re
 from copy import deepcopy
 import subprocess as sp
 from tempfile import TemporaryDirectory
@@ -39,7 +39,11 @@ def pytest_configure(config):
 DATA_DIR = Path(__file__).parent / 'data'
 
 
+PC_CONF_PATH = DATA_DIR / 'pres_contexts.cfg'
+
+
 DICOM_TAR = DATA_DIR / 'dicom.tar.bz2'
+
 
 
 @fixture(scope='session')
@@ -95,8 +99,8 @@ def get_dicom_subset(dicom_data):
             return (deepcopy(full_qr), full_data)
         else:
             curr_qr = QueryResult(QueryLevel.IMAGE)
-            curr_node = None
             for subtree_spec in spec.split(';'):
+                curr_node = None
                 for lvl_comp in subtree_spec.split('/'):
                     lvl_name, lvl_idx = lvl_comp.split('-')
                     lvl_idx = int(lvl_idx)
@@ -139,14 +143,60 @@ def make_local_node(base_port=63987, base_name='DCMTESTAE'):
     return _make_local_node
 
 
+
+dcmqrscp_path = shutil.which('dcmqrscp')
+
+
+dcmqridx_path = shutil.which('dcmqridx')
+
+
+DCMTK_VER_RE = r'.+\s+v([0-9]+).([0-9])+.([0-9])\+?\s+.*'
+
+
+# Version 3.6.2 allows us to test retrieving private SOP classes
+DCMTK_PRIV_RETR_VERS = (3, 6, 2)
+
+
+# Unfortunately, we still can't test sending private SOP classes (see
+# https://forum.dcmtk.org/viewtopic.php?f=1&t=4935&p=20112#p20112). If this
+# gets fixed in a future version this should be updated
+DCMTK_PRIV_SEND_VERS = (1000, 0, 0)
+
+
+def get_dcmtk_version():
+    if dcmqrscp_path is None:
+        return None
+    try:
+        sp_out = sp.check_output([dcmqrscp_path, '--version']).decode('latin-1')
+    except (FileNotFoundError, sp.CalledProcessError):
+        return None
+    first = sp_out.split('\n')[0]
+    return tuple(int(x) for x in re.match(DCMTK_VER_RE, first).groups())
+
+
+DCMTK_VERSION = get_dcmtk_version()
+
+
 dcmtk_base_port = 62765
 
 
 dcmtk_base_name = 'DCMTKAE'
 
 
-has_dcmtk = mark.skipif(shutil.which('dcmqrscp') == None,
+has_dcmtk = mark.skipif(DCMTK_VERSION is None,
                         reason="can't find DCMTK command 'dcmqrscp'")
+
+
+dcmtk_priv_sop_retr_xfail = \
+    mark.xfail(DCMTK_VERSION < DCMTK_PRIV_RETR_VERS,
+               reason="dcmqrscp version doesn't support retrieving private "
+               "SOPClasses")
+
+
+dcmtk_priv_sop_send_xfail = \
+    mark.xfail(DCMTK_VERSION < DCMTK_PRIV_SEND_VERS,
+               reason="dcmqrscp version doesn't support sending private "
+               "SOPClasses")
 
 
 dcmtk_config_tmpl = """\
@@ -213,11 +263,14 @@ def make_dcmtk_nodes(get_dicom_subset):
                 init_files.append(out_path)
             # Index any initial files into the dcmtk db
             if init_files:
-                sp.run(['dcmqridx', str(test_store_dir)] + init_files)
+                sp.run([dcmqridx_path, str(test_store_dir)] + init_files)
             # Fire up a dcmqrscp process
-            dcmqrscp_args = ['dcmqrscp', '-c', str(conf_file)]
+            dcmqrscp_args = [dcmqrscp_path, '-c', str(conf_file)]
             if 'dcmtk_level' in logging_opts:
                 dcmqrscp_args += ['-ll', logging_opts['dcmtk_level']]
+            if DCMTK_VERSION >= (3, 6, 2):
+                dcmqrscp_args += ['-xf', str(PC_CONF_PATH), 'Default', 'Default']
+            print(dcmqrscp_args)
             procs.append(sp.Popen(dcmqrscp_args))
             time.sleep(1)
             return (dcmtk_node, init_qr, test_store_dir)

@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 
+import pytest
 from pytest import fixture, mark
 
 from ..query import QueryResult, QueryLevel
@@ -10,8 +11,13 @@ from ..sync import TransferPlanner
 from ..store import TransferMethod
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
+from ..util import serializer
 
-from .conftest import has_dcmtk
+from .conftest import (has_dcmtk, DCMTK_VERSION, dcmtk_priv_sop_retr_xfail,
+                       dcmtk_priv_sop_send_xfail)
+
+
+priv_sop_marks = [dcmtk_priv_sop_retr_xfail, dcmtk_priv_sop_send_xfail]
 
 
 def make_lookup(dest1, dest2):
@@ -23,17 +29,36 @@ def make_lookup(dest1, dest2):
     return lookup_func
 
 
-dest_subsets = [[None] * 3,
-                ['all'] * 3,
-                ['PATIENT-0'] * 3,
-                ['PATIENT-0/STUDY-0'] * 3,
-                ['PATIENT-0/STUDY-0/SERIES-0'] * 3,
-                ['PATIENT-0/STUDY-0/SERIES-0/IMAGE-0'] * 3,
-                ['PATIENT-1'] * 3,
-                ]
+repo_to_repo_subsets = [pytest.param([None] * 3, marks=priv_sop_marks),
+                        ['all'] * 3,
+                        ['PATIENT-0'] * 3,
+                        ['PATIENT-0/STUDY-1'] * 3,
+                        pytest.param(['PATIENT-0/STUDY-0'] * 3, marks=priv_sop_marks),
+                        pytest.param(['PATIENT-0/STUDY-0/SERIES-0'] * 3, marks=priv_sop_marks),
+                        pytest.param(['PATIENT-0/STUDY-0/SERIES-0/IMAGE-0'] * 3, marks=priv_sop_marks),
+                        pytest.param(['PATIENT-1'] * 3, marks=priv_sop_marks),
+                        ]
+
+bucket_to_repo_subsets = [pytest.param([None] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['all'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-0'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-0/STUDY-1'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-0/STUDY-0'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-0/STUDY-0/SERIES-0'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-0/STUDY-0/SERIES-0/IMAGE-0'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          pytest.param(['PATIENT-1'] * 3, marks=dcmtk_priv_sop_send_xfail),
+                          ]
 
 
-@mark.parametrize('subset_specs', dest_subsets)
+@mark.parametrize('subset_specs',
+                  [[None] * 3,
+                   ['all'] * 3,
+                   ['PATIENT-0'] * 3,
+                   ['PATIENT-0/STUDY-0'] * 3,
+                   ['PATIENT-0/STUDY-0/SERIES-0'] * 3,
+                   ['PATIENT-0/STUDY-0/SERIES-0/IMAGE-0'] * 3,
+                   ['PATIENT-1'] * 3,
+                   ])
 @mark.asyncio
 @has_dcmtk
 async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs):
@@ -53,7 +78,7 @@ async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs)
                     print(transfer.chunk.qr)
 
 
-@mark.parametrize('subset_specs', dest_subsets)
+@mark.parametrize('subset_specs', repo_to_repo_subsets)
 @mark.asyncio
 @has_dcmtk
 async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, subset_specs):
@@ -67,7 +92,7 @@ async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, sub
         async for transfer in tp.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
-                    print(f"{dest} : {transfer.chunk.qr}")
+                    print(f"{dest} : {serializer.dumps(transfer.chunk.qr)}")
             await e.exec_transfer(transfer)
         print(e.report)
     dest1_dir = Path(dest1_dir)
@@ -76,7 +101,7 @@ async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, sub
     assert len(found_files) == len(full_qr)
 
 
-@mark.parametrize('subset_specs', dest_subsets)
+@mark.parametrize('subset_specs', repo_to_repo_subsets)
 @mark.asyncio
 @has_dcmtk
 async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_specs):
@@ -103,7 +128,7 @@ async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_spec
     #TODO: Check that dynamic routing worked correctly
 
 
-@mark.parametrize('subset_specs', dest_subsets)
+@mark.parametrize('subset_specs', bucket_to_repo_subsets)
 @mark.asyncio
 @has_dcmtk
 async def test_bucket_sync(make_local_dir, make_local_node, make_dcmtk_net_repo, subset_specs):

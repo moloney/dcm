@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 class NoValidTransferMethodError(Exception):
     '''Error raised when we are unable to select a valid transfer method'''
-    def __init__(self, src_dest_pair: Optional[Tuple[DataBucket[Any], DataBucket[Any]]]=None):
+    def __init__(self, src_dest_pair: Optional[Tuple[DataBucket[Any, Any], DataBucket[Any, Any]]]=None):
         self.src_dest_pair = src_dest_pair
 
     def __str__(self) -> str:
@@ -65,7 +65,7 @@ class Route:
     '''Steaming data filter for editing and rejecting data sets'''
     ''''''
 
-    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any], ...]]:
+    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
         '''Return the destintations for the `data set`
 
         Must be implemented by all subclasses.'''
@@ -79,7 +79,7 @@ class Route:
 
 @dataclass(frozen=True)
 class _StaticBase:
-    dests: Tuple[DataBucket[Any], ...]
+    dests: Tuple[DataBucket[Any, Any], ...]
     '''Static tuple of destinations'''
 
     methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
@@ -111,10 +111,10 @@ class StaticRoute(Route, _StaticBase):
         object.__setattr__(self, 'dests', tuple(self.dests))
         object.__setattr__(self, 'methods', tuple(avail_methods))
 
-    def get_dests(self, data_set: Dataset) -> Tuple[DataBucket[Any], ...]:
+    def get_dests(self, data_set: Dataset) -> Tuple[DataBucket[Any, Any], ...]:
         return self.dests
 
-    def get_method(self, src: DataBucket[Any]) -> TransferMethod:
+    def get_method(self, src: DataBucket[Any, Any]) -> TransferMethod:
         for method in self.methods:
             if method in src._supported_methods:
                 return method
@@ -126,7 +126,7 @@ class StaticRoute(Route, _StaticBase):
 
 @dataclass(frozen=True)
 class _DynamicBase:
-    lookup: Callable[[Dataset], Optional[Tuple[DataBucket[Any], ...]]]
+    lookup: Callable[[Dataset], Optional[Tuple[DataBucket[Any, Any], ...]]]
     '''Callable takes a dataset and returns destinations'''
 
     route_level: QueryLevel = QueryLevel.STUDY
@@ -135,7 +135,7 @@ class _DynamicBase:
     required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet)
     '''DICOM elements that we require to make a routing decision'''
 
-    dest_methods: Optional[Dict[Optional[DataBucket[Any]], Tuple[TransferMethod, ...]]] = None
+    dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
     '''Specify transfer methods for (some) dests
 
     Use `None` as the key to specify the default transfer methods for all dests
@@ -153,7 +153,7 @@ class DynamicRoute(Route, _DynamicBase):
     '''
     def __post_init__(self) -> None:
         if self.dest_methods is not None:
-            avail_meths: Dict[Optional[DataBucket[Any]], Tuple[TransferMethod, ...]] = {}
+            avail_meths: Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]] = {}
             for dest, methods in self.dest_methods.items():
                 if self.filt is not None:
                     if TransferMethod.PROXY not in methods:
@@ -176,7 +176,7 @@ class DynamicRoute(Route, _DynamicBase):
                                'required_elems',
                                FrozenLazySet(self.required_elems))
 
-    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any], ...]]:
+    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
         dests = self.lookup(data_set)
         if dests is None:
             return None
@@ -190,7 +190,7 @@ class DynamicRoute(Route, _DynamicBase):
         dests = tuple(dests)
 
         if self.dest_methods is not None:
-            meths_dests_map: Dict[Tuple[TransferMethod, ...], List[DataBucket[Any]]] = {}
+            meths_dests_map: Dict[Tuple[TransferMethod, ...], List[DataBucket[Any, Any]]] = {}
             default_methods = self.dest_methods.get(None)
             if default_methods is None:
                 default_methods = (TransferMethod.PROXY,)
@@ -395,7 +395,7 @@ StoreReportType = Union[DicomOpReport, LocalWriteReport]
 @dataclass
 class DynamicTransferReport(ProxyReport):
     '''Track what data is being routed where and any store results'''
-    store_reports: MultiDictReport[DataBucket[Any], MultiListReport[StoreReportType]] = field(default_factory=MultiDictReport)
+    store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = field(default_factory=MultiDictReport)
 
     @property
     def n_errors(self) -> int:
@@ -409,7 +409,7 @@ class DynamicTransferReport(ProxyReport):
     def n_reported(self) -> int:
         return self.store_reports.n_input
 
-    def add_store_report(self, dest: DataBucket[Any], store_report: StoreReportType) -> None:
+    def add_store_report(self, dest: DataBucket[Any, Any], store_report: StoreReportType) -> None:
         '''Add a DicomOpReport to keep track of'''
         if dest not in self.store_reports:
             self.store_reports[dest] = MultiListReport()
@@ -462,7 +462,7 @@ class SendAssociationCache:
     def __init__(self, timeout: float = 30.):
         '''Keeps cache of recent associations'''
         self._timeout = timeout
-        self._cache: Dict[DataBucket[Any], _CacheEntry] = {}
+        self._cache: Dict[DataBucket[Any, Any], _CacheEntry] = {}
 
     @property
     def next_timeout(self) -> float:
@@ -476,7 +476,7 @@ class SendAssociationCache:
                 next_timeout = timeout
         return next_timeout
 
-    async def send(self, ds: Dataset, dest: DataBucket[Any]) -> Optional[DicomOpReport]:
+    async def send(self, ds: Dataset, dest: DataBucket[Any, Any]) -> Optional[DicomOpReport]:
         '''Send a data set to dests, utilizing the cache of active associations'''
         res = None
         cache_entry = self._cache.get(dest, None)
@@ -493,7 +493,7 @@ class SendAssociationCache:
         await send_q.put(ds)
         return res
 
-    async def update_cache(self) -> Dict[DataBucket[Any], DicomOpReport]:
+    async def update_cache(self) -> Dict[DataBucket[Any, Any], DicomOpReport]:
         '''Close associations that haven't been used in a while
 
         Returns reports for all closed associations.
@@ -509,7 +509,7 @@ class SendAssociationCache:
             del self._cache[dest]
         return reports
 
-    async def empty_cache(self) -> Dict[DataBucket[Any], DicomOpReport]:
+    async def empty_cache(self) -> Dict[DataBucket[Any, Any], DicomOpReport]:
         '''Close all associations
 
         Returns dict of dest/op_report for all closed associations.
@@ -575,9 +575,9 @@ class Router:
     def can_dyn_route(self) -> bool:
         return self._all_proxy
 
-    def get_filter_dest_map(self, ds: Dataset) -> Dict[Optional[Filter], Tuple[DataBucket[Any], ...]]:
+    def get_filter_dest_map(self, ds: Dataset) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
         '''Get dict mapping filters to lists of destinations'''
-        selected: Dict[Optional[Filter], List[DataBucket[Any]]] = {}
+        selected: Dict[Optional[Filter], List[DataBucket[Any, Any]]] = {}
         for route in self._routes:
             dests = route.get_dests(ds)
             if not dests:
@@ -590,7 +590,7 @@ class Router:
         return {k : tuple(v) for k, v in selected.items()}
 
     async def pre_route(self,
-                        src: DataRepo[Any, Any],
+                        src: DataRepo[Any, Any, Any],
                         query: Union[Dict[str, Any], Dataset] = None,
                         query_res: QueryResult = None
                        ) -> Dict[Tuple[StaticRoute,...], QueryResult]:
@@ -789,7 +789,7 @@ class Router:
             report.check_errors()
 
     async def _fill_qr(self,
-                       src: DataRepo[Any, Any],
+                       src: DataRepo[Any, Any, Any],
                        query: Optional[Dataset],
                        query_res: Optional[QueryResult]
                       ) -> Tuple[Dataset, QueryResult]:

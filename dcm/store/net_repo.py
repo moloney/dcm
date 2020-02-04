@@ -8,6 +8,7 @@ from pydicom import Dataset
 import janus
 
 from . import TransferMethod, DcmNetChunk, DcmRepo
+from ..util import MultiListReport
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport
 
@@ -144,7 +145,7 @@ class NetRepo(DcmRepo):
     async def oob_transfer(self,
                            method: TransferMethod,
                            chunk: DcmNetChunk,
-                           report: Optional[DicomOpReport] = None
+                           report: Optional[MultiListReport[DicomOpReport]] = None
                            ) -> None:
         '''Perform out-of-band transfer instead of proxying data'''
         if method != TransferMethod.REMOTE_COPY:

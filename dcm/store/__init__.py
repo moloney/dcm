@@ -6,10 +6,10 @@ of their specific capabilities.
 '''
 from __future__ import annotations
 import os, enum, logging, asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from contextlib import asynccontextmanager
 from functools import partial
-from typing import (Optional, AsyncIterator, Tuple, List, Iterable,
+from typing import (Optional, AsyncIterator, Tuple, List, Iterable, Union,
                     Dict, TypeVar, Generic, Any, Type)
 from typing_extensions import Protocol, runtime_checkable
 
@@ -20,7 +20,7 @@ from pydicom import Dataset
 from ..query import QueryLevel, QueryResult, uid_elems
 from ..net import (DcmNode, DicomOpReport, IncomingDataReport,
                    IncomingDataError, IncomingErrorType, RetrieveReport)
-from ..util import aclosing, PathInputType, IndividualReport
+from ..util import aclosing, PathInputType, IndividualReport, MultiReport, MultiListReport
 
 
 log = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class DataChunk(Protocol):
 class RepoChunk(DataChunk, Protocol):
     '''Smarter chunk of data referencing a DataRepo/QueryResult combo'''
 
-    repo : 'DataRepo[Any, Any]'
+    repo : 'DataRepo[Any, Any, Any]'
     qr: QueryResult
 
     async def gen_data(self) -> AsyncIterator[Dataset]:
@@ -198,12 +198,13 @@ class LocalChunk(DataChunk):
 
 
 T_chunk = TypeVar('T_chunk', bound=DataChunk, covariant=True)
-T_report = TypeVar('T_report', bound=IndividualReport, contravariant=True)
+T_rreport = TypeVar('T_rreport', bound=IndividualReport, contravariant=True)
+T_sreport = TypeVar('T_sreport', bound=Union[IndividualReport, MultiReport[Any]], covariant=True)
 T_oob_chunk = TypeVar('T_oob_chunk', bound=DataChunk, contravariant=True)
-T_oob_report = TypeVar('T_oob_report', bound=IndividualReport)
+T_oob_report = TypeVar('T_oob_report', bound=Union[IndividualReport, MultiReport[Any]])
 
 
-class DataBucket(Generic[T_chunk], Protocol):
+class DataBucket(Generic[T_chunk, T_sreport], Protocol):
     '''Protocol for most basic data stores
 
     Can just produce one or more DataChunk instances with the
@@ -218,14 +219,19 @@ class DataBucket(Generic[T_chunk], Protocol):
         yield
 
     @asynccontextmanager
-    async def send(self) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+    async def send(self,
+                   report: Optional[T_sreport] = None
+                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
         '''Produces a Queue that you can put data sets into for storage'''
         raise NotImplementedError
         yield
 
+    def get_empty_send_report(self) -> T_sreport:
+        raise NotImplementedError
+
 
 @runtime_checkable
-class DataRepo(Generic[T_chunk, T_report], DataBucket[T_chunk], Protocol):
+class DataRepo(Generic[T_chunk, T_sreport, T_rreport], DataBucket[T_chunk, T_sreport], Protocol):
     '''Protocol for stores with query/retrieve functionality
     '''
     async def queries(self,
@@ -246,7 +252,7 @@ class DataRepo(Generic[T_chunk, T_report], DataBucket[T_chunk], Protocol):
 
     def retrieve(self,
                  query_res: QueryResult,
-                 report: Optional[T_report] = None) -> AsyncIterator[Dataset]:
+                 report: Optional[T_rreport] = None) -> AsyncIterator[Dataset]:
        '''Returns an async generator that will produce datasets'''
        raise NotImplementedError
 
@@ -270,7 +276,7 @@ class OobCapable(Generic[T_oob_chunk, T_oob_report], Protocol):
     def get_empty_oob_report(self) -> T_oob_report:
         raise NotImplementedError
 
-class DcmRepo(DataRepo[DcmNetChunk, RetrieveReport], OobCapable[DcmNetChunk, DicomOpReport], Protocol):
+class DcmRepo(DataRepo[DcmNetChunk, DicomOpReport, RetrieveReport], OobCapable[DcmNetChunk, MultiListReport[DicomOpReport]], Protocol):
     '''Abstract base class for repos that are DICOM network nodes'''
 
     _supported_methods: Tuple[TransferMethod, ...] = \
@@ -281,8 +287,19 @@ class DcmRepo(DataRepo[DcmNetChunk, RetrieveReport], OobCapable[DcmNetChunk, Dic
     def remote(self) -> DcmNode:
         raise NotImplementedError
 
-    def get_empty_oob_report(self) -> DicomOpReport:
+    @asynccontextmanager
+    async def send(self,
+                   report: Optional[DicomOpReport] = None
+                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+        '''Produces a Queue that you can put data sets into for storage'''
+        raise NotImplementedError
+        yield
+
+    def get_empty_send_report(self) -> DicomOpReport:
         return DicomOpReport()
+
+    def get_empty_oob_report(self) -> MultiListReport[DicomOpReport]:
+        return MultiListReport()
 
 
 class LocalWriteError(Exception):
@@ -347,8 +364,19 @@ class LocalWriteReport(IndividualReport):
         self.successful = []
         self.write_errors = {}
 
+    def __str__(self) -> str:
+        lines = [f'{self.__class__.__name__}:']
+        for f in fields(self):
+            f_name = f.name
+            if f_name == 'successful':
+                lines.append(f'\tn_success: {len(self.successful)}')
+                continue
+            val_str = str(getattr(self, f_name)).replace('\n', '\n\t')
+            lines.append(f'\t{f_name}: {val_str}')
+        return '\n'.join(lines)
 
-class LocalBucket(DataBucket[LocalChunk], OobCapable[LocalChunk, LocalWriteReport], Protocol):
+
+class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChunk, LocalWriteReport], Protocol):
     '''Abstract base class for buckets with local filesystem storage'''
 
     _supported_methods: Tuple[TransferMethod, ...] = \
@@ -356,6 +384,17 @@ class LocalBucket(DataBucket[LocalChunk], OobCapable[LocalChunk, LocalWriteRepor
          TransferMethod.LINK,
          TransferMethod.SYMLINK,
          TransferMethod.MOVE)
+
+    @asynccontextmanager
+    async def send(self,
+                   report: Optional[LocalWriteReport] = None
+                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+        '''Produces a Queue that you can put data sets into for storage'''
+        raise NotImplementedError
+        yield
+
+    def get_empty_send_report(self) -> LocalWriteReport:
+        return LocalWriteReport()
 
     def get_empty_oob_report(self) -> LocalWriteReport:
         return LocalWriteReport()

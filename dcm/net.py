@@ -29,16 +29,17 @@ from pynetdicom import (AE, Association, evt, build_context,
                         VerificationPresentationContexts,
                         sop_class)
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import (StorageServiceClass, MRImageStorage)
-from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation
+from pynetdicom.sop_class import (StorageServiceClass, MRImageStorage, SOPClass)
+from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
 from pynetdicom.transport import ThreadedAssociationServer
+from pynetdicom.presentation import PresentationContext
 
 
 from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
-from .util import IndividualReport, serializer, Serializable
+from .util import IndividualReport, MultiListReport, MultiError, serializer
 
 
 log = logging.getLogger(__name__)
@@ -48,21 +49,80 @@ UID_PREFIX = '2.25'
 
 IMPLEMENTATION_UID = '%s.84718903' % UID_PREFIX
 
-siemens_mr_sop_neg = SOPClassCommonExtendedNegotiation()
-siemens_mr_sop_neg.sop_class_uid = '1.3.12.2.1107.5.9.1'
-siemens_mr_sop_neg.service_class_uid = StorageServiceClass.uid
-siemens_mr_sop_neg.related_general_sop_class_identification = [MRImageStorage]
-c_store_ext_sop_negs = [siemens_mr_sop_neg]
 
-# TODO: We still need the below presentation when we are the SCU? Or we can
-# use the extended negotiation there too?
 
-## Add in SOP Class for storing proprietary Siemens data
-#private_sop_classes = {'SiemensProprietaryMRStorage' : '1.3.12.2.1107.5.9.1'}
-#sop_class._STORAGE_CLASSES.update(private_sop_classes)
-#sop_class._generate_sop_classes(private_sop_classes)
-#for private_uid in private_sop_classes.values():
-#    StoragePresentationContexts.append(build_context(private_uid))
+# The DICOM standard only allows an association requestor to propose 128
+# presentation contexts, which is already less than the number of unqiue
+# Storage SOPClasses. We also need to add at least one custom SOPClass (for
+# Siemens non-standard MR data). The "ideal" solution here would be to use
+# extended negotiation to propose more than 128 presentation contexts, but
+# many systems in the wild do not support this. So the "least bad" option for
+# a default is to drop some of the less commonly use SOPClasses. Unfortunately
+# I don't have objective data on which classes these are, so I have simply
+# choosen ones that seen to be unlikely to come up in my domain.
+
+dropped_storage_classes = set(['LensometryMeasurementsStorage',
+                               'AutorefractionMeasurementsStorage',
+                               'KeratometryMeasurementsStorage',
+                               'SubjectiveRefractionMeasurementsStorage',
+                               'VisualAcuityMeasurementsStorage',
+                               'OphthalmicVisualFieldStaticPerimetryMeasurementsStorage',
+                               'SpectaclePrescriptionReportStorage',
+                               'OphthalmicAxialMeasurementsStorage',
+                               'IntraocularLensCalculationsStorage',
+                               ])
+
+
+private_sop_classes = {'SiemensProprietaryMRStorage' : '1.3.12.2.1107.5.9.1'}
+
+# This is needed so 'uid_to_service_class' will work when called for incoming
+# data sets
+sop_class._STORAGE_CLASSES.update(private_sop_classes)
+
+
+def _make_default_store_scu_pcs(transfer_syntaxes: Optional[List[str]] = None
+                                ) -> List[PresentationContext]:
+    # TODO: Do we actally need the SOPClass objects for anything?
+    include_sops: List[SOPClass] = []
+    pres_contexts = []
+    max_len = 128 -  len(private_sop_classes)
+    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
+        if sop_name not in dropped_storage_classes:
+            if len(include_sops) > max_len:
+                warnings.warn("Too many storage SOPClasses, dropping more "
+                              "from end of the list")
+                break
+            sop = SOPClass(sop_uid)
+            sop._service_class = StorageServiceClass
+            include_sops.append(sop)
+            pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
+    for sop_name, sop_uid in private_sop_classes.items():
+        sop = SOPClass(sop_uid)
+        sop._service_class = StorageServiceClass
+        include_sops.append(sop)
+        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
+    return pres_contexts
+
+def _make_default_store_scp_pcs(transfer_syntaxes: Optional[List[str]] = None
+                                ) -> List[PresentationContext]:
+    pres_contexts = deepcopy(StoragePresentationContexts)
+    for sop_name, sop_uid in private_sop_classes.items():
+        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
+    return pres_contexts
+
+default_store_scu_pcs = _make_default_store_scu_pcs()
+default_store_scp_pcs = _make_default_store_scp_pcs()
+
+
+# TODO: We should have an option to use extended negotiation using the below
+#       code as a basis
+#siemens_mr_sop_neg = SOPClassCommonExtendedNegotiation()
+#siemens_mr_sop_neg.sop_class_uid = '1.3.12.2.1107.5.9.1'
+#siemens_mr_sop_neg.service_class_uid = StorageServiceClass.uid
+#siemens_mr_sop_neg.related_general_sop_class_identification = [MRImageStorage]
+#c_store_ext_sop_negs = [siemens_mr_sop_neg]
+
+
 
 
 # TODO: Everytime we establish/close an association, it should be done in a
@@ -114,6 +174,8 @@ class DcmNode:
         return cls(**json_dict)
 
 
+sub_op_attrs = {stat_type.lower(): f'NumberOf{stat_type}Suboperations' for stat_type in ('Remaining', 'Completed', 'Warning', 'Failed')}
+
 
 class BatchDicomOperationError(Exception):
     '''Base class for errors from DICOM batch network operations'''
@@ -133,7 +195,6 @@ class DicomOpReport(IndividualReport):
 
     op_type: Optional[str] = None
     '''The type of operation performed'''
-
     op_data: Dict[str, Any] = field(default_factory=dict)
     '''Additional data describing the operation specifics'''
 
@@ -143,9 +204,19 @@ class DicomOpReport(IndividualReport):
     errors: List[Dataset] = field(default_factory=list, init=False)
     '''List of data sets we got error status for'''
 
+    final_status: Optional[Dataset] = field(default=None, init=False)
+
+    _n_expected: Optional[int] = field(default=None, init=False)
+
     _n_success: int = field(default=0, init=False)
 
     _n_input: int = field(default=0, init=False)
+
+    _has_sub_ops: bool = field(default=False, init=False)
+
+    @property
+    def n_expected(self) -> Optional[int]:
+        return self._n_expected
 
     @property
     def n_input(self) -> int:
@@ -164,21 +235,73 @@ class DicomOpReport(IndividualReport):
         return len(self.warnings)
 
     def add(self, status: Dataset, data_set: Dataset) -> None:
-        if (not hasattr(status, 'Status') or
-            code_to_category(status.Status) == 'Failure'
+        if (isinstance(status, Exception) or
+            not hasattr(status, 'Status')
            ):
             if self.op_type == 'c-store':
                 data_set = minimal_copy(data_set)
             self.errors.append((status, data_set))
-            log.debug("%s op got error status: %s" % (self.op_type, status))
-        elif code_to_category(status.Status) == 'Warning':
-            if self.op_type == 'c-store':
-                data_set = minimal_copy(data_set)
-            self.warnings.append((status, data_set))
-            log.debug("%s op got warning status: %s" % (self.op_type, status))
+            self._n_input += 1
         else:
-            self._n_success += 1
-        self._n_input += 1
+            status_category = code_to_category(status.Status)
+            if status_category == 'Pending':
+                self._has_sub_ops = True
+                remaining = getattr(status, sub_op_attrs['remaining'], None)
+                if remaining is None:
+                    # We don't have sub-operation counts, so we just count
+                    # 'pending' results as success
+                    self._n_success += 1
+                else:
+                    n_success = getattr(status, sub_op_attrs['completed'])
+                    n_warn = getattr(status, sub_op_attrs['warning'])
+                    n_error = getattr(status, sub_op_attrs['failed'])
+                    assert n_success + n_warn + n_error == self._n_input + 1
+                    if self._n_expected is None:
+                        self._n_expected = remaining + 1
+                    if n_success != self._n_success:
+                        assert n_success - self._n_success == 1
+                        self._n_success += 1
+                    else:
+                        if self.op_type == 'c-store':
+                            data_set = minimal_copy(data_set)
+                        if n_warn != self.n_warnings:
+                            assert n_warn - self.n_warnings == 1
+                            self.warnings.append((status, data_set))
+                        elif n_error != self.n_errors:
+                            assert n_error - self.n_errors == 1
+                            self.errors.append((status, data_set))
+                self._n_input += 1
+            else:
+                if self._has_sub_ops:
+                    self.final_status = status
+                    n_success = getattr(status, sub_op_attrs['completed'], None)
+                    if n_success is not None:
+                        n_warn = getattr(status, sub_op_attrs['warning'])
+                        n_error = getattr(status, sub_op_attrs['failed'])
+                        assert n_success == self.n_success
+                        assert n_warn == self.n_warnings
+                        assert n_error == self.n_errors
+                    elif status_category != 'Success':
+                        # If we don't have operation sub-counts, need to make
+                        # sure any final error/warning status doesn't get lost
+                        if status_category == 'Warning':
+                            self.warnings.append((status, data_set))
+                        elif status_category == 'Failure':
+                            self.errors.append((status, data_set))
+                        self._n_input += 1
+                    log.debug("DicomOpReport got final status after sub-ops, marking self as done")
+                    self.done = True
+                else:
+                    if status_category == 'Success':
+                        self._n_success += 1
+                    else:
+                        if self.op_type == 'c-store':
+                            data_set = minimal_copy(data_set)
+                        if status_category == 'Warning':
+                            self.warnings.append((status, data_set))
+                        elif status_category == 'Failure':
+                            self.errors.append((status, data_set))
+                    self._n_input += 1
 
     def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
@@ -343,7 +466,7 @@ class RetrieveError(IncomingDataError):
                  duplicate: Optional[List[Tuple[str,...]]],
                  unexpected: Optional[List[Tuple[str,...]]],
                  missing: Optional[QueryResult],
-                 move_errors: Optional[List[Dataset]]):
+                 move_errors: Optional[MultiError]):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
         self.unexpected = unexpected
@@ -356,13 +479,15 @@ class RetrieveError(IncomingDataError):
             errors = getattr(self, err_type)
             if errors is None:
                 continue
-            n_errors = len(errors)
+            if isinstance(errors, MultiError):
+                n_errors = len(errors.errors)
+            else:
+                n_errors = len(errors)
             if n_errors != 0:
                 res.append('%d %s,' % (n_errors, err_type))
         return ' '.join(res)
 
 
-# TODO: Update this to use new keep_errors setup.
 @dataclass
 class RetrieveReport(IncomingDataReport):
     '''Track details about a retrieve operation'''
@@ -375,7 +500,7 @@ class RetrieveReport(IncomingDataReport):
     unexpected: List[Tuple[str, ...]] = field(default_factory=list)
     '''Any data sets that we received but did not expect'''
 
-    move_report: DicomOpReport = field(default_factory=DicomOpReport)
+    move_report: MultiListReport[DicomOpReport] = field(default_factory=MultiListReport)
     '''Report on move operations'''
 
     @property
@@ -388,6 +513,9 @@ class RetrieveReport(IncomingDataReport):
             raise ValueError("Setting `done` to False is not allowed")
         if self._done:
             raise ValueError("RetrieveReport was already marked done")
+        if not self.move_report.done:
+            assert len(self.move_report) == 1 and self.move_report[0].n_input == 0
+            self.move_report[0].done = True
         assert self.move_report.done
         assert self.requested is not None and self.retrieved is not None
         self.missing = self.requested - self.retrieved
@@ -452,11 +580,16 @@ class RetrieveReport(IncomingDataReport):
     def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
         if self.n_errors != 0:
+            move_err = None
+            try:
+                self.move_report.check_errors()
+            except MultiError as e:
+                move_err = e
             raise RetrieveError(self.inconsistent if IncomingErrorType.INCONSISTENT in self._keep_errors else [],
                                 self.duplicate if IncomingErrorType.DUPLICATE in self._keep_errors else [],
                                 self.unexpected if IncomingErrorType.UNEXPECTED in self._keep_errors else [],
                                 self.missing,
-                                self.move_report.errors)
+                                move_err)
 
     def clear(self) -> None:
         super().clear()
@@ -488,13 +621,14 @@ def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[s
     last_split_val = None
 
     for query in queries:
+        log.debug("Sending query:\n%s", query)
         res = QueryResult(level)
         missing_attrs: Set[str] = set()
         for status, rdat in assoc.send_c_find(query, query_model=query_model):
             rep_q.put((status, rdat))
             if rdat is None:
                 break
-            log.debug("Got query response:\n%s" % rdat)
+            log.debug("Got query response:\n%s", rdat)
             split_val = getattr(rdat, split_attr)
             if last_split_val != split_val:
                 if len(res) != 0:
@@ -550,12 +684,16 @@ def _send_worker(send_q: janus._SyncQueueProxy[Optional[Dataset]],
     while True:
         ds = send_q.get()
         if ds is None:
-            log.debug("Shutting down send worker thread")
+            log.debug("Send worker got None, shutting down...")
             rep_q.put(None)
             break
         log.debug("Send worker got a data set")
-        status = assoc.send_c_store(ds)
-        rep_q.put((status, ds))
+        try:
+            status = assoc.send_c_store(ds)
+        except Exception as e:
+            rep_q.put((e, ds))
+        else:
+            rep_q.put((status, ds))
 
 
 class UnsupportedQueryModelError(Exception):
@@ -617,7 +755,7 @@ class FilteredListenerLockBase(_FutureType):
 
 
 default_evt_pc_map = {evt.EVT_C_ECHO : VerificationPresentationContexts,
-                      evt.EVT_C_STORE : StoragePresentationContexts,
+                      evt.EVT_C_STORE : default_store_scp_pcs,
                       evt.EVT_C_FIND : QueryRetrievePresentationContexts,
                      }
 '''Map event types to the default presentation contexts the AE needs to accept
@@ -719,35 +857,12 @@ class LocalEntity:
             return True
         return False
 
-    def _prep_query(self,
-                    level: Optional[QueryLevel],
-                    query: Optional[Dataset],
-                    query_res : Optional[QueryResult]
-                   ) -> Tuple[QueryLevel, Dataset]:
-        '''Resolve/check `level` and `query` args for query methods'''
-        # Build up our base query dataset
-        if query is None:
-            query = Dataset()
-        else:
-            query = deepcopy(query)
-
-        # Deterimine level if not specified, otherwise make sure it is valid
-        if level is None:
-            if query_res is None:
-                default_level = QueryLevel.STUDY
-            else:
-                default_level = query_res.level
-            level = choose_level(query, default_level)
-        elif level not in QueryLevel:
-            raise ValueError("Unknown 'level' for query: %s" % level)
-        return level, query
-
     async def query(self,
                     remote: DcmNode,
                     level: Optional[QueryLevel] = None,
                     query: Optional[Dataset] = None,
                     query_res: Optional[QueryResult] = None,
-                    report: Optional[DicomOpReport] = None) -> QueryResult:
+                    report: Optional[MultiListReport[DicomOpReport]] = None) -> QueryResult:
         '''Query the `remote` entity all at once
 
         See documentation for the `queries` method for details
@@ -767,7 +882,7 @@ class LocalEntity:
                       level: Optional[QueryLevel] = None,
                       query: Optional[Dataset] = None,
                       query_res: Optional[QueryResult] = None,
-                      report: Optional[DicomOpReport] = None
+                      report: Optional[MultiListReport[DicomOpReport]] = None
                      ) -> AsyncIterator[QueryResult]:
         '''Query the `remote` entity in an iterative manner
 
@@ -794,12 +909,13 @@ class LocalEntity:
         '''
         if report is None:
             extern_report = False
-            report = DicomOpReport()
+            report = MultiListReport()
         else:
             extern_report = True
-        report.provider = remote
-        report.user = self._local
-        report.op_type = 'c-find'
+        op_report_attrs = {'provider': remote,
+                           'user': self._local,
+                           'op_type': 'c-find',
+                           }
         level, query = self._prep_query(level, query, query_res)
 
         # Determine the query model
@@ -895,8 +1011,9 @@ class LocalEntity:
         # Fire up a thread to perform the query and produce QueryResult chunks
         try:
             rep_builder_task = \
-                asyncio.create_task(self._report_builder(rep_q.async_q,
-                                                         report)
+                asyncio.create_task(self._multi_report_builder(rep_q.async_q,
+                                                               report,
+                                                               op_report_attrs)
                                    )
             query_fut = asyncio.ensure_future(loop.run_in_executor(self._thread_pool,
                                                                    partial(_query_worker,
@@ -939,54 +1056,11 @@ class LocalEntity:
             await query_fut
             await rep_builder_task
         finally:
-            report.done = True
             if not assoc_released:
                 assoc.release()
         if not extern_report:
             report.log_issues()
             report.check_errors()
-
-    async def _fwd_event(self, event: evt.Event) -> int:
-        for filt, handler in self._event_handlers.items():
-            if filt.matches(event):
-                log.debug(f"Calling async handler for {event} event")
-                return await handler(event)
-        log.warn(f"Can't find handler for the {event} event")
-        return 0x0122
-
-    def _setup_listen_mgr(self,
-                          sync_cb: Callable[[evt.Event], Any],
-                          presentation_contexts: SOPList,
-                         ) -> None:
-        log.debug("Starting a threaded listener")
-        # TODO: How to handle presentation contexts in generic way?
-        ae = AE(ae_title=self._local.ae_title)
-        for context in presentation_contexts:
-            ae.add_supported_context(context.abstract_syntax,
-                                     self._default_ts)
-        self._listen_mgr = ae.start_server((self._local.host,
-                                            self._local.port),
-                                           block=False)
-        for evt_type in default_evt_pc_map.keys():
-            log.debug(f"Binding to event {evt_type}")
-            self._listen_mgr.bind(evt_type, sync_cb)
-
-    async def _cleanup_listen_mgr(self) -> None:
-        log.debug("Cleaning up threaded listener")
-        assert self._listen_mgr is not None
-        try:
-            self._listen_mgr.shutdown()
-        finally:
-            self._listen_mgr = None
-
-    def _get_lock_type(self, event_filter: EventFilter) -> type:
-        lock_type = self._lock_types.get(event_filter)
-        if lock_type is None:
-            lock_type = type('FilteredListenerLock',
-                             (FilteredListenerLockBase,),
-                             {'event_filter' : event_filter})
-            self._lock_types[event_filter] = lock_type
-        return lock_type
 
     @asynccontextmanager
     async def listen(self,
@@ -1045,17 +1119,18 @@ class LocalEntity:
                    dest: DcmNode,
                    query_res: QueryResult,
                    transfer_syntax: Optional[SOPList] = None,
-                   report: DicomOpReport = None) -> None:
+                   report: MultiListReport[DicomOpReport] = None) -> None:
         '''Move DICOM files from one network entity to another'''
         if report is None:
             extern_report = False
-            report = DicomOpReport()
+            report = MultiListReport()
         else:
             extern_report = True
-        report.provider = src
-        report.user = self._local
-        report.op_type = 'c-move'
-        report.op_data = {'dest' : dest}
+        op_report_attrs = {'provider': src,
+                           'user': self._local,
+                           'op_type': 'c-move',
+                           'op_data': {'dest' : dest}
+                          }
         loop = asyncio.get_running_loop()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(loop=loop)
         # Setup the association
@@ -1073,8 +1148,9 @@ class LocalEntity:
                                          "remote: %s" % str(src))
         try:
             rep_builder_task = \
-                asyncio.create_task(self._report_builder(rep_q.async_q,
-                                                         report)
+                asyncio.create_task(self._multi_report_builder(rep_q.async_q,
+                                                               report,
+                                                               op_report_attrs)
                                    )
             await loop.run_in_executor(self._thread_pool,
                                        partial(_move_worker,
@@ -1086,8 +1162,6 @@ class LocalEntity:
                                               )
             await rep_builder_task
         finally:
-            log.debug("Setting done flag on move op report")
-            report.done = True
             assoc.release()
         if not extern_report:
             report.log_issues()
@@ -1163,35 +1237,6 @@ class LocalEntity:
             log.debug("About to check errors")
             report.check_errors()
 
-    async def download(self,
-                       remote: DcmNode,
-                       query_res: QueryResult,
-                       dest_dir: Union[str, Path]) -> List[str]:
-        '''Uses `retrieve` method to download data and saves it to `dest_dir`
-        '''
-        # TODO: Handle collisions/overwrites
-        loop = asyncio.get_running_loop()
-        dest_dir = Path(dest_dir)
-        out_files = []
-        async for ds in self.retrieve(remote, query_res):
-            out_path = str(dest_dir / ds.SOPInstanceUID) + '.dcm'
-            await loop.run_in_executor(self._thread_pool,
-                                       partial(pydicom.dcmwrite, out_path, ds))
-            out_files.append(out_path)
-        return out_files
-
-    # TODO: Update type annotation once we have report inheritance hierarchy
-    async def _report_builder(self,
-                              res_q: janus._AsyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
-                              report: Any) -> None:
-        while True:
-            res = await res_q.get()
-            if res is None:
-                break
-            status, data_set = res
-            # TODO: OpReport needs to minimize the stored data set as needed
-            report.add(status, data_set)
-
     @asynccontextmanager
     async def send(self,
                    remote: DcmNode,
@@ -1237,16 +1282,15 @@ class LocalEntity:
         log.debug(f"About to associate with {remote} to send data")
         assoc = send_ae.associate(remote.host,
                                   remote.port,
-                                  StoragePresentationContexts,
-                                  remote.ae_title,
-                                  ext_neg=c_store_ext_sop_negs)
+                                  default_store_scu_pcs,
+                                  remote.ae_title)
         if not assoc.is_established:
             raise FailedAssociationError("Failed to associate with "
                                          "remote: %s" % str(remote))
         try:
             rep_builder_task = \
-                asyncio.create_task(self._report_builder(rep_q.async_q,
-                                                         report)
+                asyncio.create_task(self._single_report_builder(rep_q.async_q,
+                                                                report)
                                    )
             send_fut = loop.run_in_executor(self._thread_pool,
                                             partial(_send_worker,
@@ -1261,6 +1305,7 @@ class LocalEntity:
                 log.debug("Shutting down send worker")
                 await send_q.async_q.put(None)
                 await send_fut
+                log.debug("Send worker has shutdown, waiting for report builder")
                 await rep_builder_task
             finally:
                 log.debug("Releasing send association")
@@ -1270,6 +1315,24 @@ class LocalEntity:
         if not extern_report:
             report.log_issues()
             report.check_errors()
+
+    async def download(self,
+                       remote: DcmNode,
+                       query_res: QueryResult,
+                       dest_dir: Union[str, Path],
+                       report: Optional[RetrieveReport] = None) -> List[str]:
+        '''Uses `retrieve` method to download data and saves it to `dest_dir`
+        '''
+        # TODO: Handle collisions/overwrites
+        loop = asyncio.get_running_loop()
+        dest_dir = Path(dest_dir)
+        out_files = []
+        async for ds in self.retrieve(remote, query_res, report=report):
+            out_path = str(dest_dir / ds.SOPInstanceUID) + '.dcm'
+            await loop.run_in_executor(self._thread_pool,
+                                       partial(pydicom.dcmwrite, out_path, ds))
+            out_files.append(out_path)
+        return out_files
 
     async def upload(self,
                      remote: DcmNode,
@@ -1285,6 +1348,103 @@ class LocalEntity:
                                                         str(src_path))
                                                )
                 await send_q.put(ds)
+
+    def _prep_query(self,
+                    level: Optional[QueryLevel],
+                    query: Optional[Dataset],
+                    query_res : Optional[QueryResult]
+                   ) -> Tuple[QueryLevel, Dataset]:
+        '''Resolve/check `level` and `query` args for query methods'''
+        # Build up our base query dataset
+        if query is None:
+            query = Dataset()
+        else:
+            query = deepcopy(query)
+
+        # Deterimine level if not specified, otherwise make sure it is valid
+        if level is None:
+            if query_res is None:
+                default_level = QueryLevel.STUDY
+            else:
+                default_level = query_res.level
+            level = choose_level(query, default_level)
+        elif level not in QueryLevel:
+            raise ValueError("Unknown 'level' for query: %s" % level)
+        return level, query
+
+    async def _fwd_event(self, event: evt.Event) -> int:
+        for filt, handler in self._event_handlers.items():
+            if filt.matches(event):
+                log.debug(f"Calling async handler for {event} event")
+                return await handler(event)
+        log.warn(f"Can't find handler for the {event} event")
+        return 0x0122
+
+    def _setup_listen_mgr(self,
+                          sync_cb: Callable[[evt.Event], Any],
+                          presentation_contexts: SOPList,
+                         ) -> None:
+        log.debug("Starting a threaded listener")
+        # TODO: How to handle presentation contexts in generic way?
+        ae = AE(ae_title=self._local.ae_title)
+        for context in presentation_contexts:
+            ae.add_supported_context(context.abstract_syntax,
+                                     self._default_ts)
+        self._listen_mgr = ae.start_server((self._local.host,
+                                            self._local.port),
+                                           block=False)
+        for evt_type in default_evt_pc_map.keys():
+            log.debug(f"Binding to event {evt_type}")
+            self._listen_mgr.bind(evt_type, sync_cb)
+
+    async def _cleanup_listen_mgr(self) -> None:
+        log.debug("Cleaning up threaded listener")
+        assert self._listen_mgr is not None
+        try:
+            self._listen_mgr.shutdown()
+        finally:
+            self._listen_mgr = None
+
+    def _get_lock_type(self, event_filter: EventFilter) -> type:
+        lock_type = self._lock_types.get(event_filter)
+        if lock_type is None:
+            lock_type = type('FilteredListenerLock',
+                             (FilteredListenerLockBase,),
+                             {'event_filter' : event_filter})
+            self._lock_types[event_filter] = lock_type
+        return lock_type
+
+    async def _single_report_builder(self,
+                              res_q: janus._AsyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                              report: DicomOpReport) -> None:
+        while True:
+            res = await res_q.get()
+            if res is None:
+                #if not report.done:
+                #    assert report.n_input == 0
+                #    report.done = True
+                break
+            status, data_set = res
+            report.add(status, data_set)
+
+    async def _multi_report_builder(self,
+                                    res_q: janus._AsyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+                                    report: MultiListReport[DicomOpReport],
+                                    def_report_attrs: Dict[str, Any]) -> None:
+        curr_op_report = DicomOpReport(**def_report_attrs)
+        report.append(curr_op_report)
+        while True:
+            res = await res_q.get()
+            if res is None:
+                #if not report.done:
+                #    assert len(report) == 1 and report[0].n_input == 0
+                #    report[0].done = True
+                break
+            if curr_op_report.done:
+                curr_op_report =  DicomOpReport(**def_report_attrs)
+                report.append(curr_op_report)
+            status, data_set = res
+            curr_op_report.add(status, data_set)
 
     def _choose_qr_model(self,
                          remote: DcmNode,

@@ -198,6 +198,11 @@ class LocalDir(LocalBucket):
     async def send(self,
                    report: Optional[LocalWriteReport] = None
                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+        if report is None:
+            extern_report = False
+            report = LocalWriteReport()
+        else:
+            extern_report = True
         loop = asyncio.get_running_loop()
         send_q: janus.Queue[Dataset] = janus.Queue(10, loop=loop)
         send_fut = asyncio.ensure_future(loop.run_in_executor(None,
@@ -205,7 +210,8 @@ class LocalDir(LocalBucket):
                                                                       send_q.sync_q,
                                                                       self._root_path,
                                                                       self._out_fmt,
-                                                                      self._force_overwrite)
+                                                                      self._force_overwrite,
+                                                                      report)
                                                              )
                                         )
         try:
@@ -214,6 +220,10 @@ class LocalDir(LocalBucket):
             if not send_fut.done():
                 await send_q.async_q.put(None)
             await send_fut
+            report.done = True
+        if not extern_report:
+            report.log_issues()
+            report.check_errors()
 
     async def oob_transfer(self,
                            method: TransferMethod,

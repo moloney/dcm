@@ -29,6 +29,12 @@ log = logging.getLogger('dcm.cli')
 logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
 
+# TODO: We should iteratively produce/consume json in streaming fashion
+
+# TODO: Several commands can now not require a src arg when taking a QR as
+#       input due to the new QueryProvenance feature
+
+
 def cli_error(msg, exit_code=1):
     '''Print msg to stderr and exit with non-zero exit code'''
     click.secho(msg, err=True, fg='red')
@@ -444,14 +450,11 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
     else:
         log.info("Starting data sync")
         async with planner.executor(validators) as ex:
-            report = ex.report
             async with aclosing(planner.gen_transfers(query_res)) as tgen:
                 async for transfer in tgen:
                     await ex.exec_transfer(transfer)
-        #import pdb ; pdb.set_trace()
-        report.log_issues()
-        report.check_errors()
         log.info("Finished data sync")
+        log.info("Full Report:\n%s", ex.report)
 
 
 @click.command()
