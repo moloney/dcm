@@ -76,14 +76,15 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
         out_path = os.path.join(root_path,
                                 make_out_path(out_fmt, ds))
 
-        log.info('Storing DICOM file: %s' % out_path)
         if os.path.exists(out_path):
             if force_overwrite:
-                log.info('File exists, overwriting: %s' %
-                         out_path)
+                log.debug('File exists, overwriting: %s', out_path)
             else:
-                log.warning('File exists, skipping: %s' %
-                            out_path)
+                log.debug('File exists, skipping: %s', out_path)
+                report.add_skipped(out_path)
+                continue
+        else:
+            log.debug('Storing DICOM file: %s' % out_path)
 
         # Create meta-data section if needed
         if not isinstance(ds, FileDataset):

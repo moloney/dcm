@@ -322,6 +322,8 @@ class LocalWriteReport(IndividualReport):
 
     successful: List[PathInputType] = field(default_factory=list)
 
+    skipped: List[PathInputType] = field(default_factory=list)
+
     _n_input: int = field(default=0, init=False)
 
     @property
@@ -338,7 +340,7 @@ class LocalWriteReport(IndividualReport):
 
     @property
     def n_warnings(self) -> int:
-        return 0
+        return len(self.skipped)
 
     def add_success(self, path: PathInputType) -> None:
         self.successful.append(path)
@@ -350,8 +352,14 @@ class LocalWriteReport(IndividualReport):
         self.write_errors[exception].append(path)
         self._n_input += 1
 
+    def add_skipped(self, path: PathInputType) -> None:
+        self.skipped.append(path)
+        self._n_input += 1
+
     def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
+        if self.n_warnings != 0:
+            log.warning("Skipped %d existing files", len(self.skipped))
         if self.n_errors != 0:
             log.error("There were %d write errors" % self.n_errors)
 
@@ -362,6 +370,7 @@ class LocalWriteReport(IndividualReport):
 
     def clear(self) -> None:
         self.successful = []
+        self.skipped = []
         self.write_errors = {}
 
     def __str__(self) -> str:
@@ -370,6 +379,9 @@ class LocalWriteReport(IndividualReport):
             f_name = f.name
             if f_name == 'successful':
                 lines.append(f'\tn_success: {len(self.successful)}')
+                continue
+            elif f_name == 'skipped':
+                lines.append(f'\tn_skipped: {len(self.skipped)}')
                 continue
             val_str = str(getattr(self, f_name)).replace('\n', '\n\t')
             lines.append(f'\t{f_name}: {val_str}')
