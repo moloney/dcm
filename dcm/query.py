@@ -620,26 +620,35 @@ class QueryResult:
                 res[key] = val
         return res
 
+    def _inject_counts(self,
+                       node: Optional[DataNode],
+                       info: Dict[str, Any]) -> None:
+
+        if node is None:
+            info['n_patients'] = self.n_patients()
+            level = -1
+        else:
+            level = node.level
+        if level <= QueryLevel.PATIENT:
+            n_studies = self.n_studies(node)
+            if n_studies is not None:
+                info['n_studies'] = n_studies
+        if level <= QueryLevel.STUDY:
+            n_series = self.n_series(node)
+            if n_series is not None:
+                info['n_series'] = n_series
+        if level <= QueryLevel.SERIES:
+            n_instances = self.n_instances(node)
+            if n_instances is not None:
+                info['n_instances'] = n_instances
+
     def node_info(self, node: Optional[DataNode]) -> Dict[str, Any]:
         level: Union[QueryLevel, int]
         if node is not None:
             res = self._get_info(self._levels[node.level][node.uid])
-            level = node.level
         else:
-            res = {'n_patients' : self.n_patients()}
-            level = -1
-        if level <= QueryLevel.PATIENT:
-            n_studies = self.n_studies(node)
-            if n_studies is not None:
-                res['n_studies'] = n_studies
-        if level <= QueryLevel.STUDY:
-            n_series = self.n_series(node)
-            if n_series is not None:
-                res['n_series'] = n_series
-        if level <= QueryLevel.SERIES:
-            n_instances = self.n_instances(node)
-            if n_instances is not None:
-                res['n_instances'] = n_instances
+            res = {}
+        self._inject_counts(node, res)
         return res
 
     def path_info(self, data_path : DataPath) -> Dict[str, Any]:
@@ -647,7 +656,7 @@ class QueryResult:
 
         Parameters
         ----------
-        data_path : DataPath
+        data_path
             The path we want to collect meta data for
         '''
         if data_path.level > self._level:
@@ -660,6 +669,7 @@ class QueryResult:
                 if key[0].isupper():
                     info[key] = val
             curr_dict = lvl_info['children']
+        self._inject_counts(data_path.end, info)
         return info
 
     def path_data_set(self, data_path: DataPath) -> Dataset:
@@ -679,7 +689,7 @@ class QueryResult:
 
         Parameters
         ----------
-        node :
+        node
             Get the number of studies under this data node, or globally if None
         '''
         if node is not None:
@@ -780,10 +790,10 @@ class QueryResult:
 
         Parameters
         ----------
-        node : DataNode
+        node
             The node in the hierarchy we want as a subset
 
-        max_level : QueryLevel
+        max_level
             The level of detail to include in the result
         '''
         prov = QueryProv(self.prov.src,
@@ -858,13 +868,16 @@ class QueryResult:
 
     def __sub__(self, other: QueryResult) -> QueryResult:
         '''Take difference between one QueryResult and another'''
-        res = QueryResult(min(self._level, other._level), prov=self.prov)
-        for dpath in self.level_paths(res._level):
+        res = QueryResult(self._level, prov=self.prov)
+        for dpath in self.level_paths(min(self._level, other._level)):
             dnode = dpath.end
             try:
                 other.get_path(dnode)
             except KeyError:
-                res.add(self.path_data_set(dpath))
+                # This sub-tree of data doesn't exist in other
+                res |= self.sub_query(dnode)
+                continue
+            if dpath.level == QueryLevel.IMAGE:
                 continue
             # This node exists in other, check for sub-count differences
             diff_info = {}
