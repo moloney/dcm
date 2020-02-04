@@ -165,6 +165,9 @@ class DataTransform:
         Returns a DataCollection.'''
         raise NotImplementedError
 
+    def __repr__(self) -> str:
+        return f"DataTransform: {self.new}"
+
 
 class DummyTransform(DataTransform):
     '''Dummy transform for efficiently handling no-op'''
