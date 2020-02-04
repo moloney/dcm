@@ -167,8 +167,12 @@ debug_filters = {'query_responses' : QueryResponseFilter(),
 @click.option('--debug-filter',
               multiple=True,
               help="Selectively filter debug log messages")
+@click.option('--quiet',
+              is_flag=True,
+              default=False,
+              help="Hide WARNING log messages")
 @click.pass_context
-def cli(ctx, config, log_path, verbose, debug, debug_filter):
+def cli(ctx, config, log_path, verbose, debug, debug_filter, quiet):
     '''High level DICOM file and network operations
     '''
     # Parse the config file
@@ -183,6 +187,10 @@ def cli(ctx, config, log_path, verbose, debug, debug_filter):
             f.write(_default_conf)
         conf_dict = {}
 
+    if quiet:
+        if verbose or debug:
+            cli_error("Can't mix --quiet with --verbose/--debug")
+
     # Setup logging
     LOG_FORMAT = '%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s'
     formatter = logging.Formatter(LOG_FORMAT)
@@ -194,6 +202,8 @@ def cli(ctx, config, log_path, verbose, debug, debug_filter):
         stream_handler.setLevel(logging.DEBUG)
     elif verbose:
         stream_handler.setLevel(logging.INFO)
+    elif quiet:
+        stream_handler.setLevel(logging.ERROR)
     else:
         stream_handler.setLevel(logging.WARN)
     root_logger.addHandler(stream_handler)
