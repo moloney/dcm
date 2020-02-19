@@ -156,6 +156,11 @@ debug_filters = {'query_responses' : QueryResponseFilter(),
                               resolve_path=True),
               envvar='DCM_LOG_PATH',
               help="Save logging output to this file")
+@click.option('--file-log-level',
+              type=click.Choice(['DEBUG', 'INFO', 'WARN', 'ERROR'],
+                                case_sensitive=False),
+              default='INFO',
+              help="Log level to use when logging to a file")
 @click.option('--verbose', '-v',
               is_flag=True,
               default=False,
@@ -172,7 +177,7 @@ debug_filters = {'query_responses' : QueryResponseFilter(),
               default=False,
               help="Hide WARNING log messages")
 @click.pass_context
-def cli(ctx, config, log_path, verbose, debug, debug_filter, quiet):
+def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, quiet):
     '''High level DICOM file and network operations
     '''
     # Parse the config file
@@ -211,7 +216,7 @@ def cli(ctx, config, log_path, verbose, debug, debug_filter, quiet):
     if log_path is not None:
         file_handler = logging.FileHandler(log_path)
         file_handler.setFormatter(formatter)
-        file_handler.setLevel(logging.DEBUG)
+        file_handler.setLevel(getattr(logging, file_log_level))
         root_logger.addHandler(file_handler)
         handlers.append(file_handler)
 
