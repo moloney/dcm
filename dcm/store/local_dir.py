@@ -52,7 +52,7 @@ class DefaultDicomWrapper:
 
 
 def make_out_path(out_fmt: str, ds: Dataset) -> str:
-    out_toks = out_fmt.split(os.sep)
+    out_toks = out_fmt.split('/')
     context = {'d': DefaultDicomWrapper(ds)}
     return os.sep.join([re.sub('[^A-Za-z0-9_.-]', '_', fstr_eval(t, context))
                         for t in out_toks]
