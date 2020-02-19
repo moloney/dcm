@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+from copy import deepcopy
 
 import pytest
 from pytest import fixture, mark
@@ -63,19 +64,44 @@ bucket_to_repo_subsets = [pytest.param([None] * 3, marks=dcmtk_priv_sop_send_xfa
 @has_dcmtk
 async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, _, _ = make_dcmtk_net_repo(local_node, subset='all')
-    dest1_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[2])
+    src_repo, full_qr, _ = make_dcmtk_net_repo(local_node, subset='all')
+    dest1_repo, dest1_init_qr, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, dest2_init_qr, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, dest3_init_qr, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
-    dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
+    dyn_lookup = make_lookup(dest2_repo, dest3_repo)
+    dyn_route = DynamicRoute(dyn_lookup, required_elems=['PatientID'])
     dests = [static_route, dyn_route]
     tp = TransferPlanner(src_repo, dests)
+
+    # Build QRs of what we expect to be transfered to each dest
+    expect_qrs = {dest1_repo: full_qr - dest1_init_qr,
+                  dest2_repo: QueryResult(QueryLevel.IMAGE),
+                  dest3_repo: QueryResult(QueryLevel.IMAGE)
+                  }
+    for ds in full_qr:
+        dests = dyn_lookup(ds)
+        for dest in dests:
+            expect_qrs[dest].add(ds)
+    trans_qrs = {}
     async with tp.executor() as executor:
         async for transfer in tp.gen_transfers():
+            trans_level = transfer.chunk.qr.level
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
-                    print(transfer.chunk.qr)
+                    print(f"\n{dest} :\n{transfer.chunk.qr.to_tree()}")
+                    if dest not in trans_qrs:
+                        trans_qrs[dest] = {}
+                    if trans_level not in trans_qrs[dest]:
+                        trans_qrs[dest][trans_level] = deepcopy(transfer.chunk.qr)
+                    else:
+                        for ds in transfer.chunk.qr:
+                            # Check this data is expected
+                            assert ds in expect_qrs[dest]
+                            # Check for duplicate transfers
+                            for lvl_qr in trans_qrs[dest].values():
+                                assert ds not in lvl_qr
+                            trans_qrs[dest][trans_level].add(ds)
 
 
 @mark.parametrize('subset_specs', repo_to_repo_subsets)
