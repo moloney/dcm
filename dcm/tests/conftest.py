@@ -124,7 +124,6 @@ def make_local_dir(get_dicom_subset):
             curr_dirs.append(store_dir)
             init_qr, init_data = get_dicom_subset(subset)
             for dcm_path, _ in init_data:
-                print(f"Copying a file: {dcm_path} -> {store_dir}")
                 shutil.copy(dcm_path, store_dir)
             return (LocalDir(store_dir, **kwargs), init_qr, store_dir)
         yield _make_local_dir
@@ -270,7 +269,6 @@ def make_dcmtk_nodes(get_dicom_subset):
                 dcmqrscp_args += ['-ll', logging_opts['dcmtk_level']]
             if DCMTK_VERSION >= (3, 6, 2):
                 dcmqrscp_args += ['-xf', str(PC_CONF_PATH), 'Default', 'Default']
-            print(dcmqrscp_args)
             procs.append(sp.Popen(dcmqrscp_args))
             time.sleep(1)
             return (dcmtk_node, init_qr, test_store_dir)
