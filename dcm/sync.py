@@ -27,11 +27,7 @@ from .util import dict_to_ds, IndividualReport, MultiListReport, MultiDictReport
 log = logging.getLogger(__name__)
 
 
-# TODO: How to determine the correct transfer report type for various static
-#       transfers? Or should we have a single type with some fields optional.
-#
 
-# TODO: should these Transfer classes be generic on the type of chunk?
 @dataclass
 class Transfer:
     chunk: DataChunk
@@ -164,7 +160,7 @@ class StaticTransferError(Exception):
 
 @dataclass
 class StaticTransferReport(IndividualReport):
-    '''Capture all possible info about a singe StaticTranfer'''
+    '''Capture all possible info about a single StaticTranfer'''
     proxy_report: Optional[StaticProxyTransferReport] = None
 
     oob_report: Optional[StaticOobTransferReport] = None
