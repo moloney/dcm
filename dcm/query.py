@@ -195,14 +195,20 @@ def info_to_dataset(level: QueryLevel, info: Dict[str, Any]) -> Dataset:
     '''Turn normalized `info` dict back into DICOM data set'''
     res = Dataset()
     for key, val in info.items():
+        if not key.startswith('n_'):
+            setattr(res, key, val)
+    # Make sure these take precedence over any "NumberOf..." elements
+    for key in ('n_studies', 'n_series', 'n_instances'):
+        val = info.get(key)
+        if val is None:
+            continue
         if key == 'n_studies':
             attr = get_subcount_attr(level, QueryLevel.STUDY)
         elif key == 'n_series':
             attr = get_subcount_attr(level, QueryLevel.SERIES)
-        elif key == 'n_instances':
-             attr = get_subcount_attr(level, QueryLevel.IMAGE)
         else:
-            attr = key
+            assert key == 'n_instances'
+            attr = get_subcount_attr(level, QueryLevel.IMAGE)
         setattr(res, attr, val)
     return res
 
