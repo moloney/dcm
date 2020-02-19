@@ -643,6 +643,7 @@ class QueryResult:
                 info['n_instances'] = n_instances
 
     def node_info(self, node: Optional[DataNode]) -> Dict[str, Any]:
+        '''Get meta data specific to this node in the hierarchy'''
         level: Union[QueryLevel, int]
         if node is not None:
             res = self._get_info(self._levels[node.level][node.uid])
@@ -652,7 +653,7 @@ class QueryResult:
         return res
 
     def path_info(self, data_path : DataPath) -> Dict[str, Any]:
-        '''Get all meta data along a path
+        '''Get all meta data along a path through the hierarchy
 
         Parameters
         ----------
@@ -823,6 +824,16 @@ class QueryResult:
         for dpath in self.level_paths(level):
             yield self.sub_query(dpath.end)
 
+    def reduced(self, level: QueryLevel) -> QueryResult:
+        '''Create lower level of detail copy'''
+        if level >= self._level:
+            raise ValueError("The level provided to 'reduced' must be lower")
+        res = QueryResult(level)
+        for dpath in self.level_paths(level):
+            ds = info_to_dataset(level, self.path_info(dpath))
+            res.add(ds)
+        return res
+
     def __and__(self, other: QueryResult) -> QueryResult:
         '''Take intersection of two QueryResult objects'''
         if self._level != other._level:
@@ -889,9 +900,14 @@ class QueryResult:
                 other_val = other_info.get(key)
                 if val is None or other_val is None or val == other_val:
                     continue
-                # TODO: What if this is negative?
                 diff_info[key] = val - other_val
             if diff_info:
+                if res._level > other._level:
+                    # We have a difference in sub-counts and we don't know
+                    # which specific data sets are missing, so we need to
+                    # produce a lower detail result that just has a reduced
+                    # sub-count
+                    res = res.reduced(other._level)
                 for key, val in self_info.items():
                     if key not in sub_counts:
                         diff_info[key] = val
