@@ -633,7 +633,8 @@ class TransferPlanner:
         # (i.e. entire missing patients, then stuides, etc.)
         curr_matching = {df : df_trans_map[df].new for df in checkable}
         curr_src_qr = src_qr
-        for curr_level in QueryLevel:
+        for curr_level in range(src_qr.level, QueryLevel.IMAGE + 1):
+            curr_level = QueryLevel(curr_level)
             if len(curr_src_qr) == 0:
                 break
             log.debug("Checking for missing data at level %s" % curr_level)
@@ -675,10 +676,14 @@ class TransferPlanner:
                     full_matching = old_matching
                 else:
                     full_matching |= old_matching
+                log.debug("missing = %s \n matching = %s" , missing[df], curr_matching[df])
+            log.debug("full matching = %s", full_matching)
 
             # Reduce the source qr to only data that matches on at least one dest
             if full_matching is not None:
+                log.debug("remaing pre-update = %s", curr_src_qr)
                 curr_src_qr = curr_src_qr & full_matching
+                log.debug("remaining post-update = %s", curr_src_qr)
 
             # Update the results with the missing data for this level
             for df_set, qr_list in res.items():
