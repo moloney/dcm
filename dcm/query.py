@@ -840,6 +840,46 @@ class QueryResult:
             res.add(ds)
         return res
 
+    def sub(self, other: QueryResult, ignore_subcounts=False) -> QueryResult:
+        '''Take the difference between two QueryResutls, with options
+
+        Using __sub__ is equivalent to calling this with default options
+        '''
+        res = QueryResult(self._level, prov=self.prov)
+        for dpath in self.level_paths(min(self._level, other._level)):
+            dnode = dpath.end
+            try:
+                other.get_path(dnode)
+            except KeyError:
+                # This sub-tree of data doesn't exist in other
+                res |= self.sub_query(dnode)
+                continue
+            if dpath.level == QueryLevel.IMAGE or ignore_subcounts:
+                continue
+            # This node exists in other, check for sub-count differences
+            diff_info = {}
+            self_info = self.path_info(dpath)
+            other_info = other.path_info(dpath)
+            sub_counts = ('n_studies', 'n_series', 'n_instances')
+            for key in sub_counts:
+                val = self_info.get(key)
+                other_val = other_info.get(key)
+                if val is None or other_val is None or val <= other_val:
+                    continue
+                diff_info[key] = val - other_val
+            if diff_info:
+                if res._level > other._level:
+                    # We have a difference in sub-counts and we don't know
+                    # which specific data sets are missing, so we need to
+                    # produce a lower detail result that just has a reduced
+                    # sub-count
+                    res = res.reduced(other._level)
+                for key, val in self_info.items():
+                    if key not in sub_counts:
+                        diff_info[key] = val
+                res.add(info_to_dataset(res.level, diff_info))
+        return res
+
     def __and__(self, other: QueryResult) -> QueryResult:
         '''Take intersection of two QueryResult objects'''
         if self._level != other._level:
@@ -885,40 +925,7 @@ class QueryResult:
 
     def __sub__(self, other: QueryResult) -> QueryResult:
         '''Take difference between one QueryResult and another'''
-        res = QueryResult(self._level, prov=self.prov)
-        for dpath in self.level_paths(min(self._level, other._level)):
-            dnode = dpath.end
-            try:
-                other.get_path(dnode)
-            except KeyError:
-                # This sub-tree of data doesn't exist in other
-                res |= self.sub_query(dnode)
-                continue
-            if dpath.level == QueryLevel.IMAGE:
-                continue
-            # This node exists in other, check for sub-count differences
-            diff_info = {}
-            self_info = self.path_info(dpath)
-            other_info = other.path_info(dpath)
-            sub_counts = ('n_studies', 'n_series', 'n_instances')
-            for key in sub_counts:
-                val = self_info.get(key)
-                other_val = other_info.get(key)
-                if val is None or other_val is None or val <= other_val:
-                    continue
-                diff_info[key] = val - other_val
-            if diff_info:
-                if res._level > other._level:
-                    # We have a difference in sub-counts and we don't know
-                    # which specific data sets are missing, so we need to
-                    # produce a lower detail result that just has a reduced
-                    # sub-count
-                    res = res.reduced(other._level)
-                for key, val in self_info.items():
-                    if key not in sub_counts:
-                        diff_info[key] = val
-                res.add(info_to_dataset(res.level, diff_info))
-        return res
+        return self.sub(other)
 
     def __isub__(self, other: QueryResult) -> QueryResult:
         if other._level < self._level:
