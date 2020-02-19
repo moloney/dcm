@@ -898,7 +898,7 @@ class QueryResult:
             for key in sub_counts:
                 val = self_info.get(key)
                 other_val = other_info.get(key)
-                if val is None or other_val is None or val == other_val:
+                if val is None or other_val is None or val <= other_val:
                     continue
                 diff_info[key] = val - other_val
             if diff_info:
@@ -931,14 +931,12 @@ class QueryResult:
             for key in sub_counts:
                 val = self_info.get(key)
                 other_val = other_info.get(key)
-                if val is None or other_val is None or val == other_val:
+                if val is None or other_val is None or val <= other_val:
                     continue
-                # TODO: What if this is negative?
                 diff_info[key] = val - other_val
             if not diff_info:
                 self.remove(self.path_data_set(dpath))
             else:
-                # TODO update our own sub-counts
                 ds = self._data[dnode.uid]
                 for counter_name, counter_diff in diff_info.items():
                     if counter_name == 'n_studies':
