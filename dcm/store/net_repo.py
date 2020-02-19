@@ -47,6 +47,9 @@ class NetRepo(DcmRepo):
     def __repr__(self) -> str:
         return f'NetRepo({self._local_ent.local}, {self._remote})'
 
+    def __str__(self) -> str:
+        return str(self._remote)
+
     @property
     def remote(self) -> DcmNode:
         return self._remote

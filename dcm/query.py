@@ -1074,14 +1074,26 @@ class QueryResult:
         return format_tree(None, formatter, child_getter)
 
     def __str__(self) -> str:
-        descr = 'Empty'
-        if self.n_patients() > 1:
-            descr = self.to_line(None)
-        else:
+        n_pat = self.n_patients()
+        if n_pat == 0:
+            descr = 'Empty'
+        elif self.n_patients() == 1:
+            descr = []
+            sep = ' | '
+            missing = 'NA'
             for pth, sub_uids in self.walk():
                 if len(sub_uids) != 1:
-                    descr = self.to_line(pth.end)
+                    descr.append(self.to_line(pth.end))
                     break
+                else:
+                    fmt_toks = [x for x in self._def_level_fmts[pth.level]
+                                if x not in self._def_cntr_fmts]
+                    line_fmt = sep.join(fmt_toks)
+                    node_info = defaultdict(lambda: missing, self.node_info(pth.end))
+                    descr.append(line_fmt.format_map(node_info))
+            descr = sep.join(descr)
+        else:
+            descr = self.to_line(None)
         return '%s Level QR: %s' % (self.level.name, descr)
 
 

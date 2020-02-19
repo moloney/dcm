@@ -100,6 +100,9 @@ class DcmNetChunk(RepoChunk):
     def __repr__(self) -> str:
         return f'DcmNetChunk({self.repo}, {self.qr})'
 
+    def __str__(self) -> str:
+        return f'({self.repo}) {self.qr}'
+
 
 class LocalIncomingDataError(IncomingDataError):
     '''Captures errors detected in incoming data stream'''

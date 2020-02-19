@@ -460,7 +460,12 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
     if dry_run:
         log.info("Starting dry run")
         async for transfer in planner.gen_transfers(query_res):
-            print('%s > %s' % (transfer.chunk, transfer.method_routes_map))
+            dests_str = []
+            for meth, routes in transfer.method_routes_map.items():
+                for route in routes:
+                    dests_str.append(f"({meth.name}) {route}")
+            dests_str = " / ".join(dests_str)
+            print('%s > %s' % (transfer.chunk, dests_str))
         log.info("Finished dry run")
     else:
         log.info("Starting data sync")
