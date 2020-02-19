@@ -657,7 +657,8 @@ class TransferPlanner:
                 curr_qr_trans = df_trans_map[df]
                 dest_qr = await dest.query(level=curr_level,
                                            query_res=curr_matching[df])
-                missing[df] = curr_qr_trans.old - curr_qr_trans.reverse(dest_qr).qr
+                missing[df] = curr_qr_trans.old.sub(curr_qr_trans.reverse(dest_qr).qr,
+                                                    ignore_subcounts=True)
                 matching = curr_qr_trans.new & dest_qr
                 if curr_level == self._trust_level:
                     done_uids = []
