@@ -225,7 +225,7 @@ class DicomOpReport(IndividualReport):
 
     @property
     def n_success(self) -> int:
-        if self._n_sucess is None:
+        if self._n_success is None:
             return 0
         return self._n_success
 
