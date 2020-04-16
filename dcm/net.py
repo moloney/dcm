@@ -256,7 +256,6 @@ class DicomOpReport(IndividualReport):
                     n_success = getattr(status, sub_op_attrs['completed'])
                     n_warn = getattr(status, sub_op_attrs['warning'])
                     n_error = getattr(status, sub_op_attrs['failed'])
-                    assert n_success + n_warn + n_error == self._n_input + 1
                     if self._n_expected is None:
                         self._n_expected = remaining + 1
                     if n_success != self._n_success:
