@@ -264,7 +264,7 @@ class DicomOpReport(IndividualReport):
                         self._n_expected = remaining + 1
                     if n_success != self._n_success:
                         assert self._n_success is None or self._n_success <= n_success
-                        self._n_success = n_sucess
+                        self._n_success = n_success
                     else:
                         if self.op_type == 'c-store':
                             data_set = minimal_copy(data_set)
