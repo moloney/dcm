@@ -195,6 +195,7 @@ class DicomOpReport(IndividualReport):
 
     op_type: Optional[str] = None
     '''The type of operation performed'''
+
     op_data: Dict[str, Any] = field(default_factory=dict)
     '''Additional data describing the operation specifics'''
 
@@ -1049,7 +1050,7 @@ class LocalEntity:
                     for missing_attr in missing_attrs:
                         if missing_attr not in auto_attrs:
                             warnings.warn(f"Remote node {remote} doesn't "
-                                          "support querying on {missing_attr}")
+                                          f"support querying on {missing_attr}")
                     qr.prov.src = remote
                     qr.prov.queried_elems = queried_elems.copy()
                     yield qr
