@@ -209,7 +209,7 @@ class DicomOpReport(IndividualReport):
 
     _n_expected: Optional[int] = field(default=None, init=False)
 
-    _n_success: int = field(default=0, init=False)
+    _n_success: int = field(default=None, init=False)
 
     _n_input: int = field(default=0, init=False)
 
@@ -225,6 +225,8 @@ class DicomOpReport(IndividualReport):
 
     @property
     def n_success(self) -> int:
+        if self._n_sucess is None:
+            return 0
         return self._n_success
 
     @property
@@ -251,6 +253,8 @@ class DicomOpReport(IndividualReport):
                 if remaining is None:
                     # We don't have sub-operation counts, so we just count
                     # 'pending' results as success
+                    if self._n_success is None:
+                        self._n_success = 0
                     self._n_success += 1
                 else:
                     n_success = getattr(status, sub_op_attrs['completed'])
@@ -259,16 +263,16 @@ class DicomOpReport(IndividualReport):
                     if self._n_expected is None:
                         self._n_expected = remaining + 1
                     if n_success != self._n_success:
-                        assert n_success - self._n_success == 1
-                        self._n_success += 1
+                        assert self._n_success is None or self._n_success <= n_success
+                        self._n_success = n_sucess
                     else:
                         if self.op_type == 'c-store':
                             data_set = minimal_copy(data_set)
                         if n_warn != self.n_warnings:
-                            assert n_warn - self.n_warnings == 1
+                            assert self.n_warnings < n_warn
                             self.warnings.append((status, data_set))
                         elif n_error != self.n_errors:
-                            assert n_error - self.n_errors == 1
+                            assert self.n_errors < n_errors
                             self.errors.append((status, data_set))
                 self._n_input += 1
             else:
@@ -278,9 +282,15 @@ class DicomOpReport(IndividualReport):
                     if n_success is not None:
                         n_warn = getattr(status, sub_op_attrs['warning'])
                         n_error = getattr(status, sub_op_attrs['failed'])
-                        assert n_success == self.n_success
+                        if self._n_success is None:
+                            self._n_success = n_success
+                        else:
+                            assert self._n_success <= n_success
+                            self._n_success = n_success
+                        # TODO: This might be incorrect, not clear if errors/warnings
+                        #       are always reported before this final status response
                         assert n_warn == self.n_warnings
-                        assert n_error == self.n_errors
+                       	assert n_error == self.n_errors
                     elif status_category != 'Success':
                         # If we don't have operation sub-counts, need to make
                         # sure any final error/warning status doesn't get lost
