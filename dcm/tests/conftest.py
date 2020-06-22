@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 import pydicom
+import psutil
 from pytest import fixture, mark
 
 from ..query import QueryLevel, QueryResult
@@ -176,7 +177,7 @@ def get_dcmtk_version():
 DCMTK_VERSION = get_dcmtk_version()
 
 
-dcmtk_base_port = 62765
+dcmtk_base_port = 62760
 
 
 dcmtk_base_name = 'DCMTKAE'
@@ -235,23 +236,37 @@ def mk_dcmtk_config(dcmtk_node, store_dir, clients):
                                    )
 
 
+def _get_used_ports():
+    return set(conn.laddr.port for conn in psutil.net_connections())
+
+
 @fixture
 def make_dcmtk_nodes(get_dicom_subset):
     '''Factory fixture for building dcmtk nodes'''
     procs = []
+    used_ports = _get_used_ports()
     with TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
         def _make_dcmtk_node(clients, subset='all'):
             node_idx = len(procs)
+            # TODO: We still have a race condition with port selection here,
+            #       ideally we would put this whole thing in a loop and detect
+            #       the server process failing with log message about the port
+            #       being in use
             port = dcmtk_base_port + node_idx
+            while port in used_ports:
+                port += 1
+            used_ports.add(port)
             ae_title = dcmtk_base_name + str(node_idx)
             dcmtk_node = DcmNode('localhost', ae_title, port)
+            print(f"Building dcmtk node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
             db_dir = node_dir / 'db'
             conf_file = db_dir / 'dcmqrscp.cfg'
             test_store_dir = db_dir / 'TEST_STORE'
             os.makedirs(test_store_dir)
             full_conf = mk_dcmtk_config(dcmtk_node, test_store_dir, clients)
+            print(full_conf)
             with open(conf_file, 'wt') as conf_fp:
                 conf_fp.write(full_conf)
             init_qr, init_data = get_dicom_subset(subset)
