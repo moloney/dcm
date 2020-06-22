@@ -1,27 +1,27 @@
 '''Synchronize DICOM data between local and/or remote locations'''
 from __future__ import annotations
 import logging, itertools, textwrap
-from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import (Optional, Tuple, Dict, List, Union, Iterable, Any, Set,
-                    Callable, TypeVar, Iterator, AsyncIterator, Generic, cast)
+                    Callable, TypeVar, Iterator, AsyncIterator, cast)
 from contextlib import AsyncExitStack, asynccontextmanager
 
 from pydicom import Dataset
 
-from .query import (QueryLevel, QueryResult, DataNode, InconsistentDataError,
-                    get_all_uids, minimal_copy, uid_elems)
-from .store import (TransferMethod, DataChunk, DataBucket, OobCapable, DataRepo, DcmRepo,
-                    LocalIncomingReport, LocalWriteReport, LocalBucket)
-from .filt import get_transform, Filter, uid_elem_set
-from .route import (Route, StaticRoute, DynamicRoute, Router, ProxyTransferError,
+from .query import (QueryLevel, QueryResult, DataNode, get_all_uids,
+                    minimal_copy, uid_elems)
+from .store import (TransferMethod, DataChunk, DataBucket, OobCapable, DataRepo,
+                    LocalIncomingReport)
+from .filt import get_transform, Filter
+from .route import (Route, StaticRoute, Router, ProxyTransferError,
                     ProxyReport, StoreReportType, DynamicTransferReport,
                     NoValidTransferMethodError)
 from .diff import diff_data_sets, DataDiff
-from .net import (DcmNode, DicomOpReport, IncomingDataReport, IncomingDataError,
-                  IncomingErrorType, RetrieveReport, RetrieveError)
-from .util import dict_to_ds, IndividualReport, MultiListReport, MultiDictReport, MultiKeyedError
+from .net import (IncomingDataReport, IncomingDataError, IncomingErrorType,
+                  RetrieveReport)
+from .util import (dict_to_ds, IndividualReport, MultiListReport,
+                   MultiDictReport, MultiKeyedError)
 
 
 log = logging.getLogger(__name__)

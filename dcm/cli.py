@@ -1,6 +1,6 @@
 '''Command line interface'''
 from __future__ import annotations
-import sys, os, logging, json, textwrap
+import sys, os, logging, json
 import asyncio
 
 import pydicom
