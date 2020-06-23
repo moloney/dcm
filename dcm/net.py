@@ -765,7 +765,6 @@ class EventFilter:
             remote_collision = True
         elif len(self.ae_titles & other.ae_titles) != 0:
             remote_collision = True
-        print("collides is returning: %s" % evt_collision and remote_collision)
         return evt_collision and remote_collision
 
 
@@ -1206,11 +1205,12 @@ class LocalEntity:
             report.log_issues()
             report.check_errors()
 
+
     async def retrieve(self,
                        remote: DcmNode,
                        query_res: QueryResult,
                        report: RetrieveReport = None,
-                       keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False
+                       keep_errors: Optional[Union[bool, Tuple[IncomingErrorType, ...]]] = None
                       ) -> AsyncIterator[Dataset]:
         '''Generate data sets from `remote` based on `query_res`.
 
@@ -1237,7 +1237,8 @@ class LocalEntity:
             extern_report = True
         report.requested = query_res
         # TODO: Stop ignoring type errors here once mypy fixes issue #3004
-        report.keep_errors = keep_errors # type: ignore
+        if keep_errors is not None:
+            report.keep_errors = keep_errors # type: ignore
         event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)),
                                    ae_titles=frozenset((remote.ae_title,))
                                   )
@@ -1261,6 +1262,7 @@ class LocalEntity:
                 # Add the data set to our report and handle errors
                 success = report.add(ds)
                 if not success:
+                    log.debug("Retrieved data set filtered due to error")
                     continue
                 # Remove any Group 0x0002 elements that may have been included
                 ds = ds[0x00030000:]

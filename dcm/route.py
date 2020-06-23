@@ -104,8 +104,6 @@ class StaticRoute(Route, _StaticBase):
                 if all(meth in d._supported_methods for d in self.dests):
                     avail_methods.append(meth)
             if len(avail_methods) == 0:
-                print(self.dests[0]._supported_methods)
-                print(self.methods)
                 raise NoValidTransferMethodError()
         object.__setattr__(self, 'dests', tuple(self.dests))
         object.__setattr__(self, 'methods', tuple(avail_methods))

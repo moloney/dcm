@@ -363,6 +363,7 @@ class TransferExecutor:
         for method, routes in transfer.method_routes_map.items():
             if method == TransferMethod.PROXY:
                 proxy_report = StaticProxyTransferReport(incoming_report=transfer.chunk.report)
+                proxy_report.keep_errors = self._keep_errors
                 trans_report.proxy_report = proxy_report
                 await self._do_static_proxy_transfer(transfer, proxy_report)
             else:

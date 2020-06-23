@@ -75,6 +75,7 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
         try:
             ds = data_queue.get(timeout=0.2)
         except Empty:
+            log.debug("disk_writer timed out waiting on queue")
             no_input = True
         else:
             if ds is None:
