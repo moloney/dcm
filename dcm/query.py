@@ -840,7 +840,7 @@ class QueryResult:
             res.add(ds)
         return res
 
-    def sub(self, other: QueryResult, ignore_subcounts=False) -> QueryResult:
+    def sub(self, other: QueryResult, ignore_subcounts: bool = False) -> QueryResult:
         '''Take the difference between two QueryResutls, with options
 
         Using __sub__ is equivalent to calling this with default options
@@ -1078,20 +1078,20 @@ class QueryResult:
         if n_pat == 0:
             descr = 'Empty'
         elif self.n_patients() == 1:
-            descr = []
+            descr_comps = []
             sep = ' | '
             missing = 'NA'
             for pth, sub_uids in self.walk():
                 if len(sub_uids) != 1:
-                    descr.append(self.to_line(pth.end))
+                    descr_comps.append(self.to_line(pth.end))
                     break
                 else:
                     fmt_toks = [x for x in self._def_level_fmts[pth.level]
                                 if x not in self._def_cntr_fmts]
                     line_fmt = sep.join(fmt_toks)
                     node_info = defaultdict(lambda: missing, self.node_info(pth.end))
-                    descr.append(line_fmt.format_map(node_info))
-            descr = sep.join(descr)
+                    descr_comps.append(line_fmt.format_map(node_info))
+            descr = sep.join(descr_comps)
         else:
             descr = self.to_line(None)
         return '%s Level QR: %s' % (self.level.name, descr)

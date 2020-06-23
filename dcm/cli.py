@@ -353,80 +353,6 @@ def query(params, remote, query, level, query_res, local, out_format,
 #
 
 
-def _cancel_all_tasks(loop):
-    to_cancel = asyncio.tasks.all_tasks(loop)
-    if not to_cancel:
-        return
-    log.debug("Canceling tasks: %s" % to_cancel)
-    for task in to_cancel:
-        task.cancel()
-
-    loop.run_until_complete(
-        asyncio.tasks.gather(*to_cancel, loop=loop, return_exceptions=True))
-
-    for task in to_cancel:
-        if task.cancelled():
-            continue
-        if task.exception() is not None:
-            log.debug("Got exception from cancelled task: %s" % task.exception())
-            #import pdb ; pdb.set_trace()
-            loop.call_exception_handler({
-                'message': 'unhandled exception during asyncio.run() shutdown',
-                'exception': task.exception(),
-                'task': task,
-            })
-
-
-def aio_run(main, *, debug=False):
-    """Run a coroutine.
-
-    This function runs the passed coroutine, taking care of
-    managing the asyncio event loop and finalizing asynchronous
-    generators.
-
-    This function cannot be called when another asyncio event loop is
-    running in the same thread.
-
-    If debug is True, the event loop will be run in debug mode.
-
-    This function always creates a new event loop and closes it at the end.
-    It should be used as a main entry point for asyncio programs, and should
-    ideally only be called once.
-
-    Example:
-
-        async def main():
-            await asyncio.sleep(1)
-            print('hello')
-
-        asyncio.run(main())
-    """
-    if asyncio.events._get_running_loop() is not None:
-        raise RuntimeError(
-            "asyncio.run() cannot be called from a running event loop")
-
-    if not asyncio.coroutines.iscoroutine(main):
-        raise ValueError("a coroutine was expected, got {!r}".format(main))
-
-    loop = asyncio.events.new_event_loop()
-    try:
-        asyncio.events.set_event_loop(loop)
-        loop.set_debug(debug)
-        return loop.run_until_complete(main)
-    finally:
-        log.debug("Cleaning up in aio_run")
-        log.debug("Found %d open asyncgens: %s" % (len(loop._asyncgens), loop._asyncgens))
-        #import pdb ; pdb.set_trace()
-        try:
-            _cancel_all_tasks(loop)
-            log.debug("Shutting down async generators")
-            loop.run_until_complete(loop.shutdown_asyncgens())
-        finally:
-            log.debug("Closing loop")
-            asyncio.events.set_event_loop(None)
-            loop.close()
-
-
 async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, keep_errors):
     # Perform initial query if needed
     if len(query) > 0:
@@ -576,8 +502,17 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
     # Handle trust-level option
     trust_level = QueryLevel[trust_level.upper()]
 
-    aio_run(_do_sync(src, dests, query, query_res, dest_route, trust_level,
-                     force_all, dry_run, validators, keep_errors))
+    asyncio.run(_do_sync(src,
+                         dests,
+                         query,
+                         query_res,
+                         dest_route,
+                         trust_level,
+                         force_all,
+                         dry_run,
+                         validators,
+                         keep_errors)
+                )
 
 
 async def _netdump_cb(event):
@@ -724,7 +659,7 @@ cli.add_command(echo)
 cli.add_command(query)
 cli.add_command(sync)
 #cli.add_command(listen)
-cli.add_command(netdump)
+#cli.add_command(netdump)
 cli.add_command(dump)
 cli.add_command(diff)
 

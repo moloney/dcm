@@ -1,6 +1,6 @@
 '''DICOM Networking'''
 from __future__ import annotations
-import asyncio, time, logging, warnings, enum, json
+import asyncio, threading, time, logging, warnings, enum
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
@@ -10,17 +10,13 @@ from typing import (List, Set, Dict, Tuple, Optional, FrozenSet, Union, Any,
                     AsyncIterator, Iterator, Callable, Awaitable, Type,
                     TYPE_CHECKING, cast)
 from pathlib import Path
+from queue import Empty
 
 import janus
 from fifolock import FifoLock
 import pydicom
 from pydicom.dataset import Dataset
 from pydicom.datadict import keyword_for_tag
-from pydicom.uid import (ExplicitVRLittleEndian,
-                         ImplicitVRLittleEndian,
-                         DeflatedExplicitVRLittleEndian,
-                         ExplicitVRBigEndian,
-                         UID)
 
 from pynetdicom import (AE, Association, evt, build_context,
                         DEFAULT_TRANSFER_SYNTAXES,
@@ -29,8 +25,8 @@ from pynetdicom import (AE, Association, evt, build_context,
                         VerificationPresentationContexts,
                         sop_class)
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import (StorageServiceClass, MRImageStorage, SOPClass)
-from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
+from pynetdicom.sop_class import StorageServiceClass, SOPClass
+#from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
 from pynetdicom.transport import ThreadedAssociationServer
 from pynetdicom.presentation import PresentationContext
 
@@ -39,7 +35,8 @@ from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
-from .util import IndividualReport, MultiListReport, MultiError, serializer
+from .util import (IndividualReport, MultiListReport, MultiError, serializer,
+                   create_thread_task)
 
 
 log = logging.getLogger(__name__)
@@ -88,7 +85,7 @@ def _make_default_store_scu_pcs(transfer_syntaxes: Optional[List[str]] = None
     max_len = 128 -  len(private_sop_classes)
     for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
         if sop_name not in dropped_storage_classes:
-            if len(include_sops) > max_len:
+            if len(include_sops) == max_len:
                 warnings.warn("Too many storage SOPClasses, dropping more "
                               "from end of the list")
                 break
@@ -101,6 +98,7 @@ def _make_default_store_scu_pcs(transfer_syntaxes: Optional[List[str]] = None
         sop._service_class = StorageServiceClass
         include_sops.append(sop)
         pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
+    assert len(pres_contexts) <= 128
     return pres_contexts
 
 def _make_default_store_scp_pcs(transfer_syntaxes: Optional[List[str]] = None
@@ -209,7 +207,7 @@ class DicomOpReport(IndividualReport):
 
     _n_expected: Optional[int] = field(default=None, init=False)
 
-    _n_success: int = field(default=None, init=False)
+    _n_success: Optional[int] = field(default=None, init=False)
 
     _n_input: int = field(default=0, init=False)
 
@@ -272,7 +270,7 @@ class DicomOpReport(IndividualReport):
                             assert self.n_warnings < n_warn
                             self.warnings.append((status, data_set))
                         elif n_error != self.n_errors:
-                            assert self.n_errors < n_errors
+                            assert self.n_errors < n_error
                             self.errors.append((status, data_set))
                 self._n_input += 1
             else:
@@ -302,6 +300,8 @@ class DicomOpReport(IndividualReport):
                     log.debug("DicomOpReport got final status after sub-ops, marking self as done")
                     self.done = True
                 else:
+                    if self._n_success is None:
+                        self._n_success = 0
                     if status_category == 'Success':
                         self._n_success += 1
                     else:
@@ -617,7 +617,8 @@ def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[s
                   level: QueryLevel,
                   queries: Iterator[Dataset],
                   query_model: sop_class.SOPClass,
-                  split_level: Optional[QueryLevel] = None) -> None:
+                  split_level: Optional[QueryLevel] = None,
+                  shutdown: Optional[threading.Event] = None) -> None:
     '''Worker function for performing queries in a separate thread
     '''
     if split_level is None:
@@ -630,6 +631,7 @@ def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[s
     split_attr = uid_elems[split_level]
     last_split_val = None
 
+    resp_count = 0
     for query in queries:
         log.debug("Sending query:\n%s", query)
         res = QueryResult(level)
@@ -638,6 +640,10 @@ def _query_worker(res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[s
             rep_q.put((status, rdat))
             if rdat is None:
                 break
+            if resp_count + 1 % 20 == 0:
+                if shutdown is not None and shutdown.is_set():
+                    return
+            resp_count += 1
             log.debug("Got query response:\n%s", rdat)
             split_val = getattr(rdat, split_attr)
             if last_split_val != split_val:
@@ -672,7 +678,8 @@ def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]]
                  assoc: Association,
                  dest: DcmNode,
                  query_res: QueryResult,
-                 query_model: sop_class.SOPClass) -> None:
+                 query_model: sop_class.SOPClass,
+                 shutdown: Optional[threading.Event] = None) -> None:
     '''Worker function for perfoming move operations in another thread'''
     for d in query_res:
         move_req = _make_move_request(d)
@@ -682,21 +689,38 @@ def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]]
                                       dest.ae_title,
                                       query_model=query_model)
         time.sleep(0.01)
-        for status, rdat in responses:
+        for r_idx, (status, rdat) in enumerate(responses):
             rep_q.put((status, rdat))
+            if r_idx % 20 == 0:
+                if shutdown is not None and shutdown.is_set():
+                    log.debug("Move worker exiting from shutdown event")
+                    return
     rep_q.put(None)
+    log.debug("Move worker exiting normally")
 
 
 def _send_worker(send_q: janus._SyncQueueProxy[Optional[Dataset]],
                  rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
-                 assoc: Association) -> None:
+                 assoc: Association,
+                 shutdown: Optional[threading.Event] = None) -> None:
     '''Worker function for performing move operations in another thread'''
+    n_sent = 0
     while True:
-        ds = send_q.get()
-        if ds is None:
-            log.debug("Send worker got None, shutting down...")
-            rep_q.put(None)
-            break
+        no_input = False
+        try:
+            ds = send_q.get(timeout=0.2)
+        except Empty:
+            no_input = True
+        else:
+            if ds is None:
+                log.debug("Send worker got None, shutting down...")
+                rep_q.put(None)
+                break
+        if no_input or n_sent % 20 == 0:
+            if shutdown is not None and shutdown.is_set():
+                break
+        if no_input:
+            continue
         log.debug("Send worker got a data set")
         try:
             status = assoc.send_c_store(ds)
@@ -1025,17 +1049,16 @@ class LocalEntity:
                                                                report,
                                                                op_report_attrs)
                                    )
-            query_fut = asyncio.ensure_future(loop.run_in_executor(self._thread_pool,
-                                                                   partial(_query_worker,
-                                                                           res_q.sync_q,
-                                                                           rep_q.sync_q,
-                                                                           assoc,
-                                                                           level,
-                                                                           queries,
-                                                                           query_model,
-                                                                          )
-                                                                   )
-                                              )
+            query_fut = create_thread_task(_query_worker,
+                                           (res_q.sync_q,
+                                            rep_q.sync_q,
+                                            assoc,
+                                            level,
+                                            queries,
+                                            query_model
+                                            ),
+                                           loop=loop,
+                                           thread_pool=self._thread_pool)
             qr_fut_done = False
             qr_fut_exception = None
             assoc_released = False
@@ -1058,8 +1081,12 @@ class LocalEntity:
                     qr, missing_attrs = res
                     for missing_attr in missing_attrs:
                         if missing_attr not in auto_attrs:
-                            warnings.warn(f"Remote node {remote} doesn't "
-                                          f"support querying on {missing_attr}")
+                            # TODO: Still getting some false positives with this
+                            #       warning, presumably from pre-queries. Disable
+                            #       it until it is more reliable.
+                            pass
+                            #warnings.warn(f"Remote node {remote} doesn't "
+                            #              f"support querying on {missing_attr}")
                     qr.prov.src = remote
                     qr.prov.queried_elems = queried_elems.copy()
                     yield qr
@@ -1091,6 +1118,7 @@ class LocalEntity:
         if event_filter is None:
             event_filter = EventFilter()
         if presentation_contexts is None:
+            log.debug("Building list of default presentation contexts")
             presentation_contexts = []
             if event_filter.event_types is None:
                 for p_contexts in default_evt_pc_map.values():
@@ -1162,14 +1190,15 @@ class LocalEntity:
                                                                report,
                                                                op_report_attrs)
                                    )
-            await loop.run_in_executor(self._thread_pool,
-                                       partial(_move_worker,
-                                               rep_q.sync_q,
-                                               assoc,
-                                               dest,
-                                               query_res,
-                                               query_model)
-                                              )
+            await create_thread_task(_move_worker,
+                                     (rep_q.sync_q,
+                                      assoc,
+                                      dest,
+                                      query_res,
+                                      query_model),
+                                     loop=loop,
+                                     thread_pool=self._thread_pool
+                                     )
             await rep_builder_task
         finally:
             assoc.release()
@@ -1233,6 +1262,8 @@ class LocalEntity:
                 success = report.add(ds)
                 if not success:
                     continue
+                # Remove any Group 0x0002 elements that may have been included
+                ds = ds[0x00030000:]
                 # Add the file_meta to the data set and yield it
                 file_meta.ImplementationVersionName = __version__
                 ds.file_meta = file_meta
@@ -1302,12 +1333,12 @@ class LocalEntity:
                 asyncio.create_task(self._single_report_builder(rep_q.async_q,
                                                                 report)
                                    )
-            send_fut = loop.run_in_executor(self._thread_pool,
-                                            partial(_send_worker,
-                                                    send_q.sync_q,
-                                                    rep_q.sync_q,
-                                                    assoc)
-                                           )
+            send_fut = create_thread_task(_send_worker,
+                                          (send_q.sync_q,
+                                           rep_q.sync_q,
+                                           assoc),
+                                          loop=loop,
+                                          thread_pool=self._thread_pool)
             yield send_q.async_q
         finally:
             try:
@@ -1411,9 +1442,12 @@ class LocalEntity:
         log.debug("Cleaning up threaded listener")
         assert self._listen_mgr is not None
         try:
+            self._listen_mgr.server_close()
             self._listen_mgr.shutdown()
+            log.debug("Threaded listener shutdown successfully")
         finally:
             self._listen_mgr = None
+            log.debug("Threaded listener has been cleaned up")
 
     def _get_lock_type(self, event_filter: EventFilter) -> type:
         lock_type = self._lock_types.get(event_filter)

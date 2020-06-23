@@ -1,15 +1,20 @@
 '''Various utility functions'''
 from __future__ import annotations
-import os, json
-
-from dataclasses import dataclass, field, fields, astuple
+import os, sys, json, time, logging
+import asyncio, threading
+from functools import partial
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field, fields
 from contextlib import asynccontextmanager
 from typing import (AsyncGenerator, Any, AsyncIterator, Dict, List, TypeVar,
-                    Optional, Union, Generic, Iterator, Tuple, KeysView,
-                    ValuesView, ItemsView, Type)
+                    Optional, Union, Generic, Iterator, Iterable, KeysView,
+                    ValuesView, ItemsView, Type, Callable)
 from typing_extensions import Protocol
 
 from pydicom import Dataset
+
+
+log = logging.getLogger(__name__)
 
 
 def dict_to_ds(data_dict: Dict[str, Any]) -> Dataset:
@@ -383,3 +388,57 @@ def fstr_eval(f_str: str,
 
     prefix = 'rf' if raw_string else 'f'
     return eval(prefix + ta + f_str + ta, context) + ra
+
+
+_thread_shutdown = threading.Event()
+
+
+def _default_done_callback(task: asyncio.Future[Any]) -> None:
+    try:
+        ex = task.exception()
+        if ex is not None:
+            loop = task.get_loop()
+            loop.call_exception_handler({
+                    'message': 'unhandled exception from task',
+                    'exception': ex,
+                    'task': task,
+                })
+            _thread_shutdown.set()
+            time.sleep(2.0)
+            sys.exit()
+            #os.kill(os.getpid(), signal.SIGINT)
+
+    except asyncio.CancelledError:
+        pass
+
+
+def create_thread_task(func: Callable[..., Any],
+                       args: Optional[Iterable[Any]] = None,
+                       kwargs: Optional[Dict[str, Any]] = None,
+                       loop: Optional[asyncio.AbstractEventLoop] = None,
+                       thread_pool: Optional[ThreadPoolExecutor] = None,
+                       done_cb: Optional[Callable[[asyncio.Future[Any]], None]] = _default_done_callback
+                       ) -> asyncio.Future[Any]:
+    '''Helper to turn threads into tasks with clean shutdown option
+
+    Canceling a thread is not generally possible, so we pass an additional
+    kwarg `shutdown` to `func` which will point to an event that can be
+    monitored periodically for shutdown events.
+
+    Worker threads are also prone to hiding exceptions, so we automatically
+    add a callback to report exceptions in a timely manner and initiate a
+    shutdown of all worker threads and exit the application.
+    '''
+    if args is None:
+        args = tuple()
+    if kwargs is None:
+        kwargs = {}
+    if loop is None:
+        loop = asyncio.get_running_loop()
+
+    kwargs['shutdown'] = _thread_shutdown
+    pfunc = partial(func, *args, **kwargs)
+    task = asyncio.ensure_future(loop.run_in_executor(thread_pool, pfunc))
+    if done_cb is not None:
+        task.add_done_callback(done_cb)
+    return task
