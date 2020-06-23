@@ -80,8 +80,10 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
             if ds is None:
                 break
         if report.n_input + 1 % 20 == 0 or no_input:
-            if ds is None or shutdown is not None and shutdown.is_set():
+            if shutdown is not None and shutdown.is_set():
                 break
+        if no_input:
+            continue
         log.debug("disk_writer thread got a data set")
         out_path = os.path.join(root_path,
                                 make_out_path(out_fmt, ds))
