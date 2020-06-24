@@ -341,7 +341,7 @@ T = TypeVar('T')
 async def aclosing(thing : AsyncGenerator[T, None]) -> AsyncIterator[AsyncGenerator[T, None]]:
     '''Context manager that ensures that an async iterator is closed
 
-    See PEP 533 for an explanation on why this is (unfortunately) needded.
+    See PEP 533 for an explanation on why this is (unfortunately) needed.
     '''
     try:
         yield thing
