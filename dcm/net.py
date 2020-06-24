@@ -67,6 +67,10 @@ dropped_storage_classes = set(['LensometryMeasurementsStorage',
                                'SpectaclePrescriptionReportStorage',
                                'OphthalmicAxialMeasurementsStorage',
                                'IntraocularLensCalculationsStorage',
+                               'MacularGridThicknessAndVolumeReport',
+                               'OphthalmicVisualFieldStaticPerimetryMeasurementsStorage',
+                               'OphthalmicThicknessMapStorage',
+                               'CornealTopographyMapStorage',
                                ])
 
 
@@ -86,8 +90,8 @@ def _make_default_store_scu_pcs(transfer_syntaxes: Optional[List[str]] = None
     for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
         if sop_name not in dropped_storage_classes:
             if len(include_sops) == max_len:
-                warnings.warn("Too many storage SOPClasses, dropping more "
-                              "from end of the list")
+                log.warn("Too many storage SOPClasses, dropping more from end "
+                         "of the list")
                 break
             sop = SOPClass(sop_uid)
             sop._service_class = StorageServiceClass
@@ -100,6 +104,7 @@ def _make_default_store_scu_pcs(transfer_syntaxes: Optional[List[str]] = None
         pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
     assert len(pres_contexts) <= 128
     return pres_contexts
+
 
 def _make_default_store_scp_pcs(transfer_syntaxes: Optional[List[str]] = None
                                 ) -> List[PresentationContext]:
