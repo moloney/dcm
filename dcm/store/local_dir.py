@@ -73,7 +73,8 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
         log.debug("disk_writer is waiting on data")
         no_input = False
         try:
-            ds = data_queue.get(timeout=0.2)
+            #TODO: Stop ignoring types when this is fixed: https://github.com/aio-libs/janus/issues/267
+            ds = data_queue.get(timeout=0.2) #type: ignore
         except Empty:
             log.debug("disk_writer timed out waiting on queue")
             no_input = True
@@ -119,7 +120,8 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
         log.debug("_oob_transfer_worker is waiting on data")
         no_input = False
         try:
-            in_paths = paths_queue.get(timeout=0.2)
+            #TODO: Stop ignoring types when this is fixed: https://github.com/aio-libs/janus/issues/267
+            in_paths = paths_queue.get(timeout=0.2) #type: ignore
         except Empty:
             no_input = True
         else:
@@ -177,16 +179,14 @@ class LocalDir(LocalBucket):
         return 'LocalDir(%s)' % self._root_path
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
-        loop = asyncio.get_running_loop()
-        res_q: janus.Queue[LocalChunk] = janus.Queue(loop=loop)
+        res_q: janus.Queue[LocalChunk] = janus.Queue()
         crawl_fut = create_thread_task(_dir_crawl_worker,
                                        (res_q.sync_q,
                                         self._root_path,
                                         self._recurse,
                                         self._file_ext,
                                         self._max_chunk
-                                        ),
-                                       loop=loop
+                                        )
                                        )
         while True:
             try:
@@ -208,15 +208,13 @@ class LocalDir(LocalBucket):
             report = LocalWriteReport()
         else:
             extern_report = True
-        loop = asyncio.get_running_loop()
-        send_q: janus.Queue[Dataset] = janus.Queue(10, loop=loop)
+        send_q: janus.Queue[Dataset] = janus.Queue(10)
         send_fut = create_thread_task(_disk_write_worker,
                                       (send_q.sync_q,
                                        self._root_path,
                                        self._out_fmt,
                                        self._force_overwrite,
-                                       report),
-                                      loop=loop
+                                       report)
                                       )
         try:
             yield send_q.async_q
@@ -254,13 +252,12 @@ class LocalDir(LocalBucket):
             op = os.link
         elif method == TransferMethod.SYMLINK:
             op = os.symlink
-        loop = asyncio.get_running_loop()
-        oob_q: janus.Queue[Optional[Tuple[PathInputType, PathInputType]]] = janus.Queue(10, loop=loop)
+        oob_q: janus.Queue[Optional[Tuple[PathInputType, PathInputType]]] = janus.Queue(10)
         oob_fut = create_thread_task(_oob_transfer_worker,
                                      (oob_q.sync_q,
                                       op,
-                                      report),
-                                     loop=loop)
+                                      report)
+                                     )
         async for src_path, ds in chunk.gen_paths_and_data():
             dest_path = os.path.join(self._root_path,
                                      make_out_path(self._out_fmt, ds))

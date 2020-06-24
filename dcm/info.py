@@ -25,7 +25,7 @@ install_requires = ['pydicom >= 1.0',
                     'click',
                     'toml',
                     'tree-format',
-                    'janus',
+                    'janus >= 0.5',
                     'fifolock',
                     'typing_extensions',
                     ]

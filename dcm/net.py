@@ -708,7 +708,8 @@ def _send_worker(send_q: janus._SyncQueueProxy[Optional[Dataset]],
     while True:
         no_input = False
         try:
-            ds = send_q.get(timeout=0.2)
+            #TODO: Stop ignoring types when this is fixed: https://github.com/aio-libs/janus/issues/267
+            ds = send_q.get(timeout=0.2) #type: ignore
         except Empty:
             no_input = True
         else:
@@ -1023,9 +1024,8 @@ class LocalEntity:
                       len(queries))
 
         # Build a queue for results from query thread
-        loop = asyncio.get_running_loop()
-        res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue(loop=loop)
-        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(loop=loop)
+        res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
         # Build an AE to perform the query
         qr_ae = AE(ae_title=self._local.ae_title)
@@ -1056,7 +1056,6 @@ class LocalEntity:
                                             queries,
                                             query_model
                                             ),
-                                           loop=loop,
                                            thread_pool=self._thread_pool)
             qr_fut_done = False
             qr_fut_exception = None
@@ -1168,8 +1167,7 @@ class LocalEntity:
                            'op_type': 'c-move',
                            'op_data': {'dest' : dest}
                           }
-        loop = asyncio.get_running_loop()
-        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(loop=loop)
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         # Setup the association
         query_model = self._choose_qr_model(src, 'move', query_res.level)
         if transfer_syntax is None:
@@ -1195,7 +1193,6 @@ class LocalEntity:
                                       dest,
                                       query_res,
                                       query_model),
-                                     loop=loop,
                                      thread_pool=self._thread_pool
                                      )
             await rep_builder_task
@@ -1318,9 +1315,8 @@ class LocalEntity:
         report.provider = remote
         report.user = self._local
         report.op_type = 'c-store'
-        loop = asyncio.get_running_loop()
-        send_q: janus.Queue[Dataset] = janus.Queue(10, loop=loop)
-        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10, loop=loop)
+        send_q: janus.Queue[Dataset] = janus.Queue(10)
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
         send_ae = AE(ae_title=self._local.ae_title)
         log.debug(f"About to associate with {remote} to send data")
         assoc = send_ae.associate(remote.host,
@@ -1339,7 +1335,6 @@ class LocalEntity:
                                           (send_q.sync_q,
                                            rep_q.sync_q,
                                            assoc),
-                                          loop=loop,
                                           thread_pool=self._thread_pool)
             yield send_q.async_q
         finally:
