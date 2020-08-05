@@ -59,7 +59,6 @@ class NoValidTransferMethodError(Exception):
     '''Error raised when we are unable to select a valid transfer method'''
 
 
-# TODO: Need some way of setting `keep_errors` in the chunks
 class DataChunk(Protocol):
     '''Most basic protocol for a naive chunk of data
 
@@ -329,10 +328,6 @@ class DcmRepo(DataRepo[DcmNetChunk, MultiListReport[DicomOpReport], DicomOpRepor
     _supported_methods: Tuple[TransferMethod, ...] = \
         (TransferMethod.PROXY,
          TransferMethod.REMOTE_COPY)
-
-    @property
-    def description(self) -> Optional[str]:
-        return str(self.remote.ae_title)
 
     @property
     def remote(self) -> DcmNode:

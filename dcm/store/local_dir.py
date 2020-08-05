@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, logging, asyncio, re, shutil, threading
 from contextlib import asynccontextmanager
 from glob import iglob
-from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast
+from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union
 from queue import Empty
 
 from pydicom.dataset import Dataset
@@ -110,7 +110,6 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
             report.add_success(out_path)
 
 
-# TODO: Take force_overwrite kwarg and handle it correctly
 def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[PathInputType, PathInputType]]]',
                          transfer_op: Callable[..., Any],
                          force_overwrite: bool,
@@ -134,17 +133,20 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
         if no_input:
             continue
         in_paths = cast(Tuple[PathInputType, PathInputType], in_paths)
-        src, dest = in_paths
+        src, dest = (os.fspath(x) for x in in_paths)
         log.debug("_oob_transfer_worker got some paths")
-        existing_backup = None
+        existing_backup: Optional[Union[str, bytes]] = None
         if os.path.exists(dest):
             if force_overwrite:
                 log.debug('File exists, overwriting: %s', dest)
-                existing_backup = dest + '~'
+                if isinstance(dest, bytes):
+                    existing_backup = dest + b'~'
+                else:
+                    existing_backup = dest + '~'
                 os.rename(dest, existing_backup)
             else:
                 log.debug('File exists, skipping: %s', dest)
-                report.add_skipped(out_path)
+                report.add_skipped(dest)
                 continue
         try:
             os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -190,13 +192,10 @@ class LocalDir(LocalBucket):
         self._file_ext = file_ext
         if self._file_ext:
             self._out_fmt += '.%s' % file_ext
+        self.description = self._root_path
 
     def __str__(self) -> str:
         return 'LocalDir(%s)' % self._root_path
-
-    @property
-    def description(self) -> Optional[str]:
-        return self._root_path
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()

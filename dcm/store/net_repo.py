@@ -32,6 +32,7 @@ class NetRepo(DcmRepo):
         self._level = level
         self._base_query = deepcopy(base_query)
         self.chunk_size = chunk_size
+        self.description = remote.ae_title
 
     def __getstate__(self) -> Dict[str, Any]:
         state = {k: v for k, v in self.__dict__.items() if k != '_local_ent'}
