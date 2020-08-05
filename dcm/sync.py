@@ -591,8 +591,8 @@ class TransferPlanner:
         if self._prog_hook is not None:
             if report is None:
                 report = MultiListReport(description='transfers', prog_hook=self._prog_hook)
-            else:
-                report.set_prog_hook(self._prog_hook)
+            #else:
+            #    report.set_prog_hook(self._prog_hook)
         try:
             executor = TransferExecutor(self._router,
                                         self._keep_errors,

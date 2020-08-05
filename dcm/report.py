@@ -136,6 +136,8 @@ class Report:
     def n_expected(self, val: int) -> None:
         self._n_expected = val
         if self._prog_hook is not None:
+            if self._task is None:
+                self._init_task()
             self._prog_hook.set_total(self._task, val)
 
     @property
@@ -156,7 +158,9 @@ class Report:
         self._task = self._prog_hook.create_task(self.description, total=self._n_expected)
 
     def set_prog_hook(self, prog_hook: Optional[ProgressHookBase[Any]]) -> None:
-        assert self._prog_hook is None
+        if self._prog_hook is not None:
+            assert prog_hook == self._prog_hook
+            return
         if prog_hook is None:
             return
         self._prog_hook = prog_hook

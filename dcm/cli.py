@@ -352,8 +352,8 @@ def query(params, remote, query, level, query_res, local, out_format,
         setattr(qdat, q_attr, q_val)
     with ExitStack() as estack:
         if not no_progress:
-            prog = estack.enter_context(Progress(transient=True))
-            report = MultiListReport(progress=prog)
+            prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+            report = MultiListReport(description='query', prog_hook=prog)
         else:
             report = None
         qr = asyncio.run(net_ent.query(remote_node, level, qdat, query_res, report=report))
@@ -389,7 +389,7 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
             #       it should be a low-level query.
             if not no_progress:
                 prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
-                report = MultiListReport(progress=prog)
+                report = MultiListReport(description='init-query', prog_hook=prog)
             else:
                 report = None
             query_res = await src.query(query=qdat, query_res=query_res, report=report)
