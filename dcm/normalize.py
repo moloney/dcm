@@ -6,6 +6,8 @@ that is not implemented yet
 from collections import OrderedDict
 from base64 import b64encode
 
+from pydicom.datadict import keyword_for_tag
+
 
 def bytes_or_text(val):
     if isinstance(val, str):
@@ -34,19 +36,25 @@ def norm_elem_val(elem):
     return val
 
 
+def make_elem_filter(include_elems):
+    def filt(tag, keyword):
+        if keyword in include_elems:
+            return True
+        return False
+    return filt
+
+
 def normalize(data_set, elem_filter=None):
     '''Convert a DICOM data set into basic python types that can be serialized
     '''
     res = OrderedDict()
-    for elem in data_set:
-        if elem_filter:
-            elem = elem_filter(elem)
-            if elem is None:
-                continue
-        key = elem.keyword
+    for tag in data_set.keys():
+        key = keyword_for_tag(tag)
+        if elem_filter and not elem_filter(tag, key):
+            continue
         if key == '':
-            key = '%04x,%04x' % (elem.tag.group, elem.tag.element)
-        res[key] = norm_elem_val(elem)
+            key = '%04x,%04x' % (tag.group, tag.element)
+        res[key] = norm_elem_val(data_set[tag])
     return res
 
 
