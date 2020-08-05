@@ -19,9 +19,9 @@ from .route import (Route, StaticRoute, Router, ProxyTransferError,
                     NoValidTransferMethodError)
 from .diff import diff_data_sets, DataDiff
 from .net import (IncomingDataReport, IncomingDataError, IncomingErrorType,
-                  RetrieveReport)
-from .util import (dict_to_ds, IndividualReport, MultiListReport,
-                   MultiDictReport, MultiKeyedError)
+                  DicomOpReport, RetrieveReport)
+from .report import Report, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .util import dict_to_ds
 
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,6 @@ class StaticTransfer(Transfer):
 
 
 
-@dataclass
 class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
     '''Transfer report that only captures storage'''
 
@@ -74,13 +73,27 @@ class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
 IncomingReportType = Union[IncomingDataReport, RetrieveReport, LocalIncomingReport]
 
 
-@dataclass
 class StaticProxyTransferReport(ProxyReport):
     '''Static proxy transfer report'''
 
-    incoming_report: IncomingReportType = field(default_factory=RetrieveReport)
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 incoming_report: Optional[IncomingReportType] = None,
+                 ):
+        super().__init__(description, n_expected, prog_hook, keep_errors)
+        self.incoming_report = RetrieveReport(prog_hook=prog_hook) if incoming_report is None else incoming_report
+        if self.n_expected is None and self.incoming_report.n_expected is not None:
+            self.n_expected = self.incoming_report.n_expected
+        self.store_reports: StaticStoreReport = StaticStoreReport(prog_hook=prog_hook)
 
-    store_reports: StaticStoreReport = field(default_factory=StaticStoreReport)
+    @property
+    def n_success(self) -> int:
+        return (super().n_success
+                + self.incoming_report.n_success
+                + self.store_reports.n_success)
 
     @property
     def n_errors(self) -> int:
@@ -103,6 +116,8 @@ class StaticProxyTransferReport(ProxyReport):
                          store_report: StoreReportType) -> None:
         '''Add a DicomOpReport or LocalWriteReport to keep track of'''
         assert dest not in self.store_reports
+        if self.n_expected is not None and store_report.n_expected is None:
+            store_report.n_expected = self.n_expected
         self.store_reports[dest] = store_report
 
     def log_issues(self) -> None:
@@ -137,7 +152,6 @@ class StaticProxyTransferReport(ProxyReport):
         self.store_reports.clear()
 
 
-@dataclass
 class StaticOobTransferReport(MultiDictReport[TransferMethod, StaticStoreReport]):
     '''Transfer report for out-of-band transfers'''
 
@@ -158,12 +172,26 @@ class StaticTransferError(Exception):
         return '\n'.join(res)
 
 
-@dataclass
-class StaticTransferReport(IndividualReport):
+class StaticTransferReport(Report):
     '''Capture all possible info about a single StaticTranfer'''
-    proxy_report: Optional[StaticProxyTransferReport] = None
 
-    oob_report: Optional[StaticOobTransferReport] = None
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 ):
+        super().__init__(description, n_expected, prog_hook)    
+        self.proxy_report: Optional[StaticProxyTransferReport] = None
+        self.oob_report: Optional[StaticOobTransferReport] = None
+
+    @property
+    def n_success(self) -> int:
+        res = 0
+        if self.proxy_report is not None:
+            res += self.proxy_report.n_success
+        if self.oob_report is not None:
+            res += self.oob_report.n_success
+        return res
 
     @property
     def n_errors(self) -> int:
@@ -275,6 +303,7 @@ class TransferExecutor:
         else:
             self.report = report
             self._extern_report = True
+        self.report.description = 'transfers'
         self._router = router
         self._validators = validators
         self._keep_errors = keep_errors
@@ -323,6 +352,8 @@ class TransferExecutor:
             for dest in dests:
                 #TODO: Might be a LocalWriteReport
                 store_rep = dest.get_empty_send_report()
+                #store_rep.set_prog_hook(self.report._prog_hook)
+                store_rep.n_expected = transfer.chunk.n_expected
                 report.add_store_report(dest, store_rep)
                 d_q_map[dest] = await stack.enter_async_context(dest.send(report=store_rep))
             async for ds in transfer.chunk.gen_data():
@@ -367,13 +398,15 @@ class TransferExecutor:
                 trans_report.proxy_report = proxy_report
                 await self._do_static_proxy_transfer(transfer, proxy_report)
             else:
-                oob_report = StaticOobTransferReport()
+                oob_report = StaticOobTransferReport(prog_hook=self.report._prog_hook)
                 oob_report[method] = StaticStoreReport()
                 trans_report.oob_report = oob_report
                 for dest in transfer.get_dests(method):
                     oob_dest = cast(OobCapable[Any, Any], dest)
                     log.debug(f"Doing out-of-band transfer to {dest}")
                     oob_report[method][dest] = oob_dest.get_empty_oob_report()
+                    oob_report[method][dest].n_expected = transfer.chunk.n_expected
+                    oob_report[method][dest].description = f'{method} to {dest}'
                     await oob_dest.oob_transfer(method,
                                                 transfer.chunk,
                                                 report=oob_report[method][dest])
@@ -440,7 +473,8 @@ class TransferPlanner:
                  dests: List[DestType],
                  trust_level: QueryLevel = QueryLevel.IMAGE,
                  force_all: bool = False,
-                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False):
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None):
         self._src = src
         self._trust_level = trust_level
         self._force_all = force_all
@@ -452,6 +486,7 @@ class TransferPlanner:
         else:
             keep_errors = cast(Tuple[IncomingErrorType, ...], keep_errors)
             self._keep_errors = keep_errors
+        self._prog_hook = prog_hook
 
         # Make sure all dests are Route objects
         self._routes = []
@@ -506,6 +541,7 @@ class TransferPlanner:
             log.info("Processing all data from data source: %s" % self._src)
             async for chunk in self._src.gen_chunks():
                 chunk.keep_errors = chunk_keep_errors
+                chunk.report.set_prog_hook(self._prog_hook)
                 if self._router.has_dynamic_routes:
                     yield DynamicTransfer(chunk)
                     n_trans += 1
@@ -522,7 +558,10 @@ class TransferPlanner:
                 qr_gen = _sync_iter_to_async(query_res.level_sub_queries(gen_level))
             else:
                 q = dict_to_ds({elem : '*' for elem in self._router.required_elems})
-                qr_gen = self._src.queries(QueryLevel.STUDY, q)
+                qr_report: Optional[MultiListReport[DicomOpReport]] = None
+                if self._prog_hook is not None:
+                    qr_report = MultiListReport(prog_hook=self._prog_hook)
+                qr_gen = self._src.queries(QueryLevel.STUDY, q, report=qr_report)
 
             async for sub_qr in qr_gen:
                 sr_qr_map = await self._router.pre_route(self._src,
@@ -537,6 +576,7 @@ class TransferPlanner:
                         for missing_qr in missing_qrs:
                             async for chunk in self._src.gen_query_chunks(missing_qr):
                                 chunk.keep_errors = chunk_keep_errors
+                                chunk.report.set_prog_hook(self._prog_hook)
                                 yield StaticTransfer(chunk, meth_routes)
                                 n_trans += 1
             log.info("Generated %d transfers " % (n_trans,))
@@ -548,6 +588,11 @@ class TransferPlanner:
                       ) -> AsyncIterator[TransferExecutor]:
         '''Produces a TransferExecutor for executing a series of transfers'''
         # TODO: Just make the executor a contexmanager and return it here
+        if self._prog_hook is not None:
+            if report is None:
+                report = MultiListReport(description='transfers', prog_hook=self._prog_hook)
+            else:
+                report.set_prog_hook(self._prog_hook)
         try:
             executor = TransferExecutor(self._router,
                                         self._keep_errors,
@@ -599,7 +644,7 @@ class TransferPlanner:
         # Pair up dests with filters and split into two groups, those we can
         # check for missing data and those we can not
         dest_filt_tuples: List[Tuple[DataBucket[Any, Any], Optional[Filter]]] = []
-        checkable: List[Tuple[DataRepo[Any, Any, Any], Optional[Filter]]] = []
+        checkable: List[Tuple[DataRepo[Any, Any, Any, Any], Optional[Filter]]] = []
         non_checkable = []
         df_trans_map = {}
         for route in static_routes:
@@ -614,7 +659,7 @@ class TransferPlanner:
                 dest_filt_tuples.append(df_tuple)
                 df_trans_map[df_tuple] = get_transform(src_qr, filt)
                 if isinstance(dest, DataRepo) and can_invert_uids:
-                    df_tuple = cast(Tuple[DataRepo[Any, Any, Any], Optional[Filter]], df_tuple)
+                    df_tuple = cast(Tuple[DataRepo[Any, Any, Any, Any], Optional[Filter]], df_tuple)
                     checkable.append(df_tuple)
                 else:
                     non_checkable.append(df_tuple)
@@ -624,7 +669,7 @@ class TransferPlanner:
             return {tuple(static_routes) : [query_res]}
 
         # We group data going to same sets of destinations
-        res: Dict[Tuple[Tuple[DataRepo[Any, Any, Any], Optional[Filter]], ...], List[QueryResult]] = {}
+        res: Dict[Tuple[Tuple[DataRepo[Any, Any, Any, Any], Optional[Filter]], ...], List[QueryResult]] = {}
         for n_dest in reversed(range(1, len(checkable)+1)):
             for df_set in itertools.combinations(checkable, n_dest):
                 if df_set not in res:
@@ -731,7 +776,8 @@ async def sync_data(src : DataBucket[Any, Any],
                     force_all: bool = False,
                     validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
                     keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                    report: Optional[MultiListReport[TransferReportTypes]] = None) -> None:
+                    report: Optional[MultiListReport[TransferReportTypes]] = None,
+                    ) -> None:
     '''Convienance function to build TransferPlanner and execute all transfers
     '''
     planner = TransferPlanner(src, dests, trust_level, force_all, keep_errors)

@@ -2,15 +2,17 @@
 from __future__ import annotations
 import sys, os, logging, json
 import asyncio
+from contextlib import ExitStack
 
 import pydicom
 from pydicom.dataset import Dataset
-
 import click
-
 import toml
+from rich.progress import Progress
+from rich.logging import RichHandler
 
 from .util import aclosing, serializer
+from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel
 from .filt import make_edit_filter
@@ -26,7 +28,7 @@ from .diff import diff_data_sets
 log = logging.getLogger('dcm.cli')
 
 #logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("asyncio").setLevel(logging.DEBUG)
+#logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
 
 # TODO: We should iteratively produce/consume json in streaming fashion
@@ -198,11 +200,14 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
 
     # Setup logging
     LOG_FORMAT = '%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s'
-    formatter = logging.Formatter(LOG_FORMAT)
+    def_formatter = logging.Formatter(LOG_FORMAT)
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
+    pynetdicom_logger = logging.getLogger('pynetdicom')
+    pynetdicom_logger.setLevel(logging.WARN)
+    stream_formatter = logging.Formatter('%(threadName)s %(name)s %(message)s')
+    stream_handler = RichHandler(show_path=False)
+    stream_handler.setFormatter(stream_formatter)
     if debug:
         stream_handler.setLevel(logging.DEBUG)
     elif verbose:
@@ -303,8 +308,11 @@ def echo(params, remote, local):
               is_flag=True,
               default=False,
               help="Automatically answer all prompts with 'y'")
+@click.option('--no-progress',
+              is_flag=True,
+              help="Don't display progress bars")
 def query(params, remote, query, level, query_res, local, out_format,
-          assume_yes):
+          assume_yes, no_progress):
     '''Perform a query against a network node'''
     if level is not None:
         level = level.upper()
@@ -317,13 +325,15 @@ def query(params, remote, query, level, query_res, local, out_format,
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = QueryResult.from_json(query_res.read())
-    if out_format is None:
-        if sys.stdout.isatty():
+        query_res = serializer.loads(query_res.read())
+    if sys.stdout.isatty():
+        if out_format is None:
             out_format = 'tree'
-        else:
+    else:
+        no_progress = True
+        if out_format is None:
             out_format = 'json'
-    elif out_format not in ('tree', 'json'):
+    if out_format not in ('tree', 'json'):
         cli_error("Invalid out-format: %s" % out_format)
     if len(query) == 0 and query_res is None and not assume_yes:
         if not click.confirm("This query hasn't been limited in any "
@@ -340,7 +350,13 @@ def query(params, remote, query, level, query_res, local, out_format,
     for query_input in query:
         q_attr, q_val = query_input.split('=')
         setattr(qdat, q_attr, q_val)
-    qr = asyncio.run(net_ent.query(remote_node, level, qdat, query_res))
+    with ExitStack() as estack:
+        if not no_progress:
+            prog = estack.enter_context(Progress(transient=True))
+            report = MultiListReport(progress=prog)
+        else:
+            report = None
+        qr = asyncio.run(net_ent.query(remote_node, level, qdat, query_res, report=report))
     if out_format == 'tree':
         out = qr.to_tree()
     elif out_format == 'json':
@@ -353,54 +369,65 @@ def query(params, remote, query, level, query_res, local, out_format,
 #
 
 
-async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, keep_errors):
-    # Perform initial query if needed
-    if len(query) > 0:
-        log.info("Querying source for initial data list")
-        qdat = Dataset()
-        for query_input in query:
-            q_attr, q_val = query_input.split('=')
-            setattr(qdat, q_attr, q_val)
-        # TODO: Should we do this iteratively in the background too?
-        #       The transfer planner would need to take a QR generator
-        #       instead of a QR then.
-        #
-        #       Won't work if simultaneous associations limit is very low (e.g. 1) on
-        #       the src, since we may need to perform further queries on src
-        #       (series/image level) when determining what data is missing from
-        #       the dests. Also, this should generally be somewhat quick, since
-        #       it should be a low-level query.
-        query_res = await src.query(query=qdat, query_res=query_res)
+async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, keep_errors, no_progress):
+    with ExitStack() as estack:
+        # Perform initial query if needed
+        if len(query) > 0:
+            log.info("Querying source for initial data list")
+            qdat = Dataset()
+            for query_input in query:
+                q_attr, q_val = query_input.split('=')
+                setattr(qdat, q_attr, q_val)
+            # TODO: Should we do this iteratively in the background too?
+            #       The transfer planner would need to take a QR generator
+            #       instead of a QR then.
+            #
+            #       Won't work if simultaneous associations limit is very low (e.g. 1) on
+            #       the src, since we may need to perform further queries on src
+            #       (series/image level) when determining what data is missing from
+            #       the dests. Also, this should generally be somewhat quick, since
+            #       it should be a low-level query.
+            if not no_progress:
+                prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+                report = MultiListReport(progress=prog)
+            else:
+                report = None
+            query_res = await src.query(query=qdat, query_res=query_res, report=report)
 
-    # Setup transfer planner
-    planner = TransferPlanner(src,
-                              [dest_route],
-                              trust_level=trust_level,
-                              force_all=force_all,
-                              keep_errors=keep_errors)
+        # Setup transfer planner
+        if not no_progress:
+            prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+        else:
+            prog = None
+        planner = TransferPlanner(src,
+                                [dest_route],
+                                trust_level=trust_level,
+                                force_all=force_all,
+                                keep_errors=keep_errors,
+                                prog_hook=prog)
 
-    # Perform the sync or dry run
-    log.info("Syncing data from '%s' to '%s'" %
-             (src, ', '.join(str(x) for x in dests)))
+        # Perform the sync or dry run
+        log.info("Syncing data from '%s' to '%s'" %
+                (src, ', '.join(str(x) for x in dests)))
 
-    if dry_run:
-        log.info("Starting dry run")
-        async for transfer in planner.gen_transfers(query_res):
-            dests_str = []
-            for meth, routes in transfer.method_routes_map.items():
-                for route in routes:
-                    dests_str.append(f"({meth.name}) {route}")
-            dests_str = " / ".join(dests_str)
-            print('%s > %s' % (transfer.chunk, dests_str))
-        log.info("Finished dry run")
-    else:
-        log.info("Starting data sync")
-        async with planner.executor(validators) as ex:
-            async with aclosing(planner.gen_transfers(query_res)) as tgen:
-                async for transfer in tgen:
-                    await ex.exec_transfer(transfer)
-        log.info("Finished data sync")
-        log.info("Full Report:\n%s", ex.report)
+        if dry_run:
+            log.info("Starting dry run")
+            async for transfer in planner.gen_transfers(query_res):
+                dests_str = []
+                for meth, routes in transfer.method_routes_map.items():
+                    for route in routes:
+                        dests_str.append(f"({meth.name}) {route}")
+                dests_str = " / ".join(dests_str)
+                print('%s > %s' % (transfer.chunk, dests_str))
+            log.info("Finished dry run")
+        else:
+            log.info("Starting data sync")
+            async with planner.executor(validators) as ex:
+                async with aclosing(planner.gen_transfers(query_res)) as tgen:
+                    async for transfer in tgen:
+                        await ex.exec_transfer(transfer)
+            log.info("Finished data sync")
+            log.info("Full Report:\n%s", ex.report)
 
 
 @click.command()
@@ -439,16 +466,24 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
               help="Output format for any local output directories")
 @click.option('--no-recurse', is_flag=True, default=False,
               help="Don't recurse into input directories")
-@click.option('--file-ext', default='dcm',
+@click.option('--in-file-ext', default='dcm',
               help="File extension for local input directories")
+@click.option('--out-file-ext', default='dcm',
+              help="File extension for local output directories")
+@click.option('--no-progress',
+              is_flag=True,
+              help="Don't display progress bars")
 def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
          force_all, method, validate, keep_errors, dry_run, local,
-         dir_format, no_recurse, file_ext):
+         dir_format, no_recurse, in_file_ext, out_file_ext, no_progress):
     '''Synchronize DICOM data between network nodes and/or directories
     '''
     # Check for incompatible options
     if validate and dry_run:
         cli_error("Can't do validation on a dry run!")
+
+    if not sys.stdout.isatty() or dry_run:
+        no_progress = True
 
     # Figure out any local/src/remote info
     if local is not None:
@@ -460,7 +495,7 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
                        conf_nodes=params['remote_nodes'],
                        out_fmt=dir_format,
                        no_recurse=no_recurse,
-                       file_ext=file_ext)
+                       file_ext=in_file_ext)
 
     # Handle query-result options
     if query_res is None and not sys.stdin.isatty():
@@ -491,7 +526,7 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
                             params['remote_nodes'],
                             dir_format,
                             no_recurse,
-                            file_ext)
+                            out_file_ext)
 
     # Handle validate option
     if validate:
@@ -511,7 +546,8 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
                          force_all,
                          dry_run,
                          validators,
-                         keep_errors)
+                         keep_errors,
+                         no_progress)
                 )
 
 

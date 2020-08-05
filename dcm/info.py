@@ -28,6 +28,8 @@ install_requires = ['pydicom >= 1.0',
                     'janus >= 0.5',
                     'fifolock',
                     'typing_extensions',
+                    'rich',
+                    'attrs',
                     ]
 dependency_links = \
     ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']

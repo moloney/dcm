@@ -113,6 +113,7 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
 # TODO: Take force_overwrite kwarg and handle it correctly
 def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[PathInputType, PathInputType]]]',
                          transfer_op: Callable[..., Any],
+                         force_overwrite: bool,
                          report: LocalWriteReport,
                          shutdown: Optional[threading.Event] = None
                         ) -> None:
@@ -135,13 +136,27 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
         in_paths = cast(Tuple[PathInputType, PathInputType], in_paths)
         src, dest = in_paths
         log.debug("_oob_transfer_worker got some paths")
+        existing_backup = None
+        if os.path.exists(dest):
+            if force_overwrite:
+                log.debug('File exists, overwriting: %s', dest)
+                existing_backup = dest + '~'
+                os.rename(dest, existing_backup)
+            else:
+                log.debug('File exists, skipping: %s', dest)
+                report.add_skipped(out_path)
+                continue
         try:
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             transfer_op(src, dest)
         except Exception as e:
             report.add_error(dest, e)
+            if existing_backup is not None:
+                os.rename(existing_backup, dest)
         else:
             report.add_success(dest)
+            if existing_backup is not None:
+                os.remove(existing_backup)
 
 
 class LocalDir(LocalBucket):
@@ -151,6 +166,7 @@ class LocalDir(LocalBucket):
 
     default_out_fmt = ('{d.PatientID}/'
                        '{d.StudyInstanceUID}/'
+                       '{d.Modality}/'
                        '{d.SeriesNumber:03d}-{d.SeriesDescription}/'
                        '{d.SOPInstanceUID}')
     '''Default format for output paths when saving data
@@ -177,6 +193,10 @@ class LocalDir(LocalBucket):
 
     def __str__(self) -> str:
         return 'LocalDir(%s)' % self._root_path
+
+    @property
+    def description(self) -> Optional[str]:
+        return self._root_path
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()
@@ -256,6 +276,7 @@ class LocalDir(LocalBucket):
         oob_fut = create_thread_task(_oob_transfer_worker,
                                      (oob_q.sync_q,
                                       op,
+                                      self._force_overwrite,
                                       report)
                                      )
         async for src_path, ds in chunk.gen_paths_and_data():

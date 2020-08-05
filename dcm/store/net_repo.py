@@ -8,7 +8,7 @@ from pydicom import Dataset
 import janus
 
 from . import TransferMethod, DcmNetChunk, DcmRepo
-from ..util import MultiListReport
+from ..report import MultiListReport
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport
 
@@ -61,7 +61,8 @@ class NetRepo(DcmRepo):
     async def query(self,
                     level: Optional[QueryLevel] = None,
                     query: Optional[Dataset] = None,
-                    query_res: Optional[QueryResult] = None) -> QueryResult:
+                    query_res: Optional[QueryResult] = None,
+                    report: Optional[MultiListReport[DicomOpReport]] = None) -> QueryResult:
         if level is None:
             if query_res is not None:
                 level = query_res.level
@@ -76,12 +77,14 @@ class NetRepo(DcmRepo):
         return await self._local_ent.query(self._remote,
                                            level,
                                            query,
-                                           query_res)
+                                           query_res,
+                                           report=report)
 
     def queries(self,
                 level: Optional[QueryLevel] = None,
                 query: Optional[Dataset] = None,
                 query_res: Optional[QueryResult] = None,
+                report: Optional[MultiListReport[DicomOpReport]] = None
                 ) -> AsyncIterator[QueryResult]:
         '''Returns async generator that produces partial QueryResult objects'''
         if level is None:
@@ -94,7 +97,7 @@ class NetRepo(DcmRepo):
             if q is None:
                 q = Dataset()
             q.update(self._base_query)
-        return self._local_ent.queries(self._remote, level, q, query_res)
+        return self._local_ent.queries(self._remote, level, q, query_res, report=report)
 
     async def gen_chunks(self) -> AsyncIterator[DcmNetChunk]:
         qr = await self.query()

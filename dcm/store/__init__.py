@@ -6,7 +6,6 @@ of their specific capabilities.
 '''
 from __future__ import annotations
 import os, enum, logging, asyncio
-from dataclasses import dataclass, field, fields
 from contextlib import asynccontextmanager
 from functools import partial
 from typing import (Optional, AsyncIterator, Tuple, List, Iterable, Union,
@@ -20,7 +19,8 @@ from pydicom import Dataset
 from ..query import QueryLevel, QueryResult, uid_elems
 from ..net import (DcmNode, DicomOpReport, IncomingDataReport,
                    IncomingDataError, IncomingErrorType, RetrieveReport)
-from ..util import aclosing, PathInputType, IndividualReport, MultiReport, MultiListReport
+from ..report import Report, MultiReport, MultiListReport, ProgressHookBase
+from ..util import aclosing, PathInputType
 
 
 log = logging.getLogger(__name__)
@@ -69,6 +69,12 @@ class DataChunk(Protocol):
 
     keep_errors: Tuple[IncomingErrorType, ...] = tuple()
 
+    description: Optional[str] = None
+
+    @property
+    def n_expected(self) -> Optional[int]:
+        raise NotImplementedError
+
     async def gen_data(self) -> AsyncIterator[Dataset]:
         '''Generator produces the data sets in this chunk'''
         raise NotImplementedError
@@ -78,8 +84,13 @@ class DataChunk(Protocol):
 class RepoChunk(DataChunk, Protocol):
     '''Smarter chunk of data referencing a DataRepo/QueryResult combo'''
 
-    repo : 'DataRepo[Any, Any, Any]'
+    repo : 'DataRepo[Any, Any, Any, Any]'
+    
     qr: QueryResult
+
+    @property
+    def n_expected(self) -> Optional[int]:
+        return self.qr.n_instances()
 
     async def gen_data(self) -> AsyncIterator[Dataset]:
         self.report.keep_errors = self.keep_errors
@@ -92,10 +103,18 @@ class DcmNetChunk(RepoChunk):
     '''Repo chunk from a DICOM network node'''
     report: RetrieveReport
 
-    def __init__(self, repo: 'DcmRepo', qr: QueryResult):
+    def __init__(self, 
+                 repo: 'DcmRepo', 
+                 qr: QueryResult, 
+                 description: Optional[str] = None):
         self.repo = repo
         self.qr = qr
-        self.report = RetrieveReport()
+        self.description = description
+        if description is None:
+            rep_descr = None
+        else:
+            rep_descr = description + '-retrieve'
+        self.report = RetrieveReport(description=rep_descr, n_expected=self.n_expected)
 
     def __repr__(self) -> str:
         return f'DcmNetChunk({self.repo}, {self.qr})'
@@ -126,11 +145,17 @@ class LocalIncomingDataError(IncomingDataError):
         return ' '.join(res)
 
 
-@dataclass
 class LocalIncomingReport(IncomingDataReport):
     '''Track incoming data from a local filesystem'''
 
-    invalid: List[PathInputType] = field(default_factory=list)
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 ):
+        super().__init__(description, n_expected, prog_hook, keep_errors)
+        self.invalid: List[PathInputType] = []
     '''Track any paths that were determined to not be valid DICOM files'''
 
     @property
@@ -140,6 +165,10 @@ class LocalIncomingReport(IncomingDataReport):
     @property
     def n_errors(self) -> int:
         return super().n_errors + len(self.invalid)
+
+    def add_invalid(self, path: PathInputType) -> None:
+        self.count_input()
+        self.invalid.append(path)
 
     def log_issues(self) -> None:
         '''Log any warnings and errors'''
@@ -159,7 +188,7 @@ class LocalIncomingReport(IncomingDataReport):
         self.invalid = []
 
 
-_read_f = partial(pydicom.dcmread, force=True)
+_read_f = partial(pydicom.dcmread, force=True, defer_size=64)
 
 
 def is_valid_dicom(ds: Dataset) -> bool:
@@ -175,9 +204,18 @@ class LocalChunk(DataChunk):
 
     report: LocalIncomingReport
 
-    def __init__(self, files: Iterable[PathInputType]):
+    def __init__(self, files: Iterable[PathInputType], description: Optional[str] = None):
         self.files = tuple(files)
-        self.report = LocalIncomingReport()
+        self.description = description
+        if description is None:
+            rep_descr = str(os.path.dirname(self.files[0])) + ' ...'
+        else:
+            rep_descr = description + '-incoming'
+        self.report = LocalIncomingReport(description=rep_descr, n_expected=self.n_expected)
+
+    @property
+    def n_expected(self) -> Optional[int]:
+        return len(self.files)
 
     def __repr__(self) -> str:
         return f'LocalDataChunk([{self.files[0]!r},...,{self.files[-1]!r}])'
@@ -193,7 +231,7 @@ class LocalChunk(DataChunk):
             ds = await loop.run_in_executor(None, _read_f, os.fspath(f))
             if not is_valid_dicom(ds):
                 log.warn("Skipping invalid dicom file: %s", f)
-                self.report.invalid.append(f)
+                self.report.add_invalid(f)
                 continue
             if not self.report.add(ds):
                 continue
@@ -201,10 +239,11 @@ class LocalChunk(DataChunk):
 
 
 T_chunk = TypeVar('T_chunk', bound=DataChunk, covariant=True)
-T_rreport = TypeVar('T_rreport', bound=IndividualReport, contravariant=True)
-T_sreport = TypeVar('T_sreport', bound=Union[IndividualReport, MultiReport[Any]], covariant=True)
+T_qreport = TypeVar('T_qreport', bound=Union[Report, MultiReport[Any]], contravariant=True)
+T_rreport = TypeVar('T_rreport', bound=Report, contravariant=True)
+T_sreport = TypeVar('T_sreport', bound=Union[Report, MultiReport[Any]], covariant=True)
 T_oob_chunk = TypeVar('T_oob_chunk', bound=DataChunk, contravariant=True)
-T_oob_report = TypeVar('T_oob_report', bound=Union[IndividualReport, MultiReport[Any]])
+T_oob_report = TypeVar('T_oob_report', bound=Union[Report, MultiReport[Any]])
 
 
 class DataBucket(Generic[T_chunk, T_sreport], Protocol):
@@ -213,6 +252,8 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
     Can just produce one or more DataChunk instances with the
     `gen_data` method, or store data sets through the `send` method
     '''
+
+    description: Optional[str] = None
 
     _supported_methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
 
@@ -234,13 +275,14 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
 
 
 @runtime_checkable
-class DataRepo(Generic[T_chunk, T_sreport, T_rreport], DataBucket[T_chunk, T_sreport], Protocol):
+class DataRepo(Generic[T_chunk, T_qreport, T_sreport, T_rreport], DataBucket[T_chunk, T_sreport], Protocol):
     '''Protocol for stores with query/retrieve functionality
     '''
     async def queries(self,
                       level: Optional[QueryLevel] = None,
                       query: Optional[Dataset] = None,
                       query_res: Optional[QueryResult] = None,
+                      report: Optional[T_qreport] = None,
                      ) -> AsyncIterator[QueryResult]:
         '''Returns async generator that produces partial QueryResult objects'''
         raise NotImplementedError
@@ -249,7 +291,8 @@ class DataRepo(Generic[T_chunk, T_sreport, T_rreport], DataBucket[T_chunk, T_sre
     async def query(self,
                     level: Optional[QueryLevel] = None,
                     query: Optional[Dataset] = None,
-                    query_res: Optional[QueryResult] = None) -> QueryResult:
+                    query_res: Optional[QueryResult] = None,
+                    report: Optional[T_qreport] = None) -> QueryResult:
         '''Perform a query against the data repo'''
         raise NotImplementedError
 
@@ -279,12 +322,17 @@ class OobCapable(Generic[T_oob_chunk, T_oob_report], Protocol):
     def get_empty_oob_report(self) -> T_oob_report:
         raise NotImplementedError
 
-class DcmRepo(DataRepo[DcmNetChunk, DicomOpReport, RetrieveReport], OobCapable[DcmNetChunk, MultiListReport[DicomOpReport]], Protocol):
+
+class DcmRepo(DataRepo[DcmNetChunk, MultiListReport[DicomOpReport], DicomOpReport, RetrieveReport], OobCapable[DcmNetChunk, MultiListReport[DicomOpReport]], Protocol):
     '''Abstract base class for repos that are DICOM network nodes'''
 
     _supported_methods: Tuple[TransferMethod, ...] = \
         (TransferMethod.PROXY,
          TransferMethod.REMOTE_COPY)
+
+    @property
+    def description(self) -> Optional[str]:
+        return str(self.remote.ae_title)
 
     @property
     def remote(self) -> DcmNode:
@@ -299,10 +347,10 @@ class DcmRepo(DataRepo[DcmNetChunk, DicomOpReport, RetrieveReport], OobCapable[D
         yield
 
     def get_empty_send_report(self) -> DicomOpReport:
-        return DicomOpReport()
+        return DicomOpReport(description=f'-> {self.description}')
 
     def get_empty_oob_report(self) -> MultiListReport[DicomOpReport]:
-        return MultiListReport()
+        return MultiListReport(description=f'-> {self.description}')
 
 
 class LocalWriteError(Exception):
@@ -316,22 +364,17 @@ class LocalWriteError(Exception):
         return ' '.join(msg)
 
 
-@dataclass
-class LocalWriteReport(IndividualReport):
+class LocalWriteReport(Report):
 
-    # TODO: You should just pick a type for the paths here
-    write_errors: Dict[Exception, List[PathInputType]] = field(default_factory=dict)
-    '''Keep track of any write errors'''
-
-    successful: List[PathInputType] = field(default_factory=list)
-
-    skipped: List[PathInputType] = field(default_factory=list)
-
-    _n_input: int = field(default=0, init=False)
-
-    @property
-    def n_input(self)-> int:
-        return self._n_input
+    def __init__(self,
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                ):
+        super().__init__(description, n_expected, prog_hook)
+        self.write_errors: Dict[Exception, List[PathInputType]] = {}
+        self.successful: List[PathInputType] = []
+        self.skipped: List[PathInputType] = []
 
     @property
     def n_success(self) -> int:
@@ -346,18 +389,18 @@ class LocalWriteReport(IndividualReport):
         return len(self.skipped)
 
     def add_success(self, path: PathInputType) -> None:
+        self.count_input()
         self.successful.append(path)
-        self._n_input += 1
 
     def add_error(self, path: PathInputType, exception: Exception) -> None:
+        self.count_input()
         if exception not in self.write_errors:
             self.write_errors[exception] = []
         self.write_errors[exception].append(path)
-        self._n_input += 1
 
     def add_skipped(self, path: PathInputType) -> None:
+        self.count_input()
         self.skipped.append(path)
-        self._n_input += 1
 
     def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
@@ -375,20 +418,6 @@ class LocalWriteReport(IndividualReport):
         self.successful = []
         self.skipped = []
         self.write_errors = {}
-
-    def __str__(self) -> str:
-        lines = [f'{self.__class__.__name__}:']
-        for f in fields(self):
-            f_name = f.name
-            if f_name == 'successful':
-                lines.append(f'\tn_success: {len(self.successful)}')
-                continue
-            elif f_name == 'skipped':
-                lines.append(f'\tn_skipped: {len(self.skipped)}')
-                continue
-            val_str = str(getattr(self, f_name)).replace('\n', '\n\t')
-            lines.append(f'\t{f_name}: {val_str}')
-        return '\n'.join(lines)
 
 
 class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChunk, LocalWriteReport], Protocol):
@@ -409,7 +438,7 @@ class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChun
         yield
 
     def get_empty_send_report(self) -> LocalWriteReport:
-        return LocalWriteReport()
+        return LocalWriteReport(description=f'-> {self.description}')
 
     def get_empty_oob_report(self) -> LocalWriteReport:
-        return LocalWriteReport()
+        return LocalWriteReport(description=f'-> {self.description}')

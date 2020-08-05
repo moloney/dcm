@@ -15,7 +15,8 @@ from .lazyset import LazySet, FrozenLazySet
 from .query import (QueryLevel, QueryResult, DataNode, InconsistentDataError,
                     get_uid, minimal_copy)
 from .filt import Filter, DataTransform, get_transform
-from .util import DuplicateDataError, IndividualReport, MultiListReport, MultiDictReport, MultiKeyedError
+from .report import Report, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .util import DuplicateDataError
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
 from .store import DataBucket, DataRepo, TransferMethod, LocalWriteReport
 
@@ -247,20 +248,21 @@ class ProxyTransferError(Exception):
 #       DataTransforms under `sent` here. I guess this is okay and mimics what
 #       happens in a RetrieveReport
 #
-@dataclass
-class ProxyReport(IndividualReport):
+class ProxyReport(Report):
     '''Abstract base class for reports on proxy transfers'''
 
-    sent: Dict[StaticRoute, DataTransform] = field(default_factory=dict)
-    '''Tracks what data was sent where'''
-
-    inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = field(default_factory=dict)
-    '''Tracks inconsistent data'''
-
-    duplicate: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = field(default_factory=dict)
-    '''Tracks duplicate data'''
-
-    _keep_errors: Tuple[IncomingErrorType, ...] = field(default=tuple(), init=False)
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 ):
+        super().__init__(description, n_expected, prog_hook)
+        self.keep_errors = keep_errors #type: ignore
+        self.sent: Dict[StaticRoute, DataTransform] = {}
+        self.inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
+        self.duplicate: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
+        self._n_success = 0
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -276,6 +278,10 @@ class ProxyReport(IndividualReport):
         else:
             val = cast(Tuple[IncomingErrorType, ...], val)
             self._keep_errors = val
+
+    @property
+    def n_success(self) -> int:
+        return self._n_success
 
     @property
     def n_errors(self) -> int:
@@ -294,14 +300,6 @@ class ProxyReport(IndividualReport):
     @property
     def all_success(self) -> bool:
         return self.n_errors + self.n_warnings == 0
-
-    @property
-    def n_input(self) -> int:
-        '''Number of input data sets'''
-        # TODO: Using trans.new here won't count data sets that were filtered out
-        res = sum(len(trans.new) for sr, trans in self.sent.items())
-        res += self.n_inconsistent + self.n_duplicate
-        return res
 
     @property
     def n_sent(self) -> int:
@@ -337,6 +335,7 @@ class ProxyReport(IndividualReport):
 
     def add(self, route: StaticRoute, old_ds: Dataset, new_ds: Dataset) -> bool:
         '''Add the route with pre/post filtering dataset to the report'''
+        self.count_input()
         if route not in self.sent:
             self.sent[route] = get_transform(QueryResult(QueryLevel.IMAGE),
                                              route.filt)
@@ -352,6 +351,8 @@ class ProxyReport(IndividualReport):
                 self.duplicate[route] = []
             self.duplicate[route].append((old_ds, new_ds))
             return IncomingErrorType.DUPLICATE in self._keep_errors
+        else:
+            self._n_success += 1
         return True
 
     def log_issues(self) -> None:
@@ -389,10 +390,20 @@ class ProxyReport(IndividualReport):
 StoreReportType = Union[DicomOpReport, LocalWriteReport]
 
 
-@dataclass
 class DynamicTransferReport(ProxyReport):
     '''Track what data is being routed where and any store results'''
-    store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = field(default_factory=MultiDictReport)
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 ):
+        super().__init__(description, n_expected, prog_hook, keep_errors)
+        self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = MultiDictReport(prog_hook=prog_hook)
+
+    @property
+    def n_success(self) -> int:
+        return super().n_success + self.store_reports.n_success
 
     @property
     def n_errors(self) -> int:
@@ -409,7 +420,7 @@ class DynamicTransferReport(ProxyReport):
     def add_store_report(self, dest: DataBucket[Any, Any], store_report: StoreReportType) -> None:
         '''Add a DicomOpReport to keep track of'''
         if dest not in self.store_reports:
-            self.store_reports[dest] = MultiListReport()
+            self.store_reports[dest] = MultiListReport(prog_hook=self._prog_hook)
         self.store_reports[dest].append(store_report)
 
     def log_issues(self) -> None:
@@ -587,7 +598,7 @@ class Router:
         return {k : tuple(v) for k, v in selected.items()}
 
     async def pre_route(self,
-                        src: DataRepo[Any, Any, Any],
+                        src: DataRepo[Any, Any, Any, Any],
                         query: Union[Dict[str, Any], Dataset] = None,
                         query_res: QueryResult = None
                        ) -> Dict[Tuple[StaticRoute,...], QueryResult]:
@@ -786,7 +797,7 @@ class Router:
             report.check_errors()
 
     async def _fill_qr(self,
-                       src: DataRepo[Any, Any, Any],
+                       src: DataRepo[Any, Any, Any, Any],
                        query: Optional[Dataset],
                        query_res: Optional[QueryResult]
                       ) -> Tuple[Dataset, QueryResult]:

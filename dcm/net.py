@@ -35,8 +35,8 @@ from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
-from .util import (IndividualReport, MultiListReport, MultiError, serializer,
-                   create_thread_task)
+from .report import Report, MultiListReport, MultiError, ProgressHookBase
+from .util import serializer, create_thread_task
 
 
 log = logging.getLogger(__name__)
@@ -187,9 +187,8 @@ class BatchDicomOperationError(Exception):
 
 
 @dataclass
-class DicomOpReport(IndividualReport):
-    '''Track status results from DICOM operations'''
-
+class DicomOp:
+    '''Describes a DICOM network operatiom'''
     provider: Optional[DcmNode] = None
     '''The service provider'''
 
@@ -202,34 +201,26 @@ class DicomOpReport(IndividualReport):
     op_data: Dict[str, Any] = field(default_factory=dict)
     '''Additional data describing the operation specifics'''
 
-    warnings: List[Dataset] = field(default_factory=list, init=False)
-    '''List of data sets we got warning status for'''
 
-    errors: List[Dataset] = field(default_factory=list, init=False)
-    '''List of data sets we got error status for'''
+class DicomOpReport(Report):
+    '''Track status results from DICOM operations'''
 
-    final_status: Optional[Dataset] = field(default=None, init=False)
-
-    _n_expected: Optional[int] = field(default=None, init=False)
-
-    _n_success: Optional[int] = field(default=None, init=False)
-
-    _n_input: int = field(default=0, init=False)
-
-    _has_sub_ops: bool = field(default=False, init=False)
-
-    @property
-    def n_expected(self) -> Optional[int]:
-        return self._n_expected
-
-    @property
-    def n_input(self) -> int:
-        return self._n_input
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 dicom_op: Optional[DicomOp] = None,
+                 ):
+        super().__init__(description, n_expected, prog_hook)
+        self.dicom_op = DicomOp() if dicom_op is None else dicom_op
+        self.warnings: List[Tuple[Dataset, Dataset]] = []
+        self.errors: List[Tuple[Dataset, Dataset]] = []
+        self._n_success = 0
+        self._has_sub_ops = False
+        self._final_status: Optional[Dataset] = None
 
     @property
     def n_success(self) -> int:
-        if self._n_success is None:
-            return 0
         return self._n_success
 
     @property
@@ -244,88 +235,83 @@ class DicomOpReport(IndividualReport):
         if (isinstance(status, Exception) or
             not hasattr(status, 'Status')
            ):
-            if self.op_type == 'c-store':
+            if self.dicom_op.op_type == 'c-store':
                 data_set = minimal_copy(data_set)
             self.errors.append((status, data_set))
-            self._n_input += 1
-        else:
-            status_category = code_to_category(status.Status)
-            if status_category == 'Pending':
-                self._has_sub_ops = True
-                remaining = getattr(status, sub_op_attrs['remaining'], None)
-                if remaining is None:
-                    # We don't have sub-operation counts, so we just count
-                    # 'pending' results as success
-                    if self._n_success is None:
-                        self._n_success = 0
-                    self._n_success += 1
+            self.count_input()
+            return
+
+        status_category = code_to_category(status.Status)
+        if status_category == 'Pending':
+            self._has_sub_ops = True
+            remaining = getattr(status, sub_op_attrs['remaining'], None)
+            if remaining is None:
+                # We don't have sub-operation counts, so we just count
+                # 'pending' results as success
+                self._n_success += 1
+            else:
+                n_success = getattr(status, sub_op_attrs['completed'])
+                n_warn = getattr(status, sub_op_attrs['warning'])
+                n_error = getattr(status, sub_op_attrs['failed'])
+                if self.n_expected is None:
+                    self.n_expected = remaining + 1
+                if n_success != self._n_success:
+                    assert self._n_success is None or self._n_success <= n_success
+                    self._n_success = n_success
                 else:
-                    n_success = getattr(status, sub_op_attrs['completed'])
+                    if self.dicom_op.op_type == 'c-store':
+                        data_set = minimal_copy(data_set)
+                    if n_warn != self.n_warnings:
+                        assert self.n_warnings < n_warn
+                        self.warnings.append((status, data_set))
+                    elif n_error != self.n_errors:
+                        assert self.n_errors < n_error
+                        self.errors.append((status, data_set))
+        else:
+            if self._has_sub_ops:
+                self._final_status = status
+                n_success = getattr(status, sub_op_attrs['completed'], None)
+                if n_success is not None:
                     n_warn = getattr(status, sub_op_attrs['warning'])
                     n_error = getattr(status, sub_op_attrs['failed'])
-                    if self._n_expected is None:
-                        self._n_expected = remaining + 1
-                    if n_success != self._n_success:
-                        assert self._n_success is None or self._n_success <= n_success
+                    if self._n_success is None:
                         self._n_success = n_success
                     else:
-                        if self.op_type == 'c-store':
-                            data_set = minimal_copy(data_set)
-                        if n_warn != self.n_warnings:
-                            assert self.n_warnings < n_warn
-                            self.warnings.append((status, data_set))
-                        elif n_error != self.n_errors:
-                            assert self.n_errors < n_error
-                            self.errors.append((status, data_set))
-                self._n_input += 1
+                        assert self._n_success <= n_success
+                        self._n_success = n_success
+                    # TODO: This might be incorrect, not clear if errors/warnings
+                    #       are always reported before this final status response
+                    assert n_warn == self.n_warnings
+                    assert n_error == self.n_errors
+                elif status_category != 'Success':
+                    # If we don't have operation sub-counts, need to make
+                    # sure any final error/warning status doesn't get lost
+                    if status_category == 'Warning':
+                        self.warnings.append((status, data_set))
+                    elif status_category == 'Failure':
+                        self.errors.append((status, data_set))
+                log.debug(f"DicomOpReport ({self.dicom_op.op_type}) got final status after sub-ops, marking self as done")
+                self.done = True
             else:
-                if self._has_sub_ops:
-                    self.final_status = status
-                    n_success = getattr(status, sub_op_attrs['completed'], None)
-                    if n_success is not None:
-                        n_warn = getattr(status, sub_op_attrs['warning'])
-                        n_error = getattr(status, sub_op_attrs['failed'])
-                        if self._n_success is None:
-                            self._n_success = n_success
-                        else:
-                            assert self._n_success <= n_success
-                            self._n_success = n_success
-                        # TODO: This might be incorrect, not clear if errors/warnings
-                        #       are always reported before this final status response
-                        assert n_warn == self.n_warnings
-                       	assert n_error == self.n_errors
-                    elif status_category != 'Success':
-                        # If we don't have operation sub-counts, need to make
-                        # sure any final error/warning status doesn't get lost
-                        if status_category == 'Warning':
-                            self.warnings.append((status, data_set))
-                        elif status_category == 'Failure':
-                            self.errors.append((status, data_set))
-                        self._n_input += 1
-                    log.debug("DicomOpReport got final status after sub-ops, marking self as done")
-                    self.done = True
+                if status_category == 'Success':
+                    self._n_success += 1
                 else:
-                    if self._n_success is None:
-                        self._n_success = 0
-                    if status_category == 'Success':
-                        self._n_success += 1
-                    else:
-                        if self.op_type == 'c-store':
-                            data_set = minimal_copy(data_set)
-                        if status_category == 'Warning':
-                            self.warnings.append((status, data_set))
-                        elif status_category == 'Failure':
-                            self.errors.append((status, data_set))
-                    self._n_input += 1
+                    if self.dicom_op.op_type == 'c-store':
+                        data_set = minimal_copy(data_set)
+                    if status_category == 'Warning':
+                        self.warnings.append((status, data_set))
+                    elif status_category == 'Failure':
+                        self.errors.append((status, data_set))
+        self.count_input()
 
     def log_issues(self) -> None:
         '''Log a summary of error/warning statuses'''
         if self.n_errors != 0:
             log.error("Got %d error and %d warning statuses out of %d %s ops" %
-                      (self.n_errors, self.n_warnings, len(self), self.op_type))
+                      (self.n_errors, self.n_warnings, len(self), self.dicom_op.op_type))
         elif self.n_warnings != 0:
             log.warning("Got %d warning statuses out of %d %s ops" %
-                        (self.n_warnings, len(self), self.op_type))
+                        (self.n_warnings, len(self), self.dicom_op.op_type))
 
     def check_errors(self) -> None:
         '''Raise an exception if any errors occured'''
@@ -334,9 +320,15 @@ class DicomOpReport(IndividualReport):
 
     def clear(self) -> None:
         '''Clear out all current operation results'''
+        if self._n_expected is not None:
+            self._n_expected -= self._n_input
+        self._n_input = 0
         self._n_success = 0
         self.warnings = []
         self.errors = []
+    
+    def _auto_descr(self) -> str:
+        return f'dicom-{self.dicom_op.op_type}'
 
 
 class IncomingErrorType(enum.Enum):
@@ -365,21 +357,19 @@ class IncomingDataError(Exception):
         return ' '.join(res)
 
 
-@dataclass
-class IncomingDataReport(IndividualReport):
+class IncomingDataReport(Report):
     '''Generic incoming data report'''
-
-    retrieved: QueryResult = field(default_factory=lambda: QueryResult(QueryLevel.IMAGE))
-    '''Track the valid incoming data'''
-
-    inconsistent: List[Tuple[str, ...]] = field(default_factory=list)
-    '''Track the inconsistent incoming data'''
-
-    duplicate: List[Tuple[str, ...]] = field(default_factory=list)
-    '''Track the duplicate incoming data'''
-
-    _keep_errors: Tuple[IncomingErrorType, ...] = field(default=tuple(), init=False)
-
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 ):
+        super().__init__(description, n_expected, prog_hook)
+        self.keep_errors = keep_errors #type: ignore
+        self.retrieved = QueryResult(level=QueryLevel.IMAGE)
+        self.inconsistent: List[Tuple[str, ...]] = []
+        self.duplicate: List[Tuple[str, ...]] = []
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -395,10 +385,6 @@ class IncomingDataReport(IndividualReport):
         else:
             val = cast(Tuple[IncomingErrorType, ...], val)
             self._keep_errors = val
-
-    @property
-    def n_input(self) -> int:
-        return len(self.retrieved) + len(self.inconsistent) + len(self.duplicate)
 
     @property
     def n_success(self) -> int:
@@ -427,6 +413,7 @@ class IncomingDataReport(IndividualReport):
         '''Add an incoming data set, returns True if it should should be used
         '''
         assert not self.done
+        self.count_input()
         try:
             dupe = data_set in self.retrieved
         except InconsistentDataError:
@@ -503,20 +490,34 @@ class RetrieveError(IncomingDataError):
         return ' '.join(res)
 
 
-@dataclass
+
 class RetrieveReport(IncomingDataReport):
     '''Track details about a retrieve operation'''
-    requested: Optional[QueryResult] = None
-    '''The data that was requested'''
+    
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+                 requested: Optional[QueryResult] = None,
+                 ):
+        super().__init__(description, n_expected, prog_hook, keep_errors)
+        self.requested = requested
+        self.missing: Optional[QueryResult] = None
+        self.unexpected: List[Tuple[str, ...]] = []
+        self.move_report: MultiListReport[DicomOpReport] = MultiListReport()
 
-    missing: Optional[QueryResult] = None
-    '''Any requested data that was not recieved'''
-
-    unexpected: List[Tuple[str, ...]] = field(default_factory=list)
-    '''Any data sets that we received but did not expect'''
-
-    move_report: MultiListReport[DicomOpReport] = field(default_factory=MultiListReport)
-    '''Report on move operations'''
+    @property
+    def requested(self) -> Optional[QueryResult]:
+        return self._requested
+    
+    @requested.setter
+    def requested(self, val: Optional[QueryResult]) -> None:
+        self._requested = val
+        if self._requested is not None:
+            n_expected = self._requested.n_instances()
+            if n_expected is not None:
+                self.n_expected = n_expected
 
     @property
     def done(self) -> bool:
@@ -524,27 +525,13 @@ class RetrieveReport(IncomingDataReport):
 
     @done.setter
     def done(self, val: bool) -> None:
-        if not val:
-            raise ValueError("Setting `done` to False is not allowed")
-        if self._done:
-            raise ValueError("RetrieveReport was already marked done")
+        super()._set_done(val)
         if not self.move_report.done:
             assert len(self.move_report) == 1 and self.move_report[0].n_input == 0
             self.move_report[0].done = True
         assert self.move_report.done
         assert self.requested is not None and self.retrieved is not None
         self.missing = self.requested - self.retrieved
-        self._done = True
-
-    @property
-    def n_expected(self) -> Optional[int]:
-        if self.requested is None:
-            return None
-        return self.requested.n_instances()
-
-    @property
-    def n_input(self) -> int:
-        return super().n_input + len(self.unexpected)
 
     @property
     def n_errors(self) -> int:
@@ -566,6 +553,7 @@ class RetrieveReport(IncomingDataReport):
     def add(self, data_set: Dataset) -> bool:
         assert not self._done
         assert self.requested is not None
+        self.count_input()
         try:
             expected = data_set in self.requested
         except InconsistentDataError:
@@ -708,7 +696,7 @@ def _send_worker(send_q: janus._SyncQueueProxy[Optional[Dataset]],
                  rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
                  assoc: Association,
                  shutdown: Optional[threading.Event] = None) -> None:
-    '''Worker function for performing move operations in another thread'''
+    '''Worker function for performing send operations in another thread'''
     n_sent = 0
     while True:
         no_input = False
@@ -951,10 +939,9 @@ class LocalEntity:
             report = MultiListReport()
         else:
             extern_report = True
-        op_report_attrs = {'provider': remote,
-                           'user': self._local,
-                           'op_type': 'c-find',
-                           }
+        if report.description is None:
+            report.description = 'queries'
+
         level, query = self._prep_query(level, query, query_res)
 
         # Determine the query model
@@ -1027,6 +1014,7 @@ class LocalEntity:
                     sub_uids.clear()
             log.debug("QueryResult expansion results in %d sub-queries" %
                       len(queries))
+        report.n_expected = len(queries)
 
         # Build a queue for results from query thread
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
@@ -1045,6 +1033,12 @@ class LocalEntity:
         if not assoc.is_established:
             raise FailedAssociationError("Can't associate with remote "
                                          "node: %s" % str(remote))
+
+        # Setup args for building reports
+        dicom_op = DicomOp(provider=remote, user=self._local, op_type='c-find')
+        op_report_attrs = {'dicom_op': dicom_op,
+                           'prog_hook': report._prog_hook,
+                           }
 
         # Fire up a thread to perform the query and produce QueryResult chunks
         try:
@@ -1167,11 +1161,7 @@ class LocalEntity:
             report = MultiListReport()
         else:
             extern_report = True
-        op_report_attrs = {'provider': src,
-                           'user': self._local,
-                           'op_type': 'c-move',
-                           'op_data': {'dest' : dest}
-                          }
+        
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         # Setup the association
         query_model = self._choose_qr_model(src, 'move', query_res.level)
@@ -1183,6 +1173,13 @@ class LocalEntity:
                                   src.port,
                                   QueryRetrievePresentationContexts,
                                   src.ae_title)
+        
+        # Setup args for building reports
+        dicom_op = DicomOp(provider=src, user=self._local, op_type='c-move')
+        op_report_attrs = {'dicom_op': dicom_op,
+                           'prog_hook': report._prog_hook,
+                           }
+
         if not assoc.is_established:
             raise FailedAssociationError("Failed to associate with "
                                          "remote: %s" % str(src))
@@ -1317,9 +1314,9 @@ class LocalEntity:
             report = DicomOpReport()
         else:
             extern_report = True
-        report.provider = remote
-        report.user = self._local
-        report.op_type = 'c-store'
+        report.dicom_op.provider = remote
+        report.dicom_op.user = self._local
+        report.dicom_op.op_type = 'c-store'
         send_q: janus.Queue[Dataset] = janus.Queue(10)
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
         send_ae = AE(ae_title=self._local.ae_title)
@@ -1482,9 +1479,7 @@ class LocalEntity:
         while True:
             res = await res_q.get()
             if res is None:
-                #if not report.done:
-                #    assert len(report) == 1 and report[0].n_input == 0
-                #    report[0].done = True
+                report.done = True
                 break
             if curr_op_report.done:
                 curr_op_report =  DicomOpReport(**def_report_attrs)
