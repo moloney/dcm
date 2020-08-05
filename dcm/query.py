@@ -15,7 +15,7 @@ from pydicom.dataset import Dataset
 from tree_format import format_tree
 
 from .util import DicomDataError, Serializable, serializer
-from .normalize import normalize
+from .normalize import normalize, make_elem_filter
 
 
 log = logging.getLogger(__name__)
@@ -121,6 +121,11 @@ opt_elems: Dict[QueryLevel, List[str]] = \
      QueryLevel.IMAGE : [],
     }
 '''Optional attributes we always try to query (exclusive to each level)'''
+
+
+level_filters = {lvl : make_elem_filter(req_elems[lvl] + opt_elems[lvl]) 
+                 for lvl in QueryLevel}
+'''Element filters for each level'''
 
 
 level_identifiers = {QueryLevel.PATIENT : ['NumberOfPatientRelatedStudies',
@@ -402,7 +407,7 @@ class QueryResult:
                 if last_info is not None:
                     parent_uid = last_info['level_uid']
                 lvl_info = OrderedDict()
-                normed_data = normalize(data_set)
+                normed_data = normalize(data_set, level_filters[lvl])
                 for attr in req_elems[lvl]:
                     lvl_info[attr] = normed_data[attr]
                 for attr in opt_elems[lvl]:
