@@ -35,7 +35,7 @@ from .info import __version__
 from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
-from .report import Report, MultiListReport, MultiError, ProgressHookBase
+from .report import CountableReport, MultiListReport, MultiError, ProgressHookBase
 from .util import serializer, create_thread_task
 
 
@@ -44,8 +44,8 @@ log = logging.getLogger(__name__)
 
 UID_PREFIX = '2.25'
 
-IMPLEMENTATION_UID = '%s.84718903' % UID_PREFIX
 
+IMPLEMENTATION_UID = '%s.84718903' % UID_PREFIX
 
 
 # The DICOM standard only allows an association requestor to propose 128
@@ -202,16 +202,17 @@ class DicomOp:
     '''Additional data describing the operation specifics'''
 
 
-class DicomOpReport(Report):
+class DicomOpReport(CountableReport):
     '''Track status results from DICOM operations'''
 
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  dicom_op: Optional[DicomOp] = None,
                  ):
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
         self.dicom_op = DicomOp() if dicom_op is None else dicom_op
         self.warnings: List[Tuple[Dataset, Dataset]] = []
         self.errors: List[Tuple[Dataset, Dataset]] = []
@@ -357,15 +358,16 @@ class IncomingDataError(Exception):
         return ' '.join(res)
 
 
-class IncomingDataReport(Report):
+class IncomingDataReport(CountableReport):
     '''Generic incoming data report'''
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
         self.keep_errors = keep_errors #type: ignore
         self.retrieved = QueryResult(level=QueryLevel.IMAGE)
         self.inconsistent: List[Tuple[str, ...]] = []
@@ -496,12 +498,13 @@ class RetrieveReport(IncomingDataReport):
     
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  requested: Optional[QueryResult] = None,
                  ):
-        super().__init__(description, n_expected, prog_hook, keep_errors)
+        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
         self.requested = requested
         self.missing: Optional[QueryResult] = None
         self.unexpected: List[Tuple[str, ...]] = []
@@ -1014,7 +1017,8 @@ class LocalEntity:
                     sub_uids.clear()
             log.debug("QueryResult expansion results in %d sub-queries" %
                       len(queries))
-        report.n_expected = len(queries)
+        if len(queries) > 1:
+            report.n_expected = len(queries)
 
         # Build a queue for results from query thread
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
@@ -1203,7 +1207,6 @@ class LocalEntity:
         if not extern_report:
             report.log_issues()
             report.check_errors()
-
 
     async def retrieve(self,
                        remote: DcmNode,

@@ -101,21 +101,15 @@ class RichProgressHook(ProgressHookBase[RichProgressTask]):
             self._progress.update(task._task, advance=advance, **task._task_opts)
 
 
-class Report:
+class BaseReport:
     '''Abstract base class for all reports'''
-
     def __init__(self, 
-                 description: Optional[str] = None, 
-                 n_expected: Optional[int] = None,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None
+                 description: Optional[str] = None,
+                 depth: int = 0,
                  ):
         self._description = description
-        self._n_expected = n_expected
-        self._n_input = 0
+        self._depth = depth
         self._done = False
-        self._task = None
-        self._prog_hook: Optional[ProgressHookBase[Any]] = None
-        self.set_prog_hook(prog_hook)
 
     @property
     def description(self) -> str:
@@ -126,6 +120,78 @@ class Report:
     @description.setter
     def description(self, val: str) -> None:
         self._description = val
+
+    @property
+    def depth(self) -> int:
+        return self._depth
+    
+    @depth.setter
+    def depth(self, val: int) -> None:
+        self._depth = val
+
+    @property
+    def done(self) -> bool:
+        return self._done
+
+    @done.setter
+    def done(self, val: bool) -> None:
+        self._set_done(val)
+    
+    @property
+    def has_errors(self) -> bool:
+        '''True if any errors were reported'''
+        raise NotImplementedError
+
+    @property
+    def has_warnings(self) -> bool:
+        '''True if any warnings were reported'''
+        raise NotImplementedError
+
+    @property
+    def all_success(self) -> bool:
+        return not (self.has_errors or self.has_warnings)
+
+    def log_issues(self) -> None:
+        '''Log a summary of error/warning statuses'''
+        raise NotImplementedError
+
+    def check_errors(self) -> None:
+        '''Raise an exception if any errors occured'''
+        raise NotImplementedError
+
+    # TODO: This is tricky to support for some subclasses, separate it out?
+    def clear(self) -> None:
+        raise NotImplementedError
+
+    def _auto_descr(self) -> str:
+        res = self.__class__.__name__.lower()
+        if res.endswith('report') and len(res) > len('report'):
+            res = res[:-len('report')]
+        return res
+    
+    def _set_done(self, val: bool) -> None:
+        if not val:
+            raise ValueError("Setting `done` to False is not allowed")
+        if self._done:
+            raise ValueError("Report was already marked done")
+        self._done = True
+
+
+class CountableReport(BaseReport):
+    '''Abstract base class for reports with single "count"'''
+
+    def __init__(self, 
+                 description: Optional[str] = None,
+                 depth: int = 0, 
+                 n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 ):
+        super().__init__(description, depth)
+        self._n_expected = n_expected
+        self._n_input = 0
+        self._task = None
+        self._prog_hook: Optional[ProgressHookBase[Any]] = None
+        self.set_prog_hook(prog_hook)
 
     @property
     def n_expected(self) -> Optional[int]:
@@ -144,14 +210,6 @@ class Report:
     def n_input(self) -> int:
         '''Number of inputs seen so far'''
         return self._n_input
-
-    @property
-    def done(self) -> bool:
-        return self._done
-
-    @done.setter
-    def done(self, val: bool) -> None:
-        self._set_done(val)
 
     def _init_task(self) -> None:
         assert self._prog_hook is not None
@@ -191,23 +249,17 @@ class Report:
         raise NotImplementedError
 
     @property
-    def all_success(self) -> bool:
-        return self.n_errors + self.n_warnings == 0
+    def has_errors(self) -> bool:
+        '''True if any errors were reported'''
+        return self.n_errors != 0
+
+    @property
+    def has_warnings(self) -> bool:
+        '''True if any warnings were reported'''
+        return self.n_warnings != 0
 
     def __len__(self) -> int:
         return self.n_success + self.n_warnings + self.n_errors
-
-    def log_issues(self) -> None:
-        '''Log a summary of error/warning statuses'''
-        raise NotImplementedError
-
-    def check_errors(self) -> None:
-        '''Raise an exception if any errors occured'''
-        raise NotImplementedError
-
-    # TODO: This is tricky to support for some subclasses, separate it out?
-    def clear(self) -> None:
-        raise NotImplementedError
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._description}, n_expected={self._n_expected}, n_input={self._n_input})'
@@ -225,18 +277,8 @@ class Report:
         # TODO: Setup method for including warning/error details
         return '\n'.join(lines)
     
-    def _auto_descr(self) -> str:
-        res = self.__class__.__name__.lower()
-        if res.endswith('report') and len(res) > len('report'):
-            res = res[:-len('report')]
-        return res
-    
     def _set_done(self, val: bool) -> None:
-        if not val:
-            raise ValueError("Setting `done` to False is not allowed")
-        if self._done:
-            raise ValueError("Report was already marked done")
-        self._done = True
+        super()._set_done(val)
         if self._prog_hook is not None and self._task is not None:
             self._prog_hook.end(self._task)
 
@@ -250,14 +292,25 @@ class MultiError(Exception):
         return '\n\t'.join(res)
 
 
-R = TypeVar('R', bound=Union[Report, 'MultiReport[Any]'])
+R = TypeVar('R', bound=Union[BaseReport, 'SummaryReport[Any]'])
 
 
-class MultiReport(Report, Generic[R]):
-    '''Abstract base class for all MultiReports'''
+class SummaryReport(CountableReport, Generic[R]):
+    '''Abstract base class for all SummaryReports'''
 
     def gen_reports(self) -> Iterator[R]:
         raise NotImplementedError
+
+    @property
+    def depth(self) -> int:
+        return self._depth
+
+    @depth.setter
+    def depth(self, val: int) -> None:
+        if val != self._depth:
+            self._depth = val
+            for r in self.gen_reports():
+                r.depth = val + 1
 
     @property
     def done(self) -> bool:
@@ -276,11 +329,11 @@ class MultiReport(Report, Generic[R]):
 
     @property
     def n_warnings(self) -> int:
-        return sum(1 for r in self.gen_reports() if r.n_warnings != 0)
+        return sum(1 for r in self.gen_reports() if r.has_warnings)
 
     @property
     def n_errors(self) -> int:
-        return sum(1 for r in self.gen_reports() if r.n_errors != 0)
+        return sum(1 for r in self.gen_reports() if r.has_errors)
 
     @property
     def n_sub_success(self) -> int:
@@ -288,8 +341,10 @@ class MultiReport(Report, Generic[R]):
         for r in self.gen_reports():
             if hasattr(r, 'n_sub_success'):
                 total += r.n_sub_success
-            else:
+            elif hasattr(r, 'n_success'):
                 total += r.n_success
+            elif r.all_success:
+                total += 1
         return total
 
     @property
@@ -298,8 +353,10 @@ class MultiReport(Report, Generic[R]):
         for r in self.gen_reports():
             if hasattr(r, 'n_sub_warnings'):
                 total += r.n_sub_warnings
-            else:
+            elif hasattr(r, 'n_warnings'):
                 total += r.n_warnings
+            elif r.has_warnings:
+                total += 1
         return total
     
     @property
@@ -308,19 +365,17 @@ class MultiReport(Report, Generic[R]):
         for r in self.gen_reports():
             if hasattr(r, 'n_sub_errors'):
                 total += r.n_sub_errors
-            else:
+            elif hasattr(r, 'n_errors'):
                 total += r.n_errors
+            elif r.has_errors:
+                total += 1
         return total
-
-    @property
-    def all_success(self) -> bool:
-        return self.n_errors + self.n_warnings == 0
 
     def log_issues(self) -> None:
         '''Produce log messages for any warning/error statuses'''
         for report in self.gen_reports():
             report.log_issues()
-
+    
     def __str__(self) -> str:
         lines = [f'{self.description}:']
         stat = 'COMPLETED' if self._done else 'PENDING'
@@ -339,18 +394,22 @@ class MultiReport(Report, Generic[R]):
                 rep_str = str(rep).replace('\n', '\n    ')
                 lines.append(f'    * {rep_str}')
         return '\n'.join(lines)
+    
+    def _prep_sub_report(self, sub_report: R) -> None:
+        sub_report._depth = self._depth + 1
+        sub_report.prog_hook = self._prog_hook
 
 
-class MultiListReport(MultiReport[R]):
+class MultiListReport(SummaryReport[R]):
     '''Sequence of related reports'''
     def __init__(self, 
                  description: Optional[str] = None, 
-                 sub_reports: Optional[List[R]] = None,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None, 
                  ):
-        self._sub_reports = [] if sub_reports is None else sub_reports
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
+        self._sub_reports: List[R] = []
 
     def __getitem__(self, idx: int) -> R:
         return self._sub_reports[idx]
@@ -362,9 +421,9 @@ class MultiListReport(MultiReport[R]):
         for report in self._sub_reports:
             yield report
 
-    def append(self, val: R) -> None:
-        val.set_prog_hook(self._prog_hook)
-        self._sub_reports.append(val)
+    def append(self, sub_report: R) -> None:
+        self._prep_sub_report(sub_report)
+        self._sub_reports.append(sub_report)
         self.count_input()
 
     def gen_reports(self) -> Iterator[R]:
@@ -406,25 +465,25 @@ class MultiKeyedError(Exception):
 K = TypeVar('K')
 
 
-class MultiDictReport(MultiReport[R], Generic[K, R]):
+class MultiDictReport(SummaryReport[R], Generic[K, R]):
     '''Collection of related reports, each identified with a unique key'''
     def __init__(self, 
-                 description: Optional[str] = None, 
-                 sub_reports: Optional[Dict[K, R]] = None,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None, 
+                 description: Optional[str] = None,
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
                  ):
-        self._sub_reports = {} if sub_reports is None else sub_reports
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
+        self._sub_reports: Dict[K, R] = {}
 
     def __getitem__(self, key: K) -> R:
         return self._sub_reports[key]
 
-    def __setitem__(self, key: K, val: R) -> None:
+    def __setitem__(self, key: K, sub_report: R) -> None:
         if key in self._sub_reports:
             raise ValueError(f"Already have report with key: {key}")
-        val.set_prog_hook(self._prog_hook)
-        self._sub_reports[key] = val
+        self._prep_sub_report(sub_report)
+        self._sub_reports[key] = sub_report
         self.count_input()
 
     def __len__(self) -> int:

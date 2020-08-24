@@ -8,7 +8,7 @@ from pytest import fixture, mark
 from ..query import QueryResult, QueryLevel
 from ..net import LocalEntity
 from ..route import StaticRoute, DynamicRoute, Router
-from ..sync import TransferPlanner
+from ..sync import SyncManager
 from ..store import TransferMethod
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
@@ -72,20 +72,19 @@ async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs)
     dyn_lookup = make_lookup(dest2_repo, dest3_repo)
     dyn_route = DynamicRoute(dyn_lookup, required_elems=['PatientID'])
     dests = [static_route, dyn_route]
-    tp = TransferPlanner(src_repo, dests)
-
+    
     # Build QRs of what we expect to be transfered to each dest
     expect_qrs = {dest1_repo: full_qr - dest1_init_qr,
                   dest2_repo: QueryResult(QueryLevel.IMAGE),
                   dest3_repo: QueryResult(QueryLevel.IMAGE)
                   }
     for ds in full_qr:
-        dests = dyn_lookup(ds)
-        for dest in dests:
+        dyn_dests = dyn_lookup(ds)
+        for dest in dyn_dests:
             expect_qrs[dest].add(ds)
     trans_qrs = {}
-    async with tp.executor() as executor:
-        async for transfer in tp.gen_transfers():
+    with SyncManager(src_repo, dests) as sm:
+        async for transfer in sm.gen_transfers():
             trans_level = transfer.chunk.qr.level
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
@@ -113,14 +112,13 @@ async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, sub
     dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
     static_route = StaticRoute([dest1_repo])
     dests = [static_route]
-    tp = TransferPlanner(src_repo, dests)
-    async with tp.executor() as e:
-        async for transfer in tp.gen_transfers():
+    with SyncManager(src_repo, dests) as sm:
+        async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
                     print(f"{dest} : {serializer.dumps(transfer.chunk.qr)}")
-            await e.exec_transfer(transfer)
-        print(e.report)
+            await sm.exec_transfer(transfer)
+        print(sm.report)
     dest1_dir = Path(dest1_dir)
     found_files = [x for x in dest1_dir.glob('**/*.dcm')]
     print(found_files)
@@ -139,14 +137,13 @@ async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_spec
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
     dests = [static_route, dyn_route]
-    tp = TransferPlanner(src_repo, dests)
-    async with tp.executor() as e:
-        async for transfer in tp.gen_transfers():
+    with SyncManager(src_repo, dests) as sm:
+        async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
                     print(f"{dest} : {transfer.chunk.qr}")
-            await e.exec_transfer(transfer)
-        print(e.report)
+            await sm.exec_transfer(transfer)
+        print(sm.report)
     dest1_dir = Path(dest1_dir)
     found_files = [x for x in dest1_dir.glob('**/*.dcm')]
     print(found_files)
@@ -167,10 +164,9 @@ async def test_bucket_sync(make_local_dir, make_local_node, make_dcmtk_net_repo,
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo),
                              required_elems=['PatientID'])
     dests = [static_route, dyn_route]
-    tp = TransferPlanner(src_bucket, dests)
-    async with tp.executor() as e:
-        async for transfer in tp.gen_transfers():
-            await e.exec_transfer(transfer)
+    with SyncManager(src_bucket, dests) as sm:
+        async for transfer in sm.gen_transfers():
+            await sm.exec_transfer(transfer)
     dest1_dir = Path(dest1_dir)
     found_files = [x for x in dest1_dir.glob('**/*.dcm')]
     print(found_files)

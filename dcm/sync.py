@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging, itertools, textwrap
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import (Optional, Tuple, Dict, List, Union, Iterable, Any, Set,
-                    Callable, TypeVar, Iterator, AsyncIterator, cast)
+from types import TracebackType
+from typing import (Optional, Tuple, Dict, List, Union, Iterable, Any, Set, Type,
+                    Callable, TypeVar, Iterator, AsyncIterator, cast, Generic)
+from typing_extensions import Protocol
 from contextlib import AsyncExitStack, asynccontextmanager
 
 from pydicom import Dataset
@@ -20,51 +22,11 @@ from .route import (Route, StaticRoute, Router, ProxyTransferError,
 from .diff import diff_data_sets, DataDiff
 from .net import (IncomingDataReport, IncomingDataError, IncomingErrorType,
                   DicomOpReport, RetrieveReport)
-from .report import Report, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .report import BaseReport, CountableReport, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
 from .util import dict_to_ds
 
 
 log = logging.getLogger(__name__)
-
-
-
-@dataclass
-class Transfer:
-    chunk: DataChunk
-
-
-@dataclass
-class DynamicTransfer(Transfer):
-    pass
-
-
-@dataclass
-class StaticTransfer(Transfer):
-    chunk: DataChunk
-
-    method_routes_map: Dict[TransferMethod, Tuple[StaticRoute, ...]]
-
-    @property
-    def proxy_filter_dest_map(self) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
-        '''Get dict mapping filters to destinations for proxy transfers'''
-        filter_dest_map: Dict[Optional[Filter], Set[DataBucket[Any, Any]]] = {}
-        routes = self.method_routes_map.get(TransferMethod.PROXY, tuple())
-        for route in routes:
-            filt = route.filt
-            if filt not in filter_dest_map:
-                filter_dest_map[filt] = set(d for d in route.dests)
-            else:
-                filter_dest_map[filt].update(route.dests)
-        return {k : tuple(v) for k, v in filter_dest_map.items()}
-
-    def get_dests(self, method: TransferMethod) -> Tuple[DataBucket[Any, Any], ...]:
-        res = set()
-        for route in self.method_routes_map.get(method, []):
-            for dest in route.dests:
-                res.add(dest)
-        return tuple(res)
-
-
 
 class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
     '''Transfer report that only captures storage'''
@@ -78,16 +40,28 @@ class StaticProxyTransferReport(ProxyReport):
 
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  incoming_report: Optional[IncomingReportType] = None,
                  ):
-        super().__init__(description, n_expected, prog_hook, keep_errors)
-        self.incoming_report = RetrieveReport(prog_hook=prog_hook) if incoming_report is None else incoming_report
+        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
+        self.incoming_report = RetrieveReport(depth=depth+1, prog_hook=prog_hook) if incoming_report is None else incoming_report
         if self.n_expected is None and self.incoming_report.n_expected is not None:
             self.n_expected = self.incoming_report.n_expected
         self.store_reports: StaticStoreReport = StaticStoreReport(prog_hook=prog_hook)
+
+    @property
+    def depth(self) -> int:
+        return self._depth
+
+    @depth.setter
+    def depth(self, val: int) -> None:
+        if val != self._depth:
+            self._depth = val
+            self.incoming_report.depth = val + 1
+            self.store_reports.depth = val + 1
 
     @property
     def n_success(self) -> int:
@@ -172,17 +146,31 @@ class StaticTransferError(Exception):
         return '\n'.join(res)
 
 
-class StaticTransferReport(Report):
+class StaticTransferReport(CountableReport):
     '''Capture all possible info about a single StaticTranfer'''
 
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  ):
-        super().__init__(description, n_expected, prog_hook)    
+        super().__init__(description, depth, n_expected, prog_hook)    
         self.proxy_report: Optional[StaticProxyTransferReport] = None
         self.oob_report: Optional[StaticOobTransferReport] = None
+
+    @property
+    def depth(self) -> int:
+        return self._depth
+
+    @depth.setter
+    def depth(self, val: int) -> None:
+        if val != self._depth:
+            self._depth = val
+            if self.proxy_report is not None:
+                self.proxy_report.depth = val + 1
+            if self.oob_report is not None:
+                self.oob_report.depth = val + 1
 
     @property
     def n_success(self) -> int:
@@ -238,7 +226,53 @@ class StaticTransferReport(Report):
         if self.proxy_report is not None:
             self.proxy_report.clear()
         if self.oob_report is not None:
-            self.oob_report.clear()
+            self.oob_report.clear()    
+
+
+T_report = TypeVar('T_report', bound=Union[DynamicTransferReport, StaticTransferReport], covariant=True)
+
+
+@dataclass
+class Transfer(Generic[T_report]):
+    chunk: DataChunk
+
+    report: T_report
+
+
+@dataclass
+class DynamicTransfer(Transfer['DynamicTransferReport']):
+    chunk: DataChunk
+
+    report: DynamicTransferReport = field(default_factory=DynamicTransferReport)
+
+
+@dataclass
+class StaticTransfer(Transfer['StaticTransferReport']):
+    chunk: DataChunk
+
+    report: StaticTransferReport = field(default_factory=StaticTransferReport)
+
+    method_routes_map: Dict[TransferMethod, Tuple[StaticRoute, ...]] = field(default_factory=dict)
+
+    @property
+    def proxy_filter_dest_map(self) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
+        '''Get dict mapping filters to destinations for proxy transfers'''
+        filter_dest_map: Dict[Optional[Filter], Set[DataBucket[Any, Any]]] = {}
+        routes = self.method_routes_map.get(TransferMethod.PROXY, tuple())
+        for route in routes:
+            filt = route.filt
+            if filt not in filter_dest_map:
+                filter_dest_map[filt] = set(d for d in route.dests)
+            else:
+                filter_dest_map[filt].update(route.dests)
+        return {k : tuple(v) for k, v in filter_dest_map.items()}
+
+    def get_dests(self, method: TransferMethod) -> Tuple[DataBucket[Any, Any], ...]:
+        res = set()
+        for route in self.method_routes_map.get(method, []):
+            for dest in route.dests:
+                res.add(dest)
+        return tuple(res)
 
 
 DiffFiltType = Callable[[DataDiff], Optional[DataDiff]]
@@ -289,137 +323,56 @@ TransferReportTypes = Union[DynamicTransferReport,
                            ]
 
 
-class TransferExecutor:
-    '''Manage the execution of a series of transfers'''
-    def __init__(self,
-                 router: Router,
-                 keep_errors: Tuple[IncomingErrorType, ...],
-                 validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
-                 report: Optional[MultiListReport[TransferReportTypes]] = None
-                ):
-        if report is None:
-            self.report: MultiListReport[TransferReportTypes] = MultiListReport()
-            self._extern_report = False
-        else:
-            self.report = report
-            self._extern_report = True
-        self.report.description = 'transfers'
-        self._router = router
-        self._validators = validators
-        self._keep_errors = keep_errors
-
-    async def exec_transfer(self, transfer: Transfer) -> None:
-        '''Execute the given transfer'''
-        if isinstance(transfer, DynamicTransfer):
-            log.debug("Executing dynamic transfer")
-            await self._do_dynamic_transfer(transfer)
-        elif isinstance(transfer, StaticTransfer):
-            log.debug("Executing static transfer")
-            await self._do_static_transfer(transfer)
-        else:
-            raise TypeError("Not a valid Transfer sub-class: %s" % transfer)
-
-    async def close(self) -> None:
-        # TODO: Some clean up to do here?
-        if not self._extern_report:
-            self.report.log_issues()
-            self.report.check_errors()
-
-    async def _do_dynamic_transfer(self, transfer: DynamicTransfer) -> None:
-        # TODO: We could keep this context manager open until the
-        #       TransferExecutor.close method is called, and thus avoid some
-        #       overhead from opening/closing associations, but this makes the
-        #       reporting quite tricky, and each transfer should be relatively
-        #       slow compared to the overhead of setting up and tearing down
-        #       associations.
-        report = DynamicTransferReport()
-        self.report.append(report)
-        async with self._router.route(report=report) as routing_q:
-            async for ds in transfer.chunk.gen_data():
-                await routing_q.put(ds)
-
-    async def _do_static_proxy_transfer(self,
-                                        transfer: StaticTransfer,
-                                        report: StaticProxyTransferReport
-                                       ) -> None:
-        filter_dest_map = transfer.proxy_filter_dest_map
-        n_filt = len(filter_dest_map)
-        if None in filter_dest_map:
-            n_filt -= 1
-        dests = transfer.get_dests(TransferMethod.PROXY)
-        async with AsyncExitStack() as stack:
-            d_q_map = {}
-            for dest in dests:
-                #TODO: Might be a LocalWriteReport
-                store_rep = dest.get_empty_send_report()
-                #store_rep.set_prog_hook(self.report._prog_hook)
-                store_rep.n_expected = transfer.chunk.n_expected
-                report.add_store_report(dest, store_rep)
-                d_q_map[dest] = await stack.enter_async_context(dest.send(report=store_rep))
-            async for ds in transfer.chunk.gen_data():
-                if n_filt:
-                    orig_ds = deepcopy(ds)
-                else:
-                    orig_ds = ds
-                min_orig_ds = minimal_copy(orig_ds)
-                for filt, sub_dests in filter_dest_map.items():
-                    static_route = StaticRoute(sub_dests, filt=filt)
-                    sub_queues = [d_q_map[d] for d in sub_dests]
-                    if filt is not None:
-                        filt_ds = filt(orig_ds)
-                        if filt_ds is not None:
-                            min_filt_ds = minimal_copy(filt_ds)
-                    else:
-                        filt_ds = orig_ds
-                        min_filt_ds = min_orig_ds
-                    if filt_ds is None:
-                        continue
-                    if not report.add(static_route, min_orig_ds, min_filt_ds):
-                        continue
-                    if filt_ds is not None:
-                        for q in sub_queues:
-                            await q.put(filt_ds)
-        report.done = True
-
-    async def _do_static_transfer(self, transfer: StaticTransfer) -> None:
-        # TODO: Can't automatically overlap the proxy and out-of-band transfers
-        #       since they both may require associations with the same src.
-        #       Would need to know the available resources, and those needed
-        #       by each transfer, including a way for a transfer to reserve
-        #       resources for future use
-        #
-        #       Our current API also doesn't allow the user to do this manually...
-        trans_report = StaticTransferReport()
-        self.report.append(trans_report)
-        for method, routes in transfer.method_routes_map.items():
-            if method == TransferMethod.PROXY:
-                proxy_report = StaticProxyTransferReport(incoming_report=transfer.chunk.report)
-                proxy_report.keep_errors = self._keep_errors
-                trans_report.proxy_report = proxy_report
-                await self._do_static_proxy_transfer(transfer, proxy_report)
-            else:
-                oob_report = StaticOobTransferReport(prog_hook=self.report._prog_hook)
-                oob_report[method] = StaticStoreReport()
-                trans_report.oob_report = oob_report
-                for dest in transfer.get_dests(method):
-                    oob_dest = cast(OobCapable[Any, Any], dest)
-                    log.debug(f"Doing out-of-band transfer to {dest}")
-                    oob_report[method][dest] = oob_dest.get_empty_oob_report()
-                    oob_report[method][dest].n_expected = transfer.chunk.n_expected
-                    oob_report[method][dest].description = f'{method} to {dest}'
-                    await oob_dest.oob_transfer(method,
-                                                transfer.chunk,
-                                                report=oob_report[method][dest])
-        trans_report.done = True
-
-class RepoRequiredError(Exception):
-    '''Operation requires a DataRepo but a DataBucket was provided'''
-    pass
-
-
 DestType = Union[DataBucket, Route]
 
 
+class RepoRequiredError(Exception):
+    '''Operation requires a DataRepo but a DataBucket was provided'''
+
+
+class SyncReport(BaseReport):
+    def __init__(self, 
+                 description: Optional[str] = None, 
+                 depth: int = 0,
+                 prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 ):
+        super().__init__(description, depth)
+        self.src_qr_report: MultiListReport[DicomOpReport] = MultiListReport('src_query', depth=depth+1, prog_hook=prog_hook)
+        self.trans_reports: MultiListReport[TransferReportTypes] = MultiListReport('transfers', depth=depth+1, prog_hook=prog_hook)
+        self._prog_hook = prog_hook
+
+    @property
+    def depth(self) -> int:
+        return self._depth
+
+    @depth.setter
+    def depth(self, val: int) -> None:
+        if val != self._depth:
+            self._depth = val
+            self.src_qr_report.depth = val + 1
+            self.trans_reports.depth = val + 1
+
+    @property
+    def has_warnings(self) -> bool:
+        return self.src_qr_report.has_warnings or self.trans_reports.has_warnings
+
+    @property
+    def has_errors(self) -> bool:
+        return self.src_qr_report.has_errors or self.trans_reports.has_errors
+
+    def log_issues(self) -> None:
+        '''Produce log messages for any warning/error statuses'''
+        self.src_qr_report.log_issues()
+        self.trans_reports.log_issues()
+        
+    def check_errors(self) -> None:
+        '''Raise an exception if any errors have occured so far'''
+        self.src_qr_report.check_errors()
+        self.trans_reports.check_errors()
+
+    def clear(self) -> None:
+        self.src_qr_report.clear()
+        self.trans_reports.clear()
 
 # TODO: Does it make more sense to allow a query to be passed in here instead
 #       having the base_query in the NetRepo? We only have once source here,
@@ -430,20 +383,13 @@ DestType = Union[DataBucket, Route]
 #       should override the query instead of the query refining the query_res?
 #       This would be different than every other part of our API that takes
 #       both though...
-
 # TODO: If we end up needing to do the query ourselves, we should include any
 #       req_elems from any DynamicRoutes so we don't have to do those queries
 #       again in pre-route. One question is how does pre-route know that we
 #       already tried to query for elements that the remote doesn't provide?
-
-# TODO: How to interleave queries/transfers? Three main places src queries can
-#       happen, top-level in gen_transfers, in pre_route, and in get_missing.
-#       There is the potential for the PACS to have a small limit on the number
-#       of simultaneous associations for any given client, which will prevent
-#       certain overlapping schemes from working.
-class TransferPlanner:
-    '''Plans efficient transfer scheme for data from the `src` to `dests`
-
+class SyncManager:
+    '''Can generate and execute transfers needed to sync `src` and `dests`
+    
     Data will only be retrieved locally from `src` at most once and then
     forwarded to all destinations that need it.
 
@@ -467,6 +413,12 @@ class TransferPlanner:
 
     force_all
         Don't skip data that already exists on the destinations
+    
+    keep_errors
+        Whether or not we try to sync erroneous data
+
+    report
+        Allows live introspection of the sync process, detailed results
     '''
     def __init__(self,
                  src: DataBucket[Any, Any],
@@ -474,7 +426,9 @@ class TransferPlanner:
                  trust_level: QueryLevel = QueryLevel.IMAGE,
                  force_all: bool = False,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None):
+                 validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
+                 report: Optional[SyncReport] = None,
+                 ):
         self._src = src
         self._trust_level = trust_level
         self._force_all = force_all
@@ -486,7 +440,13 @@ class TransferPlanner:
         else:
             keep_errors = cast(Tuple[IncomingErrorType, ...], keep_errors)
             self._keep_errors = keep_errors
-        self._prog_hook = prog_hook
+        self._validators = validators
+        if report is None:
+            self._extern_report = False
+            self.report = SyncReport()
+        else:
+            self._extern_report = True
+            self.report = report
 
         # Make sure all dests are Route objects
         self._routes = []
@@ -496,6 +456,8 @@ class TransferPlanner:
                 self._routes.append(dest)
         if plain_dests:
             self._routes.append(StaticRoute(tuple(plain_dests)))
+        if len(self._routes) == 0:
+            raise ValueError("At least one dest must be specified")
         self._has_filt = any(r.filt is not None for r in self._routes)
 
         # Precompute TransferMethod to routes map for static routes
@@ -515,8 +477,8 @@ class TransferPlanner:
             raise NoValidTransferMethodError()
 
     async def gen_transfers(self,
-                            query_res: QueryResult = None
-                            ) -> AsyncIterator[Transfer]:
+                            query_res: QueryResult = None,
+                            ) -> AsyncIterator[Transfer[Any]]:
         '''Generate the needed transfers
 
         Parameters
@@ -524,6 +486,8 @@ class TransferPlanner:
         query_res
             Only transfer data that matches this QueryResult
         '''
+        if self.report.done:
+            raise ValueError("The SyncManager has been closed")
         if not isinstance(self._src, DataRepo) and query_res is not None:
             raise RepoRequiredError("Can't pass in query_res with naive "
                                     "data source")
@@ -537,35 +501,47 @@ class TransferPlanner:
         chunk_keep_errors = tuple(_chunk_keep_errors)
 
         n_trans = 0
+        res: Transfer[Any]
         if not isinstance(self._src, DataRepo) or not self._router.can_pre_route:
-            log.info("Processing all data from data source: %s" % self._src)
+            log.info(f"Processing all data from data source: {self._src}")
+            if self._src.n_chunks is not None:
+                self.report.trans_reports.n_expected = self._src.n_chunks
             async for chunk in self._src.gen_chunks():
                 chunk.keep_errors = chunk_keep_errors
-                chunk.report.set_prog_hook(self._prog_hook)
+                chunk.report.set_prog_hook(self.report._prog_hook)
                 if self._router.has_dynamic_routes:
-                    yield DynamicTransfer(chunk)
-                    n_trans += 1
+                    res = DynamicTransfer(chunk)
                 else:
-                    yield StaticTransfer(chunk, self._static_meth_routes.copy())
-                    n_trans += 1
+                    res = StaticTransfer(chunk, method_routes_map=self._static_meth_routes.copy())
+                self.report.trans_reports.append(res.report)
+                n_trans += 1
+                yield res
         else:
             # We have a smart data repo and can precompute any dynamic routing
             # and try to avoid transferring data that already exists
-            log.info("Processing select data from source: %s" % self._src)
+            log.info(f"Processing select data from source: {self._src}")
+            expected_sub_qrs = None
             qr_gen: AsyncIterator[QueryResult]
             if query_res is not None:
                 gen_level = min(query_res.level, QueryLevel.STUDY)
                 qr_gen = _sync_iter_to_async(query_res.level_sub_queries(gen_level))
+                expected_sub_qrs = query_res.get_count(gen_level)
             else:
                 q = dict_to_ds({elem : '*' for elem in self._router.required_elems})
-                qr_report: Optional[MultiListReport[DicomOpReport]] = None
-                if self._prog_hook is not None:
-                    qr_report = MultiListReport(prog_hook=self._prog_hook)
+                qr_report = self.report.src_qr_report
                 qr_gen = self._src.queries(QueryLevel.STUDY, q, report=qr_report)
 
+            n_sub_qr = 0
+            avg_trans_per_qr = 1.0
             async for sub_qr in qr_gen:
+                if expected_sub_qrs is None and qr_report.done:
+                    expected_sub_qrs = qr_report.n_input
+                if expected_sub_qrs is not None:
+                    self.report.trans_reports.n_expected = int(expected_sub_qrs * avg_trans_per_qr)
+
                 sr_qr_map = await self._router.pre_route(self._src,
                                                          query_res=sub_qr)
+                pre_count = n_trans
                 for static_routes, qr in sr_qr_map.items():
                     if self._force_all:
                         missing_info = {tuple(static_routes) : [qr]}
@@ -576,31 +552,47 @@ class TransferPlanner:
                         for missing_qr in missing_qrs:
                             async for chunk in self._src.gen_query_chunks(missing_qr):
                                 chunk.keep_errors = chunk_keep_errors
-                                chunk.report.set_prog_hook(self._prog_hook)
-                                yield StaticTransfer(chunk, meth_routes)
+                                chunk.report.set_prog_hook(self.report._prog_hook)
+                                if len(meth_routes) == 0:
+                                    import pdb ; pdb.set_trace()
+                                res = StaticTransfer(chunk, method_routes_map=meth_routes.copy())
+                                self.report.trans_reports.append(res.report)
                                 n_trans += 1
-            log.info("Generated %d transfers " % (n_trans,))
+                                yield res
+                avg_trans_per_qr = min(0.1, ((avg_trans_per_qr * n_sub_qr) + (n_trans - pre_count)) / (n_sub_qr + 1))
+                n_sub_qr += 1
+            log.info(f"Generated {n_trans} transfers")
 
-    @asynccontextmanager
-    async def executor(self,
-                       validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
-                       report: Optional[MultiListReport[TransferReportTypes]] = None
-                      ) -> AsyncIterator[TransferExecutor]:
-        '''Produces a TransferExecutor for executing a series of transfers'''
-        # TODO: Just make the executor a contexmanager and return it here
-        if self._prog_hook is not None:
-            if report is None:
-                report = MultiListReport(description='transfers', prog_hook=self._prog_hook)
-            #else:
-            #    report.set_prog_hook(self._prog_hook)
-        try:
-            executor = TransferExecutor(self._router,
-                                        self._keep_errors,
-                                        validators,
-                                        report)
-            yield executor
-        finally:
-            await executor.close()
+    async def exec_transfer(self, transfer: Transfer[Any]) -> None:
+        '''Execute the given transfer'''
+        if self.report.done:
+            raise ValueError("The SyncManager has been closed")
+        if isinstance(transfer, DynamicTransfer):
+            log.debug("Executing dynamic transfer")
+            await self._do_dynamic_transfer(transfer)
+        elif isinstance(transfer, StaticTransfer):
+            log.debug("Executing static transfer")
+            await self._do_static_transfer(transfer)
+        else:
+            raise TypeError("Not a valid Transfer sub-class: %s" % transfer)
+
+    # TODO: If we decide to keep some associations open across transfers, we 
+    #       can do the cleanup here but below three methods will need to become
+    #       async
+    def close(self) -> None:
+        if not self._extern_report:
+            self.report.log_issues()
+            self.report.check_errors()
+        self.report.done = True
+
+    def __enter__(self) -> SyncManager:
+        return self
+    
+    def __exit__(self, 
+                 exctype: Optional[Type[BaseException]],
+                 excinst: Optional[BaseException],
+                 exctb: Optional[TracebackType]) -> None:
+        self.close()
 
     def _get_meth_routes(self,
                          routes: Iterable[StaticRoute]
@@ -768,6 +760,89 @@ class TransferPlanner:
             sr_res[tuple(routes)] = qr_list
         return sr_res
 
+    async def _do_dynamic_transfer(self, transfer: DynamicTransfer) -> None:
+        # TODO: We could keep this context manager open until the
+        #       TransferExecutor.close method is called, and thus avoid some
+        #       overhead from opening/closing associations, but this makes the
+        #       reporting quite tricky, and each transfer should be relatively
+        #       slow compared to the overhead of setting up and tearing down
+        #       associations.
+        async with self._router.route(report=transfer.report) as routing_q:
+            async for ds in transfer.chunk.gen_data():
+                await routing_q.put(ds)
+
+    async def _do_static_proxy_transfer(self,
+                                        transfer: StaticTransfer,
+                                        report: StaticProxyTransferReport
+                                       ) -> None:
+        filter_dest_map = transfer.proxy_filter_dest_map
+        n_filt = len(filter_dest_map)
+        if None in filter_dest_map:
+            n_filt -= 1
+        dests = transfer.get_dests(TransferMethod.PROXY)
+        async with AsyncExitStack() as stack:
+            d_q_map = {}
+            for dest in dests:
+                #TODO: Might be a LocalWriteReport
+                store_rep = dest.get_empty_send_report()
+                #store_rep.set_prog_hook(self.report._prog_hook)
+                store_rep.n_expected = transfer.chunk.n_expected
+                report.add_store_report(dest, store_rep)
+                d_q_map[dest] = await stack.enter_async_context(dest.send(report=store_rep))
+            async for ds in transfer.chunk.gen_data():
+                if n_filt:
+                    orig_ds = deepcopy(ds)
+                else:
+                    orig_ds = ds
+                min_orig_ds = minimal_copy(orig_ds)
+                for filt, sub_dests in filter_dest_map.items():
+                    static_route = StaticRoute(sub_dests, filt=filt)
+                    sub_queues = [d_q_map[d] for d in sub_dests]
+                    if filt is not None:
+                        filt_ds = filt(orig_ds)
+                        if filt_ds is not None:
+                            min_filt_ds = minimal_copy(filt_ds)
+                    else:
+                        filt_ds = orig_ds
+                        min_filt_ds = min_orig_ds
+                    if filt_ds is None:
+                        continue
+                    if not report.add(static_route, min_orig_ds, min_filt_ds):
+                        continue
+                    if filt_ds is not None:
+                        for q in sub_queues:
+                            await q.put(filt_ds)
+        report.done = True
+
+    async def _do_static_transfer(self, transfer: StaticTransfer) -> None:
+        # TODO: Can't automatically overlap the proxy and out-of-band transfers
+        #       since they both may require associations with the same src.
+        #       Would need to know the available resources, and those needed
+        #       by each transfer, including a way for a transfer to reserve
+        #       resources for future use
+        #
+        #       Our current API also doesn't allow the user to do this manually...
+        for method, routes in transfer.method_routes_map.items():
+            if method == TransferMethod.PROXY:
+                proxy_report = StaticProxyTransferReport(incoming_report=transfer.chunk.report)
+                proxy_report.keep_errors = self._keep_errors
+                transfer.report.proxy_report = proxy_report
+                await self._do_static_proxy_transfer(transfer, proxy_report)
+            else:
+                oob_report = StaticOobTransferReport(prog_hook=self.report._prog_hook)
+                oob_report[method] = StaticStoreReport()
+                transfer.report.oob_report = oob_report
+                for dest in transfer.get_dests(method):
+                    oob_dest = cast(OobCapable[Any, Any], dest)
+                    log.debug(f"Doing out-of-band transfer to {dest}")
+                    oob_report[method][dest] = oob_dest.get_empty_oob_report()
+                    oob_report[method][dest].n_expected = transfer.chunk.n_expected
+                    oob_report[method][dest].description = f'{method} to {dest}'
+                    await oob_dest.oob_transfer(method,
+                                                transfer.chunk,
+                                                report=oob_report[method][dest])
+        transfer.report.done = True
+
 
 async def sync_data(src : DataBucket[Any, Any],
                     dests : List[DestType],
@@ -776,14 +851,10 @@ async def sync_data(src : DataBucket[Any, Any],
                     force_all: bool = False,
                     validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
                     keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                    report: Optional[MultiListReport[TransferReportTypes]] = None,
+                    report: Optional[SyncReport] = None,
                     ) -> None:
     '''Convienance function to build TransferPlanner and execute all transfers
     '''
-    planner = TransferPlanner(src, dests, trust_level, force_all, keep_errors)
-    async with planner.executor(validators, report) as ex:
-        report = ex.report
-        async for transfer in planner.gen_transfers(query_res):
-            await ex.exec_transfer(transfer)
-    report.log_issues()
-    report.check_errors()
+    with SyncManager(src, dests, trust_level, force_all, keep_errors, validators, report) as sm:
+        async for transfer in sm.gen_transfers(query_res):
+            await sm.exec_transfer(transfer)

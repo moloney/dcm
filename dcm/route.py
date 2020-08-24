@@ -15,7 +15,7 @@ from .lazyset import LazySet, FrozenLazySet
 from .query import (QueryLevel, QueryResult, DataNode, InconsistentDataError,
                     get_uid, minimal_copy)
 from .filt import Filter, DataTransform, get_transform
-from .report import Report, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .report import CountableReport, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
 from .util import DuplicateDataError
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
 from .store import DataBucket, DataRepo, TransferMethod, LocalWriteReport
@@ -248,16 +248,17 @@ class ProxyTransferError(Exception):
 #       DataTransforms under `sent` here. I guess this is okay and mimics what
 #       happens in a RetrieveReport
 #
-class ProxyReport(Report):
+class ProxyReport(CountableReport):
     '''Abstract base class for reports on proxy transfers'''
 
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
         self.keep_errors = keep_errors #type: ignore
         self.sent: Dict[StaticRoute, DataTransform] = {}
         self.inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
@@ -394,11 +395,12 @@ class DynamicTransferReport(ProxyReport):
     '''Track what data is being routed where and any store results'''
     def __init__(self, 
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, n_expected, prog_hook, keep_errors)
+        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
         self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = MultiDictReport(prog_hook=prog_hook)
 
     @property

@@ -20,7 +20,7 @@ from .route import StaticRoute
 from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
-from .sync import TransferPlanner, make_basic_validator
+from .sync import SyncManager, make_basic_validator
 from .normalize import normalize
 from .diff import diff_data_sets
 
@@ -325,7 +325,7 @@ def query(params, remote, query, level, query_res, local, out_format,
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = serializer.loads(query_res.read())
+        query_res = serializer.loads(query_res.readhints())
     if sys.stdout.isatty():
         if out_format is None:
             out_format = 'tree'
@@ -399,20 +399,22 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
             prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
         else:
             prog = None
-        planner = TransferPlanner(src,
-                                [dest_route],
-                                trust_level=trust_level,
-                                force_all=force_all,
-                                keep_errors=keep_errors,
-                                prog_hook=prog)
+        sync_report = SyncReport(prog_hook=prog)
+        mgr = SyncManager(src,
+                          [dest_route],
+                          trust_level=trust_level,
+                          force_all=force_all,
+                          keep_errors=keep_errors,
+                          report=sync_report,
+                          )
 
         # Perform the sync or dry run
         log.info("Syncing data from '%s' to '%s'" %
-                (src, ', '.join(str(x) for x in dests)))
+                 (src, ', '.join(str(x) for x in dests)))
 
         if dry_run:
             log.info("Starting dry run")
-            async for transfer in planner.gen_transfers(query_res):
+            async for transfer in mrt.gen_transfers(query_res):
                 dests_str = []
                 for meth, routes in transfer.method_routes_map.items():
                     for route in routes:
@@ -422,12 +424,12 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
             log.info("Finished dry run")
         else:
             log.info("Starting data sync")
-            async with planner.executor(validators) as ex:
-                async with aclosing(planner.gen_transfers(query_res)) as tgen:
+            with mgr:
+                async with aclosing(mgr.gen_transfers(query_res)) as tgen:
                     async for transfer in tgen:
-                        await ex.exec_transfer(transfer)
+                        await mgr.exec_transfer(transfer)
             log.info("Finished data sync")
-            log.info("Full Report:\n%s", ex.report)
+            log.info("Full Report:\n%s", sync_report)
 
 
 @click.command()

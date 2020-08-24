@@ -19,7 +19,7 @@ from pydicom import Dataset
 from ..query import QueryLevel, QueryResult, uid_elems
 from ..net import (DcmNode, DicomOpReport, IncomingDataReport,
                    IncomingDataError, IncomingErrorType, RetrieveReport)
-from ..report import Report, MultiReport, MultiListReport, ProgressHookBase
+from ..report import CountableReport, SummaryReport, MultiListReport, ProgressHookBase
 from ..util import aclosing, PathInputType
 
 
@@ -148,12 +148,13 @@ class LocalIncomingReport(IncomingDataReport):
     '''Track incoming data from a local filesystem'''
 
     def __init__(self, 
-                 description: Optional[str] = None, 
+                 description: Optional[str] = None,
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, n_expected, prog_hook, keep_errors)
+        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
         self.invalid: List[PathInputType] = []
     '''Track any paths that were determined to not be valid DICOM files'''
 
@@ -238,11 +239,11 @@ class LocalChunk(DataChunk):
 
 
 T_chunk = TypeVar('T_chunk', bound=DataChunk, covariant=True)
-T_qreport = TypeVar('T_qreport', bound=Union[Report, MultiReport[Any]], contravariant=True)
-T_rreport = TypeVar('T_rreport', bound=Report, contravariant=True)
-T_sreport = TypeVar('T_sreport', bound=Union[Report, MultiReport[Any]], covariant=True)
+T_qreport = TypeVar('T_qreport', bound=Union[CountableReport, SummaryReport[Any]], contravariant=True)
+T_rreport = TypeVar('T_rreport', bound=CountableReport, contravariant=True)
+T_sreport = TypeVar('T_sreport', bound=Union[CountableReport, SummaryReport[Any]], covariant=True)
 T_oob_chunk = TypeVar('T_oob_chunk', bound=DataChunk, contravariant=True)
-T_oob_report = TypeVar('T_oob_report', bound=Union[Report, MultiReport[Any]])
+T_oob_report = TypeVar('T_oob_report', bound=Union[CountableReport, SummaryReport[Any]])
 
 
 class DataBucket(Generic[T_chunk, T_sreport], Protocol):
@@ -255,6 +256,11 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
     description: Optional[str] = None
 
     _supported_methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
+
+    @property
+    def n_chunks(self) -> Optional[int]:
+        '''Subclasses can return an int if they know how many chunks to expect'''
+        return None
 
     async def gen_chunks(self) -> AsyncIterator[T_chunk]:
         '''Generate the data in this bucket, one chunk at a time'''
@@ -359,14 +365,15 @@ class LocalWriteError(Exception):
         return ' '.join(msg)
 
 
-class LocalWriteReport(Report):
+class LocalWriteReport(CountableReport):
 
     def __init__(self,
                  description: Optional[str] = None, 
+                 depth: int = 0,
                  n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                 ):
-        super().__init__(description, n_expected, prog_hook)
+        super().__init__(description, depth, n_expected, prog_hook)
         self.write_errors: Dict[Exception, List[PathInputType]] = {}
         self.successful: List[PathInputType] = []
         self.skipped: List[PathInputType] = []
