@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging, itertools, textwrap
 from copy import deepcopy
 from dataclasses import dataclass, field
+import asyncio
 from types import TracebackType
 from typing import (Optional, Tuple, Dict, List, Union, Iterable, Any, Set, Type,
                     Callable, TypeVar, Iterator, AsyncIterator, cast, Generic)
@@ -602,14 +603,7 @@ class SyncManager:
             if len(curr_src_qr) == 0:
                 break
             log.debug("Checking for missing data at level %s" % curr_level)
-            if curr_level > curr_src_qr.level:
-                # We need more details for the source QueryResult
-                log.debug("Querying src in _get_missing more details")
-                curr_src_qr = await self._src.query(level=curr_level,
-                                                    query_res=curr_src_qr)
-                df_trans_map = {df : get_transform(curr_src_qr & qr_trans.old, df[1])
-                                for df, qr_trans in df_trans_map.items()}
-
+            
             # Compute what is missing for each dest and matching for any dest
             # at this level
             missing = {}
@@ -618,9 +612,18 @@ class SyncManager:
                 dest, filt = df
                 log.debug("Checking for missing data on dest: %s", dest)
                 assert isinstance(dest, DataRepo)
-                curr_qr_trans = df_trans_map[df]
+                if curr_level > curr_src_qr.level:
+                    # We need more details for the source QueryResult
+                    log.debug("Querying src in _get_missing more details")
+                    src_qr_task = asyncio.create_task(self._src.query(level=curr_level,
+                                                                      query_res=curr_src_qr))
                 dest_qr = await dest.query(level=curr_level,
                                            query_res=curr_matching[df])
+                if curr_level > curr_src_qr.level:
+                    curr_src_qr = await src_qr_task
+                    df_trans_map = {df : get_transform(curr_src_qr & qr_trans.old, df[1])
+                                    for df, qr_trans in df_trans_map.items()}
+                curr_qr_trans = df_trans_map[df]
                 missing[df] = curr_qr_trans.old.sub(curr_qr_trans.reverse(dest_qr).qr,
                                                     ignore_subcounts=True)
                 matching = curr_qr_trans.new & dest_qr
