@@ -208,17 +208,17 @@ class DicomOpReport(CountableReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  dicom_op: Optional[DicomOp] = None,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook)
         self.dicom_op = DicomOp() if dicom_op is None else dicom_op
         self.warnings: List[Tuple[Dataset, Dataset]] = []
         self.errors: List[Tuple[Dataset, Dataset]] = []
         self._n_success = 0
         self._has_sub_ops = False
         self._final_status: Optional[Dataset] = None
+        super().__init__(description, depth, prog_hook, n_expected)
 
     @property
     def n_success(self) -> int:
@@ -363,15 +363,15 @@ class IncomingDataReport(CountableReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook)
         self.keep_errors = keep_errors #type: ignore
         self.retrieved = QueryResult(level=QueryLevel.IMAGE)
         self.inconsistent: List[Tuple[str, ...]] = []
         self.duplicate: List[Tuple[str, ...]] = []
+        super().__init__(description, depth, prog_hook, n_expected)
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -499,16 +499,16 @@ class RetrieveReport(IncomingDataReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  requested: Optional[QueryResult] = None,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
         self.requested = requested
         self.missing: Optional[QueryResult] = None
         self.unexpected: List[Tuple[str, ...]] = []
         self.move_report: MultiListReport[DicomOpReport] = MultiListReport()
+        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def requested(self) -> Optional[QueryResult]:
@@ -521,20 +521,6 @@ class RetrieveReport(IncomingDataReport):
             n_expected = self._requested.n_instances()
             if n_expected is not None:
                 self.n_expected = n_expected
-
-    @property
-    def done(self) -> bool:
-        return self._done
-
-    @done.setter
-    def done(self, val: bool) -> None:
-        super()._set_done(val)
-        if not self.move_report.done:
-            assert len(self.move_report) == 1 and self.move_report[0].n_input == 0
-            self.move_report[0].done = True
-        assert self.move_report.done
-        assert self.requested is not None and self.retrieved is not None
-        self.missing = self.requested - self.retrieved
 
     @property
     def n_errors(self) -> int:
@@ -601,6 +587,15 @@ class RetrieveReport(IncomingDataReport):
         super().clear()
         self.move_report.clear()
         self.unexpected = []
+
+    def _set_done(self, val: bool) -> None:
+        super()._set_done(val)
+        if not self.move_report.done:
+            assert len(self.move_report) == 1 and self.move_report[0].n_input == 0
+            self.move_report[0].done = True
+        assert self.move_report.done
+        assert self.requested is not None and self.retrieved is not None
+        self.missing = self.requested - self.retrieved
 
 
 class FailedAssociationError(Exception):

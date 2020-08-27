@@ -29,7 +29,7 @@ install_requires = ['pydicom >= 1.0',
                     'fifolock',
                     'typing_extensions',
                     'rich',
-                    'attrs',
+                    'dateparser',
                     ]
 dependency_links = \
     ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']

@@ -10,6 +10,7 @@ import click
 import toml
 from rich.progress import Progress
 from rich.logging import RichHandler
+import dateparser
 
 from .util import aclosing, serializer
 from .report import MultiListReport, RichProgressHook
@@ -20,7 +21,7 @@ from .route import StaticRoute
 from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
-from .sync import SyncManager, make_basic_validator
+from .sync import SyncReport, SyncManager, make_basic_validator
 from .normalize import normalize
 from .diff import diff_data_sets
 
@@ -289,6 +290,38 @@ def echo(params, remote, local):
         cli_error("Failed")
 
 
+def _hr_to_dcm_date(in_str):
+    try:
+        dt = dateparser.parse(in_str)
+    except Exception:
+        cli_error(f"Unable to parse date: 'in_str'")
+    return dt.strftime('%Y%m%d')
+
+
+def _build_study_date(since, before):
+    if since is not None:
+        since_str = _hr_to_dcm_date(since)
+    else:
+        since_str = ''
+    if before is not None:
+        before_str =  _hr_to_dcm_date(before)
+    else:
+        before_str = ''
+    return f'{since_str}-{before_str}'
+
+
+def _build_query(query_strs, since, before):
+    qdat = Dataset()
+    for query_input in query_strs:
+        q_attr, q_val = query_input.split('=')
+        setattr(qdat, q_attr, q_val)
+    if since is not None or before is not None:
+        if hasattr(qdat, 'StudyDate'):
+            cli_error("Do not specify 'StudyDate' when using '--since' or '--before'")
+        setattr(qdat, 'StudyDate', _build_study_date(since, before))
+    return qdat
+
+
 @click.command()
 @click.pass_obj
 @click.argument('remote')
@@ -299,6 +332,8 @@ def echo(params, remote, local):
 @click.option('--query-res',
               type=click.File('rb'),
               help='A result from a previous query to refine')
+@click.option('--since', help="Only return studies since this date")
+@click.option('--before', help="Only return studies before this date")
 @click.option('--local',
               help="Local DICOM network node properties")
 @click.option('--out-format',
@@ -311,8 +346,8 @@ def echo(params, remote, local):
 @click.option('--no-progress',
               is_flag=True,
               help="Don't display progress bars")
-def query(params, remote, query, level, query_res, local, out_format,
-          assume_yes, no_progress):
+def query(params, remote, query, level, query_res, since, before,
+          local, out_format, assume_yes, no_progress):
     '''Perform a query against a network node'''
     if level is not None:
         level = level.upper()
@@ -335,21 +370,18 @@ def query(params, remote, query, level, query_res, local, out_format,
             out_format = 'json'
     if out_format not in ('tree', 'json'):
         cli_error("Invalid out-format: %s" % out_format)
-    if len(query) == 0 and query_res is None and not assume_yes:
-        if not click.confirm("This query hasn't been limited in any "
-                             "way and may generate a huge result, "
-                             "continue?"):
-            return
     remote_node = parse_node_spec(remote, conf_nodes=params['remote_nodes'])
     if local is not None:
         local = parse_node_spec(local)
     else:
         local = params['local_node']
     net_ent = LocalEntity(local)
-    qdat = Dataset()
-    for query_input in query:
-        q_attr, q_val = query_input.split('=')
-        setattr(qdat, q_attr, q_val)
+    qdat = _build_query(query, since, before)
+    if len(qdat) == 0 and query_res is None and not assume_yes:
+        if not click.confirm("This query hasn't been limited in any "
+                             "way and may generate a huge result, "
+                             "continue?"):
+            return
     with ExitStack() as estack:
         if not no_progress:
             prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
@@ -369,15 +401,11 @@ def query(params, remote, query, level, query_res, local, out_format,
 #
 
 
-async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, dry_run, validators, keep_errors, no_progress):
+async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_all, 
+                   dry_run, validators, keep_errors, no_progress):
     with ExitStack() as estack:
         # Perform initial query if needed
         if len(query) > 0:
-            log.info("Querying source for initial data list")
-            qdat = Dataset()
-            for query_input in query:
-                q_attr, q_val = query_input.split('=')
-                setattr(qdat, q_attr, q_val)
             # TODO: Should we do this iteratively in the background too?
             #       The transfer planner would need to take a QR generator
             #       instead of a QR then.
@@ -387,14 +415,15 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
             #       (series/image level) when determining what data is missing from
             #       the dests. Also, this should generally be somewhat quick, since
             #       it should be a low-level query.
+            log.info("Querying source for initial data list")
             if not no_progress:
                 prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
                 report = MultiListReport(description='init-query', prog_hook=prog)
             else:
                 report = None
-            query_res = await src.query(query=qdat, query_res=query_res, report=report)
+            query_res = await src.query(query=query, query_res=query_res, report=report)
 
-        # Setup transfer planner
+        # Setup SyncManager
         if not no_progress:
             prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
         else:
@@ -414,7 +443,7 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
 
         if dry_run:
             log.info("Starting dry run")
-            async for transfer in mrt.gen_transfers(query_res):
+            async for transfer in mgr.gen_transfers(query_res):
                 dests_str = []
                 for meth, routes in transfer.method_routes_map.items():
                     for route in routes:
@@ -429,7 +458,7 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
                     async for transfer in tgen:
                         await mgr.exec_transfer(transfer)
             log.info("Finished data sync")
-            log.info("Full Report:\n%s", sync_report)
+    return sync_report
 
 
 @click.command()
@@ -441,6 +470,8 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
 @click.option('--query-res',
               type=click.File('rb'),
               help='A result from a previous query to limit the data synced')
+@click.option('--since', help="Only return studies since this date")
+@click.option('--before', help="Only return studies before this date")
 @click.option('--edit', '-e', multiple=True,
               help="Modify DICOM attribute in the synced data")
 @click.option('--edit-json', type=click.File('rb'),
@@ -475,9 +506,11 @@ async def _do_sync(src, dests, query, query_res, dest_route, trust_level, force_
 @click.option('--no-progress',
               is_flag=True,
               help="Don't display progress bars")
-def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
-         force_all, method, validate, keep_errors, dry_run, local,
-         dir_format, no_recurse, in_file_ext, out_file_ext, no_progress):
+@click.option('--no-report', is_flag=True, help="Don't print report")
+def sync(params, src, dests, query, query_res, since, before, edit, edit_json, 
+         trust_level, force_all, method, validate, keep_errors, dry_run, local,
+         dir_format, no_recurse, in_file_ext, out_file_ext, no_progress, 
+         no_report):
     '''Synchronize DICOM data between network nodes and/or directories
     '''
     # Check for incompatible options
@@ -499,6 +532,9 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
                        no_recurse=no_recurse,
                        file_ext=in_file_ext)
 
+    if len(query) != 0 or since is not None or before is not None:
+        query = _build_query(query, since, before)
+    
     # Handle query-result options
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
@@ -539,7 +575,7 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
     # Handle trust-level option
     trust_level = QueryLevel[trust_level.upper()]
 
-    asyncio.run(_do_sync(src,
+    report = asyncio.run(_do_sync(src,
                          dests,
                          query,
                          query_res,
@@ -551,6 +587,9 @@ def sync(params, src, dests, query, query_res, edit, edit_json, trust_level,
                          keep_errors,
                          no_progress)
                 )
+    report.log_issues()
+    if not no_report:
+        print(report)
 
 
 async def _netdump_cb(event):

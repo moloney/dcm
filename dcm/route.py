@@ -254,16 +254,16 @@ class ProxyReport(CountableReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook)
         self.keep_errors = keep_errors #type: ignore
         self.sent: Dict[StaticRoute, DataTransform] = {}
         self.inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
         self.duplicate: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
         self._n_success = 0
+        super().__init__(description, depth, prog_hook, n_expected)
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -297,10 +297,6 @@ class ProxyReport(CountableReport):
         if self.keep_errors:
             n_warn += self.n_inconsistent + self.n_duplicate
         return n_warn
-
-    @property
-    def all_success(self) -> bool:
-        return self.n_errors + self.n_warnings == 0
 
     @property
     def n_sent(self) -> int:
@@ -396,12 +392,13 @@ class DynamicTransferReport(ProxyReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
-        self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = MultiDictReport(prog_hook=prog_hook)
+        self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = \
+            MultiDictReport(prog_hook=prog_hook)
+        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def n_success(self) -> int:

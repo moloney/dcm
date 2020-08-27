@@ -22,7 +22,8 @@ from .route import (Route, StaticRoute, Router, ProxyTransferError,
 from .diff import diff_data_sets, DataDiff
 from .net import (IncomingDataReport, IncomingDataError, IncomingErrorType,
                   DicomOpReport, RetrieveReport)
-from .report import BaseReport, CountableReport, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .report import (BaseReport, MultiAttrReport, MultiListReport, MultiDictReport, 
+                     MultiKeyedError, ProgressHookBase)
 from .util import dict_to_ds
 
 
@@ -46,22 +47,15 @@ class StaticProxyTransferReport(ProxyReport):
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  incoming_report: Optional[IncomingReportType] = None,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
-        self.incoming_report = RetrieveReport(depth=depth+1, prog_hook=prog_hook) if incoming_report is None else incoming_report
-        if self.n_expected is None and self.incoming_report.n_expected is not None:
-            self.n_expected = self.incoming_report.n_expected
+        self.incoming_report: IncomingReportType
+        if incoming_report is None:
+            self.incoming_report = RetrieveReport(depth=depth+1, prog_hook=prog_hook)
+        else:
+            self.incoming_report = incoming_report
+        if n_expected is None and self.incoming_report.n_expected is not None:
+            n_expected = self.incoming_report.n_expected
         self.store_reports: StaticStoreReport = StaticStoreReport(prog_hook=prog_hook)
-
-    @property
-    def depth(self) -> int:
-        return self._depth
-
-    @depth.setter
-    def depth(self, val: int) -> None:
-        if val != self._depth:
-            self._depth = val
-            self.incoming_report.depth = val + 1
-            self.store_reports.depth = val + 1
+        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def n_success(self) -> int:
@@ -125,6 +119,12 @@ class StaticProxyTransferReport(ProxyReport):
         self.incoming_report.clear()
         self.store_reports.clear()
 
+    def _set_depth(self, val: int) -> None:
+        if val != self._depth:
+            self._depth = val
+            self.incoming_report.depth = val + 1
+            self.store_reports.depth = val + 1
+
 
 class StaticOobTransferReport(MultiDictReport[TransferMethod, StaticStoreReport]):
     '''Transfer report for out-of-band transfers'''
@@ -146,69 +146,22 @@ class StaticTransferError(Exception):
         return '\n'.join(res)
 
 
-class StaticTransferReport(CountableReport):
+class StaticTransferReport(MultiAttrReport):
     '''Capture all possible info about a single StaticTranfer'''
 
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
-                 ):
-        super().__init__(description, depth, n_expected, prog_hook)    
+                 ):   
         self.proxy_report: Optional[StaticProxyTransferReport] = None
         self.oob_report: Optional[StaticOobTransferReport] = None
-
-    @property
-    def depth(self) -> int:
-        return self._depth
-
-    @depth.setter
-    def depth(self, val: int) -> None:
-        if val != self._depth:
-            self._depth = val
-            if self.proxy_report is not None:
-                self.proxy_report.depth = val + 1
-            if self.oob_report is not None:
-                self.oob_report.depth = val + 1
-
-    @property
-    def n_success(self) -> int:
-        res = 0
-        if self.proxy_report is not None:
-            res += self.proxy_report.n_success
-        if self.oob_report is not None:
-            res += self.oob_report.n_success
-        return res
-
-    @property
-    def n_errors(self) -> int:
-        res = 0
-        if self.proxy_report is not None:
-            res += self.proxy_report.n_errors
-        if self.oob_report is not None:
-            res += self.oob_report.n_errors
-        return res
-
-    @property
-    def n_warnings(self) -> int:
-        res = 0
-        if self.proxy_report is not None:
-            res += self.proxy_report.n_warnings
-        if self.oob_report is not None:
-            res += self.oob_report.n_warnings
-        return res
-
-    def log_issues(self) -> None:
-        '''Produce log messages for any warning/error statuses'''
-        if self.proxy_report is not None:
-            self.proxy_report.log_issues()
-        if self.oob_report is not None:
-            self.oob_report.log_issues()
+        self._report_attrs = ['proxy_report', 'oob_report']
+        super().__init__(description, depth, prog_hook) 
 
     def check_errors(self) -> None:
         '''Raise an exception if any errors have occured so far'''
-        if self.n_errors:
+        if self.has_errors:
             err = StaticTransferError()
             if self.proxy_report is not None:
                 try:
@@ -221,12 +174,6 @@ class StaticTransferReport(CountableReport):
                 except MultiKeyedError as e:
                     err.oob_error = e
             raise err
-
-    def clear(self) -> None:
-        if self.proxy_report is not None:
-            self.proxy_report.clear()
-        if self.oob_report is not None:
-            self.oob_report.clear()    
 
 
 T_report = TypeVar('T_report', bound=Union[DynamicTransferReport, StaticTransferReport], covariant=True)
@@ -330,49 +277,27 @@ class RepoRequiredError(Exception):
     '''Operation requires a DataRepo but a DataBucket was provided'''
 
 
-class SyncReport(BaseReport):
+class SyncReport(MultiAttrReport):
     def __init__(self, 
                  description: Optional[str] = None, 
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  ):
-        super().__init__(description, depth)
-        self.src_qr_report: MultiListReport[DicomOpReport] = MultiListReport('src_query', depth=depth+1, prog_hook=prog_hook)
-        self.trans_reports: MultiListReport[TransferReportTypes] = MultiListReport('transfers', depth=depth+1, prog_hook=prog_hook)
-        self._prog_hook = prog_hook
+        self._src_qr_report: Optional[MultiListReport[DicomOpReport]] = None 
+        self.trans_reports: MultiListReport[TransferReportTypes] = MultiListReport('transfers', 
+                                                                                   depth=depth + 1, 
+                                                                                   prog_hook=prog_hook)
+        self._report_attrs = ['_src_qr_report', 'trans_reports']
+        super().__init__(description, depth, prog_hook)
 
     @property
-    def depth(self) -> int:
-        return self._depth
+    def src_qr_report(self) -> MultiListReport[DicomOpReport]:
+        if self._src_qr_report is None:
+            self._src_qr_report = MultiListReport('src_query', 
+                                                  depth=self._depth + 1, 
+                                                  prog_hook=self._prog_hook)
+        return self._src_qr_report
 
-    @depth.setter
-    def depth(self, val: int) -> None:
-        if val != self._depth:
-            self._depth = val
-            self.src_qr_report.depth = val + 1
-            self.trans_reports.depth = val + 1
-
-    @property
-    def has_warnings(self) -> bool:
-        return self.src_qr_report.has_warnings or self.trans_reports.has_warnings
-
-    @property
-    def has_errors(self) -> bool:
-        return self.src_qr_report.has_errors or self.trans_reports.has_errors
-
-    def log_issues(self) -> None:
-        '''Produce log messages for any warning/error statuses'''
-        self.src_qr_report.log_issues()
-        self.trans_reports.log_issues()
-        
-    def check_errors(self) -> None:
-        '''Raise an exception if any errors have occured so far'''
-        self.src_qr_report.check_errors()
-        self.trans_reports.check_errors()
-
-    def clear(self) -> None:
-        self.src_qr_report.clear()
-        self.trans_reports.clear()
 
 # TODO: Does it make more sense to allow a query to be passed in here instead
 #       having the base_query in the NetRepo? We only have once source here,
@@ -508,7 +433,7 @@ class SyncManager:
                 self.report.trans_reports.n_expected = self._src.n_chunks
             async for chunk in self._src.gen_chunks():
                 chunk.keep_errors = chunk_keep_errors
-                chunk.report.set_prog_hook(self.report._prog_hook)
+                chunk.report.prog_hook = self.report._prog_hook
                 if self._router.has_dynamic_routes:
                     res = DynamicTransfer(chunk)
                 else:
@@ -534,6 +459,7 @@ class SyncManager:
             n_sub_qr = 0
             avg_trans_per_qr = 1.0
             async for sub_qr in qr_gen:
+                log.info(f"Processing {n_sub_qr} out of {expected_sub_qrs} sub-qr (avg trans per qr = {avg_trans_per_qr}")
                 if expected_sub_qrs is None and qr_report.done:
                     expected_sub_qrs = qr_report.n_input
                 if expected_sub_qrs is not None:
@@ -552,14 +478,14 @@ class SyncManager:
                         for missing_qr in missing_qrs:
                             async for chunk in self._src.gen_query_chunks(missing_qr):
                                 chunk.keep_errors = chunk_keep_errors
-                                chunk.report.set_prog_hook(self.report._prog_hook)
+                                chunk.report.prog_hook = self.report._prog_hook
                                 if len(meth_routes) == 0:
                                     import pdb ; pdb.set_trace()
                                 res = StaticTransfer(chunk, method_routes_map=meth_routes.copy())
                                 self.report.trans_reports.append(res.report)
                                 n_trans += 1
                                 yield res
-                avg_trans_per_qr = min(0.1, ((avg_trans_per_qr * n_sub_qr) + (n_trans - pre_count)) / (n_sub_qr + 1))
+                avg_trans_per_qr = max(0.1, ((avg_trans_per_qr * n_sub_qr) + (n_trans - pre_count)) / (n_sub_qr + 1))
                 n_sub_qr += 1
             log.info(f"Generated {n_trans} transfers")
 
@@ -785,7 +711,6 @@ class SyncManager:
             for dest in dests:
                 #TODO: Might be a LocalWriteReport
                 store_rep = dest.get_empty_send_report()
-                #store_rep.set_prog_hook(self.report._prog_hook)
                 store_rep.n_expected = transfer.chunk.n_expected
                 report.add_store_report(dest, store_rep)
                 d_q_map[dest] = await stack.enter_async_context(dest.send(report=store_rep))

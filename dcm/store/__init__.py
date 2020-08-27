@@ -150,12 +150,12 @@ class LocalIncomingReport(IncomingDataReport):
     def __init__(self, 
                  description: Optional[str] = None,
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
-        super().__init__(description, depth, n_expected, prog_hook, keep_errors)
         self.invalid: List[PathInputType] = []
+        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
     '''Track any paths that were determined to not be valid DICOM files'''
 
     @property
@@ -370,13 +370,13 @@ class LocalWriteReport(CountableReport):
     def __init__(self,
                  description: Optional[str] = None, 
                  depth: int = 0,
-                 n_expected: Optional[int] = None,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
+                 n_expected: Optional[int] = None,
                 ):
-        super().__init__(description, depth, n_expected, prog_hook)
         self.write_errors: Dict[Exception, List[PathInputType]] = {}
         self.successful: List[PathInputType] = []
         self.skipped: List[PathInputType] = []
+        super().__init__(description, depth, prog_hook, n_expected)
 
     @property
     def n_success(self) -> int:
