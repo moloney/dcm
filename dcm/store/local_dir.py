@@ -1,3 +1,4 @@
+'''Data storage abstraction for local directories'''
 from __future__ import annotations
 import os, logging, asyncio, re, shutil, threading
 from contextlib import asynccontextmanager

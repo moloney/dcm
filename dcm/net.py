@@ -1,4 +1,5 @@
-'''DICOM Networking'''
+'''High level async DICOM networking interface
+'''
 from __future__ import annotations
 import asyncio, threading, time, logging, warnings, enum
 from concurrent.futures import ThreadPoolExecutor

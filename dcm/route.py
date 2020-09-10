@@ -1,4 +1,4 @@
-'''Define static/dynamic routes for DICOM data'''
+'''Define static/dynamic routes for copying DICOM data between storage abstractions'''
 from __future__ import annotations
 import asyncio, logging
 from copy import copy, deepcopy

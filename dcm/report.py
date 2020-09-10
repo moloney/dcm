@@ -1,3 +1,11 @@
+'''Base classes for all reporting infrastructure
+
+Most high-level operations are in fact batch operations which large numbers of 
+sub-operations. In is not uncommon for these sub-operations to produces errors or
+warning statuses that shouldn't interrupt the whole batch operation. We use a 
+variety of "report" classes to capture this kind of information and provide 
+real-time insight into an ongoing async operation.
+'''
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
