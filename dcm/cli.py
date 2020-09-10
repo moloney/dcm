@@ -254,9 +254,20 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
 
 @click.command()
 @click.pass_obj
-def conf(params):
+@click.option('--show', is_flag=True,
+              help="Just print the current config contents")
+@click.option('--path', is_flag=True,
+              help="Just print the current config path")
+def conf(params, show, path):
     '''Open the config file with your $EDITOR'''
     config_path = params['config_path']
+    if path:
+        click.echo(config_path)
+    if show:
+        with open(config_path, 'r') as f:
+            click.echo(f.read())
+    if path or show:
+        return
     while True:
         click.edit(filename=config_path)
         try:
