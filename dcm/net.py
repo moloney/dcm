@@ -1,7 +1,7 @@
 '''High level async DICOM networking interface
 '''
 from __future__ import annotations
-import asyncio, threading, time, logging, warnings, enum
+import asyncio, threading, time, logging, warnings, enum, inspect
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
@@ -823,8 +823,26 @@ def is_specified(query: Dataset, attr: str) -> bool:
 SOPList = List[sop_class.SOPClass]
 
 
+class _SingletonEntity(type):
+    '''Make sure we have a single LocalEntity for each ae_title/port combo'''
+    _instances = {} # type: ignore
+    _init = {} # type: ignore
+
+    def __init__(cls, name, bases, dct): # type: ignore
+        super(_SingletonEntity, cls).__init__(name, bases, dct)
+        cls._init[cls] = dct.get('__init__', None)
+
+    def __call__(cls, *args, **kwargs): # type: ignore
+        init = cls._init[cls]
+        local_node = inspect.getcallargs(init, None, *args, **kwargs)['local']
+        key = (cls, local_node.ae_title, local_node.port)
+        if key not in cls._instances:
+            cls._instances[key] = super(_SingletonEntity, cls).__call__(*args, **kwargs)
+        return cls._instances[key]
+
+
 # TODO: Need to listen for association aborted events and handle them
-class LocalEntity:
+class LocalEntity(metaclass=_SingletonEntity):
     '''Low level interface to DICOM networking functionality
 
     Params
