@@ -803,14 +803,13 @@ def make_sync_to_async_cb(async_cb: Callable[[evt.Event], Awaitable[int]],
     return sync_cb
 
 
-# TODO: Do data validation here, and if requested return error status when
-#       we detect issues with the incoming data
-def _make_retrieve_cb(res_q: asyncio.Queue[Tuple[Dataset, Dataset]]
-                     ) -> Callable[[evt.Event], Awaitable[int]]:
-    async def retrieve_cb(event: evt.Event) -> int:
+def make_queue_data_cb(res_q: asyncio.Queue[Tuple[Dataset, Dataset]]
+                      ) -> Callable[[evt.Event], Awaitable[int]]:
+    '''Return callback that queues dataset/metadata from incoming events'''
+    async def callback(event: evt.Event) -> int:
         await res_q.put((event.dataset, event.file_meta))
         return 0x0 # Success
-    return retrieve_cb
+    return callback
 
 
 def is_specified(query: Dataset, attr: str) -> bool:
@@ -1259,7 +1258,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                                    ae_titles=frozenset((remote.ae_title,))
                                   )
         res_q: asyncio.Queue[Tuple[Dataset, Dataset]] = asyncio.Queue()
-        retrieve_cb = _make_retrieve_cb(res_q)
+        retrieve_cb = make_queue_data_cb(res_q)
         async with self.listen(retrieve_cb, event_filter):
             move_task = asyncio.create_task(self.move(remote,
                                                       self._local,

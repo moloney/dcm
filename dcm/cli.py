@@ -6,6 +6,7 @@ from contextlib import ExitStack
 
 import pydicom
 from pydicom.dataset import Dataset
+from pynetdicom import evt
 import click
 import toml
 from rich.progress import Progress
@@ -15,9 +16,9 @@ import dateparser
 from .util import aclosing, serializer
 from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
-from .net import DcmNode, LocalEntity, QueryLevel
+from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
 from .filt import make_edit_filter, MultiFilter
-from .route import StaticRoute
+from .route import StaticRoute, Router
 from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
@@ -661,33 +662,15 @@ def sync(params, dests, src, query, query_res, since, before, edit, edit_json,
         print(report)
 
 
-async def _netdump_cb(event):
-    #click.echo(event)
-    #for attr in dir(event):
-    #    click.echo(f'{attr} : {getattr(event)}')
-    return 0x0
-
-
-async def _netdump(net_ent):
-    async with net_ent.listen(_netdump_cb):
-        log.debug("Listening in _netdump")
-        while True:
-            await asyncio.sleep(0.1)
-
-
-@click.command()
-@click.pass_obj
-@click.option('--local',
-              help="Local DICOM network node properties")
-def netdump(params, local):
-    '''Listen for network events and print them out'''
-    if local is not None:
-        local = parse_node_spec(local)
-    else:
-        local = params['local_node']
-    net_ent = LocalEntity(local)
-    asyncio.run(_netdump(net_ent), debug=True)
-
+async def _do_route(local, router):
+    local_ent = LocalEntity(local)
+    event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
+    async with router.route() as route_q:
+        fwd_cb = make_queue_data_cb(route_q)
+        async with local_ent.listen(fwd_cb, event_filter=event_filter):
+            print("Listener started, hit Ctrl-c to exit")
+            while True:
+                await asyncio.sleep(1.0)
 
 
 @click.command()
@@ -701,7 +684,9 @@ def netdump(params, local):
               help="Local DICOM network node properties")
 @click.option('--dir-format',
               help="Output format for any local output directories")
-def forward(params, dests, dir_format, edit, edit_json, local):
+@click.option('--out-file-ext', default='dcm',
+              help="File extension for local output directories")
+def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext):
     '''Listen for incoming DICOM files on network and forward to dests
     '''
     # Figure out any local/src/remote info
@@ -710,17 +695,31 @@ def forward(params, dests, dir_format, edit, edit_json, local):
     else:
         local = params['local_node']
 
+    # Handle edit options
+    filt = None
+    if edit_json is not None:
+        edit_dict = json.load(edit_json)
+        edit_json.close()
+    else:
+        edit_dict = {}
+    if edit:
+        for edit_str in edit:
+            attr, val = edit_str.split('=')
+            edit_dict[attr] = val
+    if edit_dict:
+        filt = make_edit_filter(edit_dict)
+
     dest_routes = get_routes(dests,
                              filt,
-                             method,
+                             TransferMethod.PROXY,
                              params['routes'],
                              local_node=local,
                              conf_nodes=params['remote_nodes'],
                              out_fmt=dir_format,
-                             no_recurse=no_recurse,
                              file_ext=out_file_ext)
-   
-    raise NotImplementedError
+
+    router = Router(dest_routes)
+    asyncio.run(_do_route(local, router))
 
 
 def make_print_cb(fmt, elem_filter=None):
@@ -808,8 +807,7 @@ cli.add_command(conf)
 cli.add_command(echo)
 cli.add_command(query)
 cli.add_command(sync)
-#cli.add_command(listen)
-#cli.add_command(netdump)
+cli.add_command(forward)
 cli.add_command(dump)
 cli.add_command(diff)
 
