@@ -78,7 +78,9 @@ class Filter(_BaseFilter, _SingleFilter):
     def __call__(self, data_set: Dataset) -> Dataset:
         return self.func(data_set)
 
-    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
+    def get_dependencies(self, 
+                         elems: Any
+                         ) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
         return ([self.func], self.read_elems)
 
 
@@ -348,6 +350,32 @@ def make_edit_filter(edit_dict: Dict[str, Any],
     if update_uids is False:
         write_elems = FrozenLazySet(edit_dict.keys())
     else:
+        # TODO: Should be able to be more specific here...
         write_elems = FrozenLazySet(AllElems)
     edit_filter = Filter(edit_func, write_elems=write_elems)
     return edit_filter
+
+
+def make_reject_filter(reject_dict: Dict[str, Tuple[Callable[[Dataset, Dataset], Any], Any]]
+                       ) -> _BaseFilter:
+    '''Make a filter that rejects certain datasets
+    
+    This is useful when you want to limit a transfer based on attributes that can't be 
+    queried for.
+    
+    Parameters
+    ----------
+    reject_dict
+        Maps keywords to (operator, rvalue) tuples defining which datasets to reject
+    '''
+    def reject_func(ds: Dataset) -> Optional[Dataset]:
+        for attr_name, (op, val) in reject_dict.items():
+            if not hasattr(ds, attr_name):
+                log.warning("Dataset doesn't have '{attr_name}' element for reject filter")
+                continue
+            if op(getattr(ds, attr_name), val):
+                return None
+        return ds
+    read_elems = FrozenLazySet(reject_dict.keys())
+    reject_filter = Filter(reject_func, read_elems=read_elems, write_elems=FrozenLazySet())
+    return reject_filter
