@@ -20,11 +20,11 @@ from pydicom.dataset import Dataset
 from pydicom.datadict import keyword_for_tag
 
 from pynetdicom import (AE, Association, evt, build_context,
-                        DEFAULT_TRANSFER_SYNTAXES,
                         QueryRetrievePresentationContexts,
                         StoragePresentationContexts,
                         VerificationPresentationContexts,
                         sop_class)
+from pynetdicom._globals import ALL_TRANSFER_SYNTAXES
 from pynetdicom.status import code_to_category
 from pynetdicom.sop_class import StorageServiceClass, SOPClass
 #from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
@@ -676,7 +676,6 @@ def _move_worker(rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]]
     for d in query_res:
         move_req = _make_move_request(d)
         move_req.QueryRetrieveLevel = query_res.level.name
-        log.debug("Sending move request:\n%s" % move_req)
         responses = assoc.send_c_move(move_req,
                                       dest.ae_title,
                                       query_model=query_model)
@@ -862,7 +861,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                  max_threads: int = 8):
         self._local = local
         if transfer_syntaxes is None:
-            self._default_ts = DEFAULT_TRANSFER_SYNTAXES
+            self._default_ts = ALL_TRANSFER_SYNTAXES[:]
         else:
             self._default_ts = transfer_syntaxes
         self._thread_pool = ThreadPoolExecutor(max_threads)

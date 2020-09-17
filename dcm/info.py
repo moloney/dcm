@@ -21,7 +21,7 @@ description = 'High level DICOM file/network operations'
 # Dependencies
 setup_requires = ['pytest-runner']
 install_requires = ['pydicom >= 1.0',
-                    'pynetdicom',
+                    'pynetdicom >= 1.5',
                     'click',
                     'toml',
                     'tree-format',
