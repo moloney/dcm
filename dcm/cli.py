@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys, os, logging, json
 import asyncio
 from contextlib import ExitStack
+from copy import deepcopy
 
 import pydicom
 from pydicom.dataset import Dataset
@@ -13,7 +14,8 @@ from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
 
-from .util import aclosing, serializer
+from .conf import DcmConfig
+from .util import aclosing, json_serializer
 from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
@@ -22,7 +24,7 @@ from .route import StaticRoute, Router
 from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
-from .sync import SyncReport, SyncManager, make_basic_validator
+from .sync import SyncReport, make_basic_validator, sync_data
 from .normalize import normalize
 from .diff import diff_data_sets
 
@@ -35,130 +37,11 @@ log = logging.getLogger('dcm.cli')
 
 # TODO: We should iteratively produce/consume json in streaming fashion
 
-# TODO: Several commands can now not require a src arg when taking a QR as
-#       input due to the new QueryProvenance feature
-
-
 def cli_error(msg, exit_code=1):
     '''Print msg to stderr and exit with non-zero exit code'''
     click.secho(msg, err=True, fg='red')
     sys.exit(exit_code)
 
-
-def parse_node_spec(in_str, conf_nodes=None):
-    '''Parse a string into a DcmNode (host/ae_title/port)'''
-    if conf_nodes is not None and in_str in conf_nodes:
-        return conf_nodes[in_str]
-    toks = in_str.split(':')
-    if len(toks) > 3:
-        raise ValueError("Too many tokens for node specification: %s" %
-                         in_str)
-    host = toks[0]
-    if len(toks) == 3:
-        ae_title, port = toks[1], int(toks[2])
-    elif len(toks) == 2:
-        try:
-            port = int(toks[1])
-        except ValueError:
-            port = 104
-            ae_title = toks[1]
-        else:
-            ae_title = 'ANYAE'
-    elif len(toks) == 1:
-        ae_title = 'ANYAE'
-        port = 104
-    return DcmNode(host, ae_title, port)
-
-
-def parse_target(in_str, local_node=None, conf_nodes=None, 
-                 out_fmt=None, no_recurse=False, file_ext='dcm'):
-    '''Parse command line argument into a target for data transfers'''
-    if conf_nodes is not None and in_str in conf_nodes:
-        remote = conf_nodes[in_str]
-        return NetRepo(local_node, remote)
-    if os.path.isdir(in_str):
-        return LocalDir(in_str, out_fmt=out_fmt, recurse=not no_recurse,
-                        file_ext=file_ext)
-    remote = parse_node_spec(in_str, conf_nodes)
-    return NetRepo(local_node, remote)
-
-
-def get_routes(dest_strs, filt, method, conf_routes, **target_kwargs):
-    routes = []
-    plain_dests = []
-    for d_str in dest_strs:
-        route = conf_routes.get(d_str)
-        if route is not None:
-            if filt is not None or method is not None:
-                if method is None:
-                    methods = route.methods
-                else:
-                    if method not in route.methods:
-                        raise ValueError(f"Route '{d_str}' doesn't support method '{method}'")
-                    methods = (method,)
-                if filt is None:
-                    filt = route.filt
-                elif route.filt is not None:
-                    filt = MultiFilter((route.filt, filt))
-                route = StaticRoute(route.dests, methods, filt)
-            routes.append(route)
-        else:
-            plain_dests.append(parse_target(d_str, **target_kwargs))
-    if plain_dests:
-        kwargs = {}
-        if method is not None:
-            kwargs['methods'] = (method,)
-        routes.append(StaticRoute(tuple(plain_dests), filt=filt, **kwargs))
-    return routes
-
-
-def node_from_conf(conf_dict, default_host=None, default_ae='ANYAE',
-                   default_port=104):
-    res = DcmNode(conf_dict.get('host', default_host),
-                  conf_dict.get('ae_title', default_ae),
-                  conf_dict.get('port', default_port),
-                 )
-    if res.host is None:
-        cli_error("A hostname is required")
-    return res
-
-
-def route_from_conf(conf_dict, remote_nodes):
-    dest_names = conf_dict.get('dests')
-    if dest_names is None:
-        cli_error(f"A route in the config file is missing 'dests'")
-    kwargs = {'dests': [remote_nodes[d] for d in dest_names]}
-    method_names = conf_dict.get('methods')
-    if method_names is not None:
-        kwargs['methods'] = tuple(TransferMethod[m.upper()] for m in method_names)
-    return StaticRoute(**kwargs)
-
-
-_default_conf = \
-'''
-# Uncomment and add your local AE_Title / port
-#[local]
-#ae_title = "YOURAE"
-#port = 11112
-
-# Uncomment and add any PACS or other DICOM network entities
-#[remotes]
-#
-#  [remotes.yourpacs]
-#  host = "yourpacs.example.org"
-#  ae_title = "PACSAETITLE"
-#  port = 104
-
-# Optionally specify routes for more control over how data is sent
-#[routes]
-#
-#  # Route to two PACS with direct Move-SCU instead of proxying data
-#  # (note you would need to specify 'otherpacs' above)
-#  [routes.movescu_pacs]
-#  dests = [yourpacs, otherpacs]
-#  methods = [REMOTE_COPY]
-
-'''
 
 class QueryResponseFilter(logging.Filter):
     def filter(self, record):
@@ -225,18 +108,6 @@ debug_filters = {'query_responses' : QueryResponseFilter(),
 def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, quiet):
     '''High level DICOM file and network operations
     '''
-    # Parse the config file
-    if os.path.exists(config):
-        with open(config, 'r') as f:
-            conf_dict = toml.load(f)
-    else:
-        config_dir = os.path.dirname(config)
-        if not os.path.exists(config_dir):
-            os.makedirs(config_dir)
-        with open(config, 'w') as f:
-            f.write(_default_conf)
-        conf_dict = {}
-
     if quiet:
         if verbose or debug:
             cli_error("Can't mix --quiet with --verbose/--debug")
@@ -246,8 +117,8 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
     def_formatter = logging.Formatter(LOG_FORMAT)
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
-    pynetdicom_logger = logging.getLogger('pynetdicom')
-    pynetdicom_logger.setLevel(logging.WARN)
+    #pynetdicom_logger = logging.getLogger('pynetdicom')
+    #pynetdicom_logger.setLevel(logging.WARN)
     stream_formatter = logging.Formatter('%(threadName)s %(name)s %(message)s')
     stream_handler = RichHandler(show_path=False)
     stream_handler.setFormatter(stream_formatter)
@@ -275,28 +146,10 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
             for handler in handlers:
                 handler.addFilter(debug_filters[filter_name])
 
-
-    # Setup any DICOM nodes specified in the config file
-    local_info = conf_dict.get('local', {})
-    local_node = node_from_conf(local_info,
-                                default_host='0.0.0.0',
-                                default_port=11112)
-    remote_nodes = {}
-    node_specs = conf_dict.get('remotes', {})
-    for node_name, node_spec in node_specs.items():
-        remote_nodes[node_name] = node_from_conf(node_spec)
-    routes = {}
-    route_specs = conf_dict.get('routes', {})
-    for route_name, route_spec in route_specs.items():
-        routes[route_name] = route_from_conf(route_spec, remote_nodes)
-
     # Create global param dict for subcommands to use
     ctx.obj = {}
     ctx.obj['config_path'] = config
-    ctx.obj['config'] = conf_dict
-    ctx.obj['local_node'] = local_node
-    ctx.obj['remote_nodes'] = remote_nodes
-    ctx.obj['routes'] = routes
+    ctx.obj['config'] = DcmConfig(config)
 
 
 @click.command()
@@ -335,11 +188,8 @@ def conf(params, show, path):
               help="Local DICOM network node properties")
 def echo(params, remote, local):
     '''Test connectivity with remote node'''
-    remote_node = parse_node_spec(remote, conf_nodes=params['remote_nodes'])
-    if local is not None:
-        local = parse_node_spec(local)
-    else:
-        local = params['local_node']
+    local = params['config'].get_local(local)
+    remote_node = params['config'].get_remote()
     net_ent = LocalEntity(local)
     res = asyncio.run(net_ent.echo(remote_node))
     if res:
@@ -418,7 +268,7 @@ def query(params, remote, query, level, query_res, since, before,
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = serializer.loads(query_res.readhints())
+        query_res = json_serializer.loads(query_res.readhints())
     if sys.stdout.isatty():
         if out_format is None:
             out_format = 'tree'
@@ -428,11 +278,8 @@ def query(params, remote, query, level, query_res, since, before,
             out_format = 'json'
     if out_format not in ('tree', 'json'):
         cli_error("Invalid out-format: %s" % out_format)
-    remote_node = parse_node_spec(remote, conf_nodes=params['remote_nodes'])
-    if local is not None:
-        local = parse_node_spec(local)
-    else:
-        local = params['local_node']
+    local = params['config'].get_local(local)
+    remote_node = params['config'].get_remote(remote)
     net_ent = LocalEntity(local)
     qdat = _build_query(query, since, before)
     if len(qdat) == 0 and query_res is None and not assume_yes:
@@ -450,74 +297,14 @@ def query(params, remote, query, level, query_res, since, before,
     if out_format == 'tree':
         out = qr.to_tree()
     elif out_format == 'json':
-        out = serializer.dumps(qr, indent=4)
+        out = json_serializer.dumps(qr, indent=4)
     click.echo(out)
-
-
-async def _do_sync(src, dests, query, query_res, dest_routes, trust_level, force_all, 
-                   dry_run, validators, keep_errors, no_progress):
-    with ExitStack() as estack:
-        # Perform initial query if needed
-        if len(query) > 0:
-            # TODO: Should we do this iteratively in the background too?
-            #       The transfer planner would need to take a QR generator
-            #       instead of a QR then.
-            #
-            #       Won't work if simultaneous associations limit is very low (e.g. 1) on
-            #       the src, since we may need to perform further queries on src
-            #       (series/image level) when determining what data is missing from
-            #       the dests. Also, this should generally be somewhat quick, since
-            #       it should be a low-level query.
-            log.info("Querying source for initial data list")
-            if not no_progress:
-                prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
-                report = MultiListReport(description='init-query', prog_hook=prog)
-            else:
-                report = None
-            query_res = await src.query(query=query, query_res=query_res, report=report)
-
-        # Setup SyncManager
-        if not no_progress:
-            prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
-        else:
-            prog = None
-        sync_report = SyncReport(prog_hook=prog)
-        mgr = SyncManager(src,
-                          dest_routes,
-                          trust_level=trust_level,
-                          force_all=force_all,
-                          keep_errors=keep_errors,
-                          report=sync_report,
-                          )
-
-        # Perform the sync or dry run
-        log.info("Syncing data from '%s' to '%s'" %
-                 (src, ', '.join(str(x) for x in dests)))
-
-        if dry_run:
-            log.info("Starting dry run")
-            async for transfer in mgr.gen_transfers(query_res):
-                dests_str = []
-                for meth, routes in transfer.method_routes_map.items():
-                    for route in routes:
-                        dests_str.append(f"({meth.name}) {route}")
-                dests_str = " / ".join(dests_str)
-                print('%s > %s' % (transfer.chunk, dests_str))
-            log.info("Finished dry run")
-        else:
-            log.info("Starting data sync")
-            with mgr:
-                async with aclosing(mgr.gen_transfers(query_res)) as tgen:
-                    async for transfer in tgen:
-                        await mgr.exec_transfer(transfer)
-            log.info("Finished data sync")
-    return sync_report
 
 
 @click.command()
 @click.pass_obj
 @click.argument('dests', nargs=-1)
-@click.option('--src', '-s', help='The data source')
+@click.option('--source', '-s', multiple=True, help='A data source')
 @click.option('--query', '-q', multiple=True,
               help="Only sync data matching the query")
 @click.option('--query-res',
@@ -560,23 +347,24 @@ async def _do_sync(src, dests, query, query_res, dest_routes, trust_level, force
               is_flag=True,
               help="Don't display progress bars")
 @click.option('--no-report', is_flag=True, help="Don't print report")
-def sync(params, dests, src, query, query_res, since, before, edit, edit_json, 
+def sync(params, dests, source, query, query_res, since, before, edit, edit_json, 
          trust_level, force_all, method, validate, keep_errors, dry_run, local,
          dir_format, no_recurse, in_file_ext, out_file_ext, no_progress, 
          no_report):
-    '''Synchronize DICOM data from a single source to one or more destinations
+    '''Sync DICOM data from a one or more sources to one or more destinations
 
     The `dests` can be a local directory, a DICOM network entity (given as 
     'hostname:aetitle:port'), or a named remote/route from your config file.
 
-    Generally you will need to use '--src' to specify the data source, unless 
+    Generally you will need to use `--source` to specify the data source, unless 
     you pass in a query result which contains a source (e.g. when doing 
-    'dcm query srcpacs ... | dcm sync destpacs'). The '--src' can be given 
+    'dcm query srcpacs ... | dcm sync destpacs'). The `--source` can be given 
     in the same way `dests` are specified, except it cannot be a 'route'.
     '''
     # Check for incompatible options
     if validate and dry_run:
         cli_error("Can't do validation on a dry run!")
+
 
     # Disable progress for non-interactive output or dry runs
     if not sys.stdout.isatty() or dry_run:
@@ -590,24 +378,28 @@ def sync(params, dests, src, query, query_res, since, before, edit, edit_json,
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = serializer.loads(query_res.read())
+        query_res = json_serializer.loads(query_res.read())
     
-    # Figure out any local/src info
-    if local is not None:
-        local = parse_node_spec(local)
-    else:
-        local = params['local_node']
-    if src is None:
-        if query_res is None or query_res.prov.src is None:
+    # Pass source options that override config through to the config parser
+    params['config'].set_local_dir_kwargs(recurse=not no_recurse,
+                                          file_ext=in_file_ext) 
+
+    # Figure out any local/source info
+    local = params['config'].get_local(local)
+    if source is None:
+        if query_res is None or query_res.prov.source is None:
             cli_error("No data source specified")
-        src = NetRepo(local, query_res.prov.src)
+        sources = [NetRepo(local, query_res.prov.source)]
     else:
-        src = parse_target(src,
-                           local_node=local,
-                           conf_nodes=params['remote_nodes'],
-                           out_fmt=dir_format,
-                           no_recurse=no_recurse,
-                           file_ext=in_file_ext)
+        sources = [params['config'].get_bucket(s) for s in source]
+
+    # Pass dest options that override config through to the config parser
+    params['config'].set_local_dir_kwargs(out_fmt=dir_format, 
+                                          file_ext=out_file_ext)
+    
+    # Some command line options override route configuration
+    static_route_kwargs = {}
+    dynamic_route_kwargs = {}
 
     # Handle edit options
     filt = None
@@ -622,19 +414,21 @@ def sync(params, dests, src, query, query_res, since, before, edit, edit_json,
             edit_dict[attr] = val
     if edit_dict:
         filt = make_edit_filter(edit_dict)
+        static_route_kwargs['filt'] = filt
+        dynamic_route_kwargs['filt'] = filt
 
     # Convert dests/filters to a StaticRoute
     if method is not None:
         method = TransferMethod[method.upper()]
-    dest_routes = get_routes(dests,
-                             filt,
-                             method,
-                             params['routes'],
-                             local_node=local,
-                             conf_nodes=params['remote_nodes'],
-                             out_fmt=dir_format,
-                             no_recurse=no_recurse,
-                             file_ext=out_file_ext)
+        static_route_kwargs['methods'] = (method,)
+        dynamic_route_kwargs['methods'] = {None: (method,)}
+    
+    # Pass route options that override config through to the config parser
+    params['config'].set_static_route_kwargs(**static_route_kwargs)
+    params['config'].set_dynamic_route_kwargs(**dynamic_route_kwargs)
+
+    # Convert dests to routes
+    dests = params['config'].get_routes(dests)
 
     # Handle validate option
     if validate:
@@ -645,21 +439,45 @@ def sync(params, dests, src, query, query_res, since, before, edit, edit_json,
     # Handle trust-level option
     trust_level = QueryLevel[trust_level.upper()]
 
-    report = asyncio.run(_do_sync(src,
-                         dests,
-                         query,
-                         query_res,
-                         dest_routes,
-                         trust_level,
-                         force_all,
-                         dry_run,
-                         validators,
-                         keep_errors,
-                         no_progress)
-                )
-    report.log_issues()
-    if not no_report:
-        print(report)
+    # Setup reporting/progress hooks and do the transfer
+    with ExitStack() as estack:
+        qr_reports = None
+        if len(query) > 0 or query_res is not None:
+            qr_reports = []
+            for src in sources:
+                if not no_progress:
+                    prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+                    report = MultiListReport(description='init-query', prog_hook=prog)
+                else:
+                    report = None
+                qr_reports.append(report)
+            
+        qrs = [deepcopy(query_res) for _ in sources]
+
+        base_kwargs = {'trust_level': trust_level,
+                       'force_all': force_all,
+                       'keep_errors': keep_errors,
+                       'validators': validators,
+                      }
+        sm_kwargs = []
+        sync_reports = []
+        for src in sources:
+            if not no_progress:
+                prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+            else:
+                prog = None
+            sync_report = SyncReport(prog_hook=prog)
+            kwargs = deepcopy(base_kwargs)
+            kwargs['report'] = sync_report
+            sm_kwargs.append(kwargs)
+            sync_reports.append(sync_report)
+        
+        asyncio.run(sync_data(sources, dests, query, qrs, qr_reports, sm_kwargs, dry_run))
+
+    for report in sync_reports:
+        report.log_issues()
+        if not no_report:
+            print(report)
 
 
 async def _do_route(local, router):
@@ -689,11 +507,15 @@ async def _do_route(local, router):
 def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext):
     '''Listen for incoming DICOM files on network and forward to dests
     '''
-    # Figure out any local/src/remote info
-    if local is not None:
-        local = parse_node_spec(local)
-    else:
-        local = params['local_node']
+    local = params['config'].get_local(local)
+    
+    # Pass dest options that override config through to the config parser
+    params['config'].set_local_dir_kwargs(out_fmt=dir_format, 
+                                          file_ext=out_file_ext)
+    
+    # Some command line options override route configuration
+    static_route_kwargs = {}
+    dynamic_route_kwargs = {}
 
     # Handle edit options
     filt = None
@@ -708,17 +530,17 @@ def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext):
             edit_dict[attr] = val
     if edit_dict:
         filt = make_edit_filter(edit_dict)
+        static_route_kwargs['filt'] = filt
+        dynamic_route_kwargs['filt'] = filt
+    
+    # Pass route options that override config through to the config parser
+    params['config'].set_static_route_kwargs(**static_route_kwargs)
+    params['config'].set_dynamic_route_kwargs(**dynamic_route_kwargs)
 
-    dest_routes = get_routes(dests,
-                             filt,
-                             TransferMethod.PROXY,
-                             params['routes'],
-                             local_node=local,
-                             conf_nodes=params['remote_nodes'],
-                             out_fmt=dir_format,
-                             file_ext=out_file_ext)
+    # Convert dests to routes
+    dests = params['config'].get_routes(dests)
 
-    router = Router(dest_routes)
+    router = Router(dests)
     asyncio.run(_do_route(local, router))
 
 

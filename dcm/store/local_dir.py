@@ -162,8 +162,8 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
                 os.remove(existing_backup)
 
 
-class LocalDir(LocalBucket):
-    '''Local directory of data without additional meta data'''
+class LocalDir(LocalBucket, InlineConfigurable):
+    '''Local directory of data without any additional meta data'''
 
     is_local = True
 
@@ -182,6 +182,8 @@ class LocalDir(LocalBucket):
                  max_chunk: int = 1000,
                  out_fmt: Optional[str] = None,
                  force_overwrite: bool = False):
+        if not os.path.exists(path):
+            raise ValueError(f"Path doesn't exist: {path}")
         self._root_path = path
         self._recurse = recurse
         self._max_chunk = max_chunk
@@ -195,8 +197,26 @@ class LocalDir(LocalBucket):
             self._out_fmt += '.%s' % file_ext
         self.description = self._root_path
 
+    @staticmethod
+    def inline_to_dict(in_str: str) -> Dict[str, Any]:
+        '''Parse inline string format 'path[:out_fmt][:file_ext]' 
+        
+        Both the second components are optional
+        '''
+        toks = in_str.split(':')
+        res = {'path': toks[0]}
+        if len(toks) == 2:
+            res['out_fmt'] = toks[1]
+        elif len(toks) == 3:
+            if toks[1]:
+                res['out_fmt'] = toks[1]
+            res['file_ext'] = toks[2]
+        elif len(toks) >= 4:
+            raise ValueError(f"Invalid short form for LocalDir: {in_str}")
+        return res
+
     def __str__(self) -> str:
-        return 'LocalDir(%s)' % self._root_path
+        return f'LocalDir({self.root_path})'
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()

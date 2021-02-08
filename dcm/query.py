@@ -14,7 +14,7 @@ from typing import (Tuple, List, Dict, Any, Optional, Iterator, AsyncIterator,
 from pydicom.dataset import Dataset
 from tree_format import format_tree
 
-from .util import DicomDataError, Serializable, serializer
+from .util import DicomDataError, JsonSerializable, json_serializer
 from .normalize import normalize, make_elem_filter
 
 
@@ -230,7 +230,7 @@ class InconsistentDataError(DicomDataError):
     '''The data set violates the established patient/study/series heirarchy'''
 
 
-@serializer
+@json_serializer
 @dataclass
 class QueryProv:
     '''Track how a QueryResult was created
@@ -239,13 +239,13 @@ class QueryProv:
     themselves when chaining operations
     '''
 
-    src: Optional[Serializable] = None
+    src: Optional[JsonSerializable] = None
     '''The source of this query result'''
 
     queried_elems: Optional[Set[str]] = None
     '''The attributes that were queried for'''
 
-    removed_existing_on: Optional[Serializable] = None
+    removed_existing_on: Optional[JsonSerializable] = None
     '''A remote we queried and removed any data that already exists on it'''
 
     def __bool__(self) -> bool:
@@ -279,7 +279,7 @@ class QueryProv:
                    json_dict['removed_existing_on'])
 
 
-@serializer
+@json_serializer
 class QueryResult:
     '''High level representation of a collection of DICOM data sets
 

@@ -37,7 +37,7 @@ from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
 from .report import CountableReport, MultiListReport, MultiError, ProgressHookBase
-from .util import serializer, create_thread_task
+from .util import json_serializer, JsonSerializable, TomlConfigurable, create_thread_task
 
 
 log = logging.getLogger(__name__)
@@ -151,9 +151,10 @@ QR_MODELS = {'PatientRoot' :
                   'get' : sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet},
             }
 
-@serializer
+
+@json_serializer
 @dataclass(frozen=True)
-class DcmNode:
+class DcmNode(JsonSerializable, InlineConfigurable):
     '''DICOM network entity info'''
     host: str
     '''Hostname of the node'''
@@ -170,12 +171,26 @@ class DcmNode:
     def __str__(self) -> str:
         return '%s:%s:%s' % (self.host, self.ae_title, self.port)
 
-    def to_json_dict(self) -> Dict[str, Any]:
-        return asdict(self)
-
-    @classmethod
-    def from_json_dict(cls, json_dict: Dict[str, Any]) -> DcmNode:
-        return cls(**json_dict)
+    @staticmethod
+    def inline_to_dict(in_str: str) -> Dict[str, Any]:
+        '''Parse inline string format 'host[:ae_title][:port]' 
+        
+        Both the second components are optional
+        '''
+        toks = in_str.split(':')
+        if len(toks) > 3:
+            raise ValueError("Too many tokens for node specification: %s" %
+                            in_str)
+        res = {'host' : toks[0]}
+        if len(toks) == 3:
+            res['ae_title'] = toks[1]
+            res['port'] = int(toks[2])
+        elif len(toks) == 2:
+            try:
+                res['port'] = int(toks[1])
+            except ValueError:
+                res['ae_title'] = toks[1]
+        return res
 
 
 sub_op_attrs = {stat_type.lower(): f'NumberOf{stat_type}Suboperations' for stat_type in ('Remaining', 'Completed', 'Warning', 'Failed')}

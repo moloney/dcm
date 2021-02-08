@@ -30,6 +30,7 @@ from .util import dict_to_ds
 
 log = logging.getLogger(__name__)
 
+
 class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
     '''Transfer report that only captures storage'''
 
@@ -466,6 +467,8 @@ class SyncManager:
                 if expected_sub_qrs is not None:
                     self.report.trans_reports.n_expected = int(expected_sub_qrs * avg_trans_per_qr)
 
+                # Resolve any dynamic routes, so all routes are static. Produce dict mapping
+                # these static routes to QueryResults specifying the data to send
                 sr_qr_map = await self._router.pre_route(self._src,
                                                          query_res=sub_qr)
                 pre_count = n_trans
@@ -502,6 +505,11 @@ class SyncManager:
             await self._do_static_transfer(transfer)
         else:
             raise TypeError("Not a valid Transfer sub-class: %s" % transfer)
+
+    async def sync(self, query_res=None):
+        '''Generate and exec all transfers for `query_res`'''
+        async for trans in self.gen_transfers(query_res):
+            await self.exec_transfer(trans)
 
     # TODO: If we decide to keep some associations open across transfers, we 
     #       can do the cleanup here but below three methods will need to become
@@ -772,17 +780,95 @@ class SyncManager:
         transfer.report.done = True
 
 
-async def sync_data(src : DataBucket[Any, Any],
-                    dests : List[DestType],
-                    query_res: Optional[QueryResult] = None,
-                    trust_level: QueryLevel = QueryLevel.IMAGE,
-                    force_all: bool = False,
-                    validators: Optional[Iterable[Callable[[Dataset, Dataset], None]]] = None,
-                    keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                    report: Optional[SyncReport] = None,
-                    ) -> None:
-    '''Convienance function to build TransferPlanner and execute all transfers
+async def sync_data(sources: List[DataBucket[Any, Any]],
+                    dests: List[DestType],
+                    query: Optional[Union[Dataset, List[Dataset]]] = None,
+                    query_res: Optional[Union[QueryResult, List[QueryResult]]] = None,
+                    query_reports: Optional[List[MultiListReport]] = None,
+                    sm_kwargs: Optional[List[Dict[str, Any]]] = None,
+                    dry_run: bool = False
+                    ) -> List[SyncReport]:
+    '''Sync data from one or more sources to one or more destinations 
+
+    The `query` paramater can be a single item that applies to all sources or 
+    a list of items (one for each source). 
+
+    The data from each source if forwarded to all destinations (unless those
+    dests filter it).
+
+    Parameters
+    ----------
+    sources
+        The sources we are syncing data from
+    
+    dests
+        The destinations we are syncing data to
+    
+    query
+        A query (or list w/ one per source) to limit the data being sent
+    
+    query_res
+        A list of query results (one per source) to limit the data being sent
+    
+    sm_kwargs
+        The keyword arguments used to create each SyncManager
+    
+    dry_run
+        Set to true to just print the transfers that would get executed
     '''
-    with SyncManager(src, dests, trust_level, force_all, keep_errors, validators, report) as sm:
-        async for transfer in sm.gen_transfers(query_res):
-            await sm.exec_transfer(transfer)
+    if query is not None or query_res is not None:
+        if not all(isinstance(src, DataRepo) for src in sources):
+            raise ValueError("Not all sources support queries")
+    n_srcs = len(sources)
+    if query_res is not None:
+        if len(query_res) != n_srcs:
+            raise ValueError("The query_res list is not the right size")
+    else:
+        query_res = [None] * n_srcs
+    if sm_kwargs is not None:
+        if len(sm_kwargs) != n_srcs:
+            raise ValueError("The query_res list is not the right size")
+    else:
+        sm_kwargs = [{} for _ in n_sources]
+    if query is not None:
+        if query_reports is not None:
+            if len(query_reports) != n_srcs:
+                raise ValueError("The query_reports list is not the right size")
+        else:
+            query_reports = [None] * n_srcs
+        if isinstance(query, Dataset):
+            query = [query] * n_srcs
+        elif len(query) != n_srcs:
+            raise ValueError("The query list is not the right size")
+        qr_tasks = []
+        for src, q, qr, qr_report in zip(sources, query, query_res, query_reports):
+            qr_tasks.append(src.query(query=q, query_res=qr, report=qr_report))
+        log.info("Performing initial queries against sources")
+        query_res = await asyncio.gather(qr_tasks)
+    
+    sync_mgrs = [SyncManager(src, dests, **kwargs) 
+                 for src, kwargs in zip(sources, sm_kwargs)]
+    if dry_run:
+        log.info("Starting dry-run")
+        async with AsyncExitStack() as estack:
+            sync_tasks = []
+            for sm, qr in zip(sync_mgrs, query_res):
+                await estack.enter_context(sm)
+                async for transfer in sm.gen_transfers(qr):
+                    dests_str = []
+                    for meth, routes in transfer.method_routes_map.items():
+                        for route in routes:
+                            dests_str.append(f"({meth.name}) {route}")
+                    dests_str = " / ".join(dests_str)
+                    print('%s > %s' % (transfer.chunk, dests_str))
+        log.info("Completed dry-run")
+    else:
+        log.info("Starting sync")
+        async with AsyncExitStack() as estack:
+            sync_tasks = []
+            for sm, qr in zip(sync_mgrs, query_res):
+                await estack.enter_context(sm)
+                sync_tasks.append(asyncio.create_task(sm.sync(query_res)))
+            await asyncio.gather(sync_tasks)
+        log.info("Completed sync")
+    return [sm.report for sm in sync_mgrs]

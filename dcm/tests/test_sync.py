@@ -12,7 +12,7 @@ from ..sync import SyncManager
 from ..store import TransferMethod
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
-from ..util import serializer
+from ..util import json_serializer
 
 from .conftest import (has_dcmtk, DCMTK_VERSION, dcmtk_priv_sop_retr_xfail,
                        dcmtk_priv_sop_send_xfail)
@@ -116,7 +116,7 @@ async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, sub
         async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
-                    print(f"{dest} : {serializer.dumps(transfer.chunk.qr)}")
+                    print(f"{dest} : {json_serializer.dumps(transfer.chunk.qr)}")
             await sm.exec_transfer(transfer)
         print(sm.report)
     dest1_dir = Path(dest1_dir)

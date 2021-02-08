@@ -14,9 +14,9 @@ from pydicom import Dataset
 from .lazyset import LazySet, FrozenLazySet
 from .query import (QueryLevel, QueryResult, DataNode, InconsistentDataError,
                     get_uid, minimal_copy)
-from .filt import Filter, DataTransform, get_transform
+from .filt import Filter, DataTransform, get_transform, Selector
 from .report import CountableReport, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
-from .util import DuplicateDataError
+from .util import DuplicateDataError, TomlConfigurable
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
 from .store import DataBucket, DataRepo, TransferMethod, LocalWriteReport
 
@@ -72,7 +72,7 @@ class Route:
         raise NotImplementedError
 
     def get_filtered(self, data_set: Dataset) -> Optional[Dataset]:
-        if not self.filt:
+        if self.filt is None:
             return data_set
         return self.filt(data_set)
 
@@ -92,7 +92,7 @@ class _StaticBase:
 
 
 @dataclass(frozen=True)
-class StaticRoute(Route, _StaticBase):
+class StaticRoute(Route, _StaticBase, TomlConfigurable):
     '''Static route that sends all (unfiltered) data to same dests'''
     def __post_init__(self) -> None:
         if self.filt is not None:
@@ -108,6 +108,14 @@ class StaticRoute(Route, _StaticBase):
                 raise NoValidTransferMethodError()
         object.__setattr__(self, 'dests', tuple(self.dests))
         object.__setattr__(self, 'methods', tuple(avail_methods))
+
+    @classmethod
+    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> StaticRoute:
+        kwargs = deepcopy(toml_dict)
+        methods = kwargs.get('methods')
+        if methods is not None:
+            kwargs['methods'] = tuple(TransferMethod[m.upper()] for m in methods)
+        return cls(**kwargs)
 
     def get_dests(self, data_set: Dataset) -> Tuple[DataBucket[Any, Any], ...]:
         return self.dests
@@ -208,6 +216,66 @@ class DynamicRoute(Route, _DynamicBase):
 
     def __str__(self) -> str:
         return 'Dynamic on: %s' % self.required_elems
+
+
+@dataclass(frozen=True)
+class SelectorDestMap(TomlConfigurable):
+    '''Allow construction of dynamic routes from static config file'''
+
+    routing_map: Tuple[Selector, Tuple[DataBucket[Any, Any], ...], ...]
+    '''One or more tuples of (selector, dests) pairs'''
+
+    stop_on_first: bool = True
+    '''Just return dests associated with first selector that matches'''
+
+    route_level: QueryLevel = QueryLevel.STUDY
+    '''The level in the DICOM hierarchy we are making routing decisions at'''
+
+    dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
+    '''Specify transfer methods for (some) dests
+
+    Use `None` as the key to specify the default transfer methods for all dests
+    not explicitly listed.
+
+    Only respected when pre-routing is used. Dynamic routing can only proxy.
+    '''
+
+    filt: Optional[Filter] = None
+    '''Steaming data filter for editing and rejecting data sets'''
+
+    def __post_init__(self) -> None:
+        self._req_elems = LazySet()
+        for sel, _ in self.routing_map:
+            self._req_elems |= sel.get_read_elems()
+
+    @classmethod
+    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> SelectorDestMap:
+        kwargs = deepcopy(toml_dict)
+        route_level = kwargs.get('route_level')
+        if route_level is not None:
+            kwargs['route_level'] = QueryLevel[route_level.upper()]
+        return cls(**kwargs)
+
+    def get_dynamic_route(self) -> DynamicRoute:
+        '''Return equivalent DynamicRoute object'''
+        def lookup_func(ds: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
+            if not self.stop_on_first:
+                res = []
+            for sel, dests in self.routing_map:
+                if sel.test_ds(ds):
+                    if self.stop_on_first:
+                        return dests
+                    else:
+                        res += dests
+            if not res:
+                return None
+            return tuple(res)
+        
+        return DynamicRoute(lookup_func, 
+                            route_level=self.route_level, 
+                            required_elems=self._req_elems, 
+                            dest_methods=self.dest_methods,
+                            filt=self.filt)
 
 
 class ProxyTransferError(Exception):

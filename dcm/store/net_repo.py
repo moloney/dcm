@@ -12,12 +12,13 @@ from . import TransferMethod, DcmNetChunk, DcmRepo
 from ..report import MultiListReport
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport
+from ..util import TomlConfigurable, dict_to_ds
 
 
 log = logging.getLogger(__name__)
 
 
-class NetRepo(DcmRepo):
+class NetRepo(DcmRepo, TomlConfigurable):
     '''Smart data store corresponding to a DICOM network entity'''
 
     is_local = False
@@ -34,6 +35,17 @@ class NetRepo(DcmRepo):
         self._base_query = deepcopy(base_query)
         self.chunk_size = chunk_size
         self.description = remote.ae_title
+
+    @classmethod
+    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> NetRepo:
+        kwargs = deepcopy(toml_dict)
+        level = kwargs.get('level')
+        if level is not None:
+            kwargs['level'] = QueryLevel[level.upper()]
+        base_query = kwargs.get('base_query')
+        if base_query is not None:
+            kwargs['base_query'] = dict_to_ds(base_query)
+        return cls(**kwargs)
 
     def __getstate__(self) -> Dict[str, Any]:
         state = {k: v for k, v in self.__dict__.items() if k != '_local_ent'}

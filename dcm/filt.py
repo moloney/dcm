@@ -1,13 +1,13 @@
 '''DICOM data filtering'''
 from __future__ import annotations
-import logging
+import logging, operator, re
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Tuple, List, Any, Dict
+from typing import Callable, Optional, Tuple, List, Any, Dict, Protocol
 
 from pydicom import Dataset, DataElement
 from pydicom.uid import generate_uid
 
-from .util import DuplicateDataError
+from .util import DuplicateDataError, TomlConfigurable, InlineConfigurable
 from .lazyset import LazySet, FrozenLazySet, AllElems
 from .query import (QueryLevel, QueryResult, DataNode, get_uid, uid_elems,
                     QueryLevelMismatchError, InconsistentDataError)
@@ -379,3 +379,111 @@ def make_reject_filter(reject_dict: Dict[str, Tuple[Callable[[Dataset, Dataset],
     read_elems = FrozenLazySet(reject_dict.keys())
     reject_filter = Filter(reject_func, read_elems=read_elems, write_elems=FrozenLazySet())
     return reject_filter
+
+
+CMP_OPS = {'==' : operator.eq,
+           '!=' : operator.ne,
+           '<' : operator.lt,
+           '<=' : operator.le,
+           '>' : operator.gt,
+           '>=' : operator.ge,
+           '~=' : lambda l, r: re.match(l, r), 
+           'in' : lambda l, r: l in r
+          }
+
+
+class Selector(Protocol):
+    '''Abstract base for objects that can select/reject data sets'''
+    def get_read_elems(self) -> FrozenLazySet:
+        raise NotImplementedError
+
+    def test_ds(self, ds: Dataset) -> bool:
+        raise NotImplementedError
+
+    def get_filter(self) -> Filter:
+        return Filter(lambda ds: ds if self.test_ds(ds) else None,
+                      read_elems=self.get_read_elems(), 
+                      write_elems=FrozenLazySet())
+
+
+@dataclass(frozen=True)
+class SingleSelector(Selector, InlineConfigurable):
+    '''Define a selection based on a single attribute
+    
+    Can be defined in config file or as single string
+    '''
+    attr: str
+
+    op: str
+
+    rvalue: Any
+
+    invert: bool = False
+
+    reject_missing: bool = True
+
+    def __post_init__(self):
+        cmp_op = CMP_OPS.get(self.op)
+        if cmp_op is None:
+            raise ValueError(f"Unknown operator: {self.op}")
+        if self.invert:
+            self._op = lambda l, r: not cmp_op(l, r)
+        else:
+            self._op = cmp_op
+
+    @staticmethod
+    def inline_to_dict(in_str: str) -> Dict[str, Any]:
+        '''Support simple forms to be encoded in single string'''
+        # TODO: Can we use safe_eval on rvalue to convert it?
+        #       Would still need more that that to support dates, use TOML?
+        match = re.match(r'^\s*(?P<invert>!?)\s*(?P<attr>\S+)\s+(?P<op>\S+)\s+(?P<rvalue>.+?)\s*$', in_str)
+        if not match:
+            raise ValueError(f"Invalid in_str for Selector: {in_str}")
+        res = match.groupdict()
+        if res['invert'] == '!':
+            res['invert'] = True
+        return res
+
+    def get_read_elems(self) -> FrozenLazySet:
+        return FrozenLazySet((self.attr,))
+
+    def test_ds(self, ds: Dataset) -> bool:
+        lvalue = getattr(ds, self.attr, None)
+        if lvalue is None:
+            return not self.reject_missing
+        # TODO: Probably want some type coalescing for DS, maybe dates?
+        return self._op(lvalue, self.rvalue)
+
+
+@dataclass(frozen=True)
+class MultiSelector(Selector, TomlConfigurable):
+    '''Logically combine selectors for more complex selections'''
+    all_of: Tuple[Selector, ...] = tuple()
+
+    any_of: Tuple[Selector, ...] = tuple()
+
+    none_of: Tuple[Selector, ...] = tuple()
+
+    def __post_init__(self):
+        if len(self.all_of) + len(self.any_of) + len(self.none_of) == 0:
+            raise ValueError("Must give at least one type of selector")
+        for attr in ('all_of', 'any_of', 'none_of'):
+            val = getattr(self, attr)
+            if not isinstance(val, tuple):
+                object.__setattr__(self, attr, tuple(val))
+
+    def get_read_elems(self) -> FrozenLazySet:
+        elems = LazySet()
+        for selectors in (self.all_of, self.any_of, self.none_of):
+            for s in selectors:
+                elems |= s.get_read_elems()
+        return FrozenLazySet(elems)
+
+    def test_ds(self, ds: Dataset) -> bool:
+        if self.none_of and any(s.test_ds(ds) for s in self.none_of):
+            return False
+        if not all(s.test_ds(ds) for s in self.all_of):
+            return False
+        if self.any_of and not any(s.test_ds(ds) for s in self.any_of):
+            return False
+        return True

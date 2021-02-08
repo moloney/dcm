@@ -4,7 +4,7 @@ import os, sys, json, time, logging
 import asyncio, threading
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, is_dataclass, asdict
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import (AsyncGenerator, Any, AsyncIterator, Dict, List, TypeVar,
@@ -35,49 +35,90 @@ class DuplicateDataError(DicomDataError):
     '''A duplicate dataset was found'''
 
 
-class Serializable(Protocol):
-
+class JsonSerializable(Protocol):
+    '''Protocol for JSON serializable objects
+    
+    Classes can inherit from this to get reasonable defaults for many objects
+    '''
     def to_json_dict(self) -> Dict[str, Any]:
-        raise NotImplementedError
+        if is_dataclass(self):
+            return asdict(self)
+        else:
+            res = {}
+            for k, v in self.__dict__.items():
+                if k[0] == '_':
+                    continue
+                if hasattr(v, 'to_json_dict'):
+                    res[k] = v.to_json_dict()
+                elif isinstance(v, (str, float, int, bool, list, tuple, dict)):
+                    res[k] = v
+        return res
 
     @classmethod
-    def from_json_dict(cls, json_dict: Dict[str, Any]) -> Serializable:
-        raise NotImplementedError
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> JsonSerializable:
+        return cls(**json_dict)
 
 
-class _Serializer:
+class _JsonSerializer:
     '''Defines class decorator for registering JSON serializable objects
 
     Adapted from: https://stackoverflow.com/questions/51975664/serialize-and-deserialize-objects-from-user-defined-classes'''
     def __init__(self, classname_key: str = '__class__'):
         self._key = classname_key
-        self._classes: Dict[str, Type[Serializable]] = {}
+        self._classes: Dict[str, Type[JsonSerializable]] = {}
 
     def __call__(self, class_: Any) -> Any:
         assert hasattr(class_, 'to_json_dict') and hasattr(class_, 'from_json_dict')
         self._classes[class_.__name__] = class_
         return class_
 
-    def decoder_hook(self, d: Dict[str, Any]) -> Union[Dict[str, Any], Serializable]:
+    def decoder_hook(self, d: Dict[str, Any]) -> Union[Dict[str, Any], JsonSerializable]:
         classname = d.pop(self._key, None)
         if classname:
             return self._classes[classname].from_json_dict(d)
         return d
 
-    def encoder_default(self, obj: Serializable) -> Dict[str, Any]:
-        d = obj.to_json_dict()
-        d[self._key] = type(obj).__name__
-        return d
+    def encoder_default(self, obj: JsonSerializable) -> Dict[str, Any]:
+        if hasattr(obj, 'to_json_dict'):
+            d = obj.to_json_dict()
+            d[self._key] = type(obj).__name__
+            return d
+        return obj
 
-    def dumps(self, obj: Serializable, **kwargs: Any) -> str:
+    def dumps(self, obj: JsonSerializable, **kwargs: Any) -> str:
         return json.dumps(obj, default=self.encoder_default, **kwargs)
 
-    def loads(self, json_str: str) -> Serializable:
+    def loads(self, json_str: str) -> JsonSerializable:
         return json.loads(json_str, object_hook=self.decoder_hook)
 
 
-serializer = _Serializer()
+json_serializer = _JsonSerializer()
 '''Class decorator for registering JSON serializable objects'''
+
+
+class TomlConfigurable(Protocol):
+    '''Protocol for objects that are configurable through TOML'''
+    @classmethod
+    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> TomlConfigurable:
+        return cls(**toml_dict)
+
+    @classmethod
+    def from_toml_val(cls, val: Dict[str, Any]) -> TomlConfigurable:
+        return cls.from_toml_dict(val)
+
+
+class InlineConfigurable(TomlConfigurable, Protocol):
+    '''Protocol for objects that are TOML and inline configurable'''
+
+    @staticmethod
+    def inline_to_dict(in_str: str) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    @classmethod
+    def from_toml_val(cls, val: Union[str, Dict[str, Any]]) -> InlineConfigurable:
+        if isinstance(val, str):
+            val = cls.inline_to_dict(val)
+        return cls.from_toml_dict(val)
 
 
 PathInputType = Union[bytes, str, 'os.PathLike']
