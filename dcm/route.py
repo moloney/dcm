@@ -92,7 +92,7 @@ class _StaticBase:
 
 
 @dataclass(frozen=True)
-class StaticRoute(Route, _StaticBase, TomlConfigurable):
+class StaticRoute(Route, _StaticBase, TomlConfigurable['StaticRoute']):
     '''Static route that sends all (unfiltered) data to same dests'''
     def __post_init__(self) -> None:
         if self.filt is not None:
@@ -219,10 +219,10 @@ class DynamicRoute(Route, _DynamicBase):
 
 
 @dataclass(frozen=True)
-class SelectorDestMap(TomlConfigurable):
+class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
     '''Allow construction of dynamic routes from static config file'''
 
-    routing_map: Tuple[Selector, Tuple[DataBucket[Any, Any], ...], ...]
+    routing_map: Tuple[Tuple[Selector, Tuple[DataBucket[Any, Any], ...]], ...]
     '''One or more tuples of (selector, dests) pairs'''
 
     stop_on_first: bool = True
@@ -230,6 +230,9 @@ class SelectorDestMap(TomlConfigurable):
 
     route_level: QueryLevel = QueryLevel.STUDY
     '''The level in the DICOM hierarchy we are making routing decisions at'''
+
+    required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet, init=False)
+    '''DICOM elements that we require to make a routing decision'''
 
     dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
     '''Specify transfer methods for (some) dests
@@ -243,10 +246,13 @@ class SelectorDestMap(TomlConfigurable):
     filt: Optional[Filter] = None
     '''Steaming data filter for editing and rejecting data sets'''
 
+
+
     def __post_init__(self) -> None:
-        self._req_elems = LazySet()
+        req_elems: LazySet[str] = LazySet()
         for sel, _ in self.routing_map:
-            self._req_elems |= sel.get_read_elems()
+            req_elems |= sel.get_read_elems()
+        object.__setattr__(self, 'required_elems', FrozenLazySet(req_elems))
 
     @classmethod
     def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> SelectorDestMap:
@@ -260,7 +266,7 @@ class SelectorDestMap(TomlConfigurable):
         '''Return equivalent DynamicRoute object'''
         def lookup_func(ds: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
             if not self.stop_on_first:
-                res = []
+                res: List[DataBucket[Any, Any]] = []
             for sel, dests in self.routing_map:
                 if sel.test_ds(ds):
                     if self.stop_on_first:
@@ -273,7 +279,7 @@ class SelectorDestMap(TomlConfigurable):
         
         return DynamicRoute(lookup_func, 
                             route_level=self.route_level, 
-                            required_elems=self._req_elems, 
+                            required_elems=self.required_elems, 
                             dest_methods=self.dest_methods,
                             filt=self.filt)
 
@@ -556,7 +562,7 @@ class SendAssociationCache:
         res = None
         cache_entry = self._cache.get(dest, None)
         if cache_entry is None:
-            op_report = DicomOpReport()
+            op_report = dest.get_empty_send_report()
             res = op_report
             ctx_mgr = dest.send(op_report)
             send_q = await ctx_mgr.__aenter__()
@@ -809,16 +815,17 @@ class Router:
             n_pushed = 0
             while True:
                 try:
-                    ds = await asyncio.wait_for(data_q.get(),
-                                                assoc_cache.next_timeout)
+                    in_data = await asyncio.wait_for(data_q.get(),
+                                                     min(assoc_cache.next_timeout, 5.0))
                 except asyncio.TimeoutError:
                     await assoc_cache.update_cache()
                     continue
                 # TODO: Do we want this? Or should we just use task canceling?
                 #       What happens if a user pushes None accidentally? Just
                 #       use a different sentinel value?
-                if ds is None:
+                if in_data is None:
                     break
+                ds, file_meta = in_data
                 filter_dest_map = self.get_filter_dest_map(ds)
                 n_filt = len([f for f in filter_dest_map if f is not None])
                 # Only make copy of the data set if needed

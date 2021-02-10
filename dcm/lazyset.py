@@ -142,6 +142,11 @@ class _BaseLazySet(Generic[T]):
         if self._elems is AllElems:
             raise LazyEnumerationError
         return len(self._elems)
+    
+    def __eq__(self, other: object) -> bool:
+        o_elems = getattr(other, '_elems', None)
+        o_exclude = getattr(other, '_exclude', None)
+        return self._elems == o_elems and self._exclude == o_exclude
 
     def excludes(self) -> Iterator[T]:
         if self._exclude is AllElems:
@@ -216,3 +221,6 @@ class FrozenLazySet(_BaseLazySet[T]):
     '''Frozen LazySet'''
 
     _set_type = frozenset
+
+    def __hash__(self) -> int:
+        return hash((self._elems, self._exclude))

@@ -18,7 +18,7 @@ from ..util import TomlConfigurable, dict_to_ds
 log = logging.getLogger(__name__)
 
 
-class NetRepo(DcmRepo, TomlConfigurable):
+class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
     '''Smart data store corresponding to a DICOM network entity'''
 
     is_local = False

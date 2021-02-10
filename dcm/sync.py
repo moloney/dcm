@@ -506,28 +506,28 @@ class SyncManager:
         else:
             raise TypeError("Not a valid Transfer sub-class: %s" % transfer)
 
-    async def sync(self, query_res=None):
+    async def sync(self, query_res: QueryResult = None) -> None:
         '''Generate and exec all transfers for `query_res`'''
         async for trans in self.gen_transfers(query_res):
             await self.exec_transfer(trans)
 
-    # TODO: If we decide to keep some associations open across transfers, we 
-    #       can do the cleanup here but below three methods will need to become
-    #       async
-    def close(self) -> None:
+    # For now the below three methods don't actually need to be async, but we
+    # implement them as such so we can leverage it in the future without API 
+    # breakage.
+    async def close(self) -> None:
         if not self._extern_report:
             self.report.log_issues()
             self.report.check_errors()
         self.report.done = True
 
-    def __enter__(self) -> SyncManager:
+    async def __aenter__(self) -> SyncManager:
         return self
     
-    def __exit__(self, 
-                 exctype: Optional[Type[BaseException]],
-                 excinst: Optional[BaseException],
-                 exctb: Optional[TracebackType]) -> None:
-        self.close()
+    async def __aexit__(self, 
+                       exctype: Optional[Type[BaseException]],
+                       excinst: Optional[BaseException],
+                       exctb: Optional[TracebackType]) -> None:
+        await self.close()
 
     def _get_meth_routes(self,
                          routes: Iterable[StaticRoute]
@@ -783,8 +783,8 @@ class SyncManager:
 async def sync_data(sources: List[DataBucket[Any, Any]],
                     dests: List[DestType],
                     query: Optional[Union[Dataset, List[Dataset]]] = None,
-                    query_res: Optional[Union[QueryResult, List[QueryResult]]] = None,
-                    query_reports: Optional[List[MultiListReport]] = None,
+                    query_res: Optional[Union[QueryResult, List[Optional[QueryResult]]]] = None,
+                    query_reports: Optional[List[Optional[MultiListReport[DicomOpReport]]]] = None,
                     sm_kwargs: Optional[List[Dict[str, Any]]] = None,
                     dry_run: bool = False
                     ) -> List[SyncReport]:
@@ -827,9 +827,9 @@ async def sync_data(sources: List[DataBucket[Any, Any]],
         query_res = [None] * n_srcs
     if sm_kwargs is not None:
         if len(sm_kwargs) != n_srcs:
-            raise ValueError("The query_res list is not the right size")
+            raise ValueError("The sm_kwargs list is not the right size")
     else:
-        sm_kwargs = [{} for _ in n_sources]
+        sm_kwargs = [{} for _ in range(n_srcs)]
     if query is not None:
         if query_reports is not None:
             if len(query_reports) != n_srcs:
@@ -842,24 +842,28 @@ async def sync_data(sources: List[DataBucket[Any, Any]],
             raise ValueError("The query list is not the right size")
         qr_tasks = []
         for src, q, qr, qr_report in zip(sources, query, query_res, query_reports):
+            assert isinstance(src, DataRepo)
             qr_tasks.append(src.query(query=q, query_res=qr, report=qr_report))
         log.info("Performing initial queries against sources")
-        query_res = await asyncio.gather(qr_tasks)
+        query_res = await asyncio.gather(*qr_tasks)
     
     sync_mgrs = [SyncManager(src, dests, **kwargs) 
                  for src, kwargs in zip(sources, sm_kwargs)]
     if dry_run:
         log.info("Starting dry-run")
         async with AsyncExitStack() as estack:
-            sync_tasks = []
+            sync_tasks: List[asyncio.Task[None]] = []
             for sm, qr in zip(sync_mgrs, query_res):
-                await estack.enter_context(sm)
+                await estack.enter_async_context(sm)
                 async for transfer in sm.gen_transfers(qr):
-                    dests_str = []
-                    for meth, routes in transfer.method_routes_map.items():
-                        for route in routes:
-                            dests_str.append(f"({meth.name}) {route}")
-                    dests_str = " / ".join(dests_str)
+                    if isinstance(transfer, StaticTransfer):
+                        dests_comps = []
+                        for meth, routes in transfer.method_routes_map.items():
+                            for route in routes:
+                                dests_comps.append(f"({meth.name}) {route}")
+                        dests_str = " / ".join(dests_comps)
+                    else:
+                        dests_str = "DYNAMIC" # TODO: Something better here?
                     print('%s > %s' % (transfer.chunk, dests_str))
         log.info("Completed dry-run")
     else:
@@ -867,8 +871,8 @@ async def sync_data(sources: List[DataBucket[Any, Any]],
         async with AsyncExitStack() as estack:
             sync_tasks = []
             for sm, qr in zip(sync_mgrs, query_res):
-                await estack.enter_context(sm)
-                sync_tasks.append(asyncio.create_task(sm.sync(query_res)))
-            await asyncio.gather(sync_tasks)
+                await estack.enter_async_context(sm)
+                sync_tasks.append(asyncio.create_task(sm.sync(qr)))
+            await asyncio.gather(*sync_tasks)
         log.info("Completed sync")
     return [sm.report for sm in sync_mgrs]

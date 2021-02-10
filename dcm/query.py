@@ -1059,7 +1059,7 @@ class QueryResult:
             if len(children) == 0:
                 return
             sort_elem = sort_elems[children[0].level]
-            children = sorted(children, key=lambda n: self.node_info(n).get(sort_elem))
+            children = sorted(children, key=lambda n: self.node_info(n).get(sort_elem, 0))
             for child in children:
                 yield child
         return sorted_child_getter

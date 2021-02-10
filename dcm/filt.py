@@ -2,7 +2,8 @@
 from __future__ import annotations
 import logging, operator, re
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Tuple, List, Any, Dict, Protocol
+from typing import Callable, Optional, Tuple, List, Any, Dict, Union, MutableMapping
+from typing_extensions import Protocol
 
 from pydicom import Dataset, DataElement
 from pydicom.uid import generate_uid
@@ -86,7 +87,7 @@ class Filter(_BaseFilter, _SingleFilter):
 
 @dataclass(frozen=True)
 class _MultiFilter:
-    filters: Tuple[Filter]
+    filters: Tuple[Filter, ...]
     '''The collection of filters'''
 
 
@@ -394,7 +395,7 @@ CMP_OPS = {'==' : operator.eq,
 
 class Selector(Protocol):
     '''Abstract base for objects that can select/reject data sets'''
-    def get_read_elems(self) -> FrozenLazySet:
+    def get_read_elems(self) -> FrozenLazySet[str]:
         raise NotImplementedError
 
     def test_ds(self, ds: Dataset) -> bool:
@@ -407,7 +408,7 @@ class Selector(Protocol):
 
 
 @dataclass(frozen=True)
-class SingleSelector(Selector, InlineConfigurable):
+class SingleSelector(Selector, InlineConfigurable['SingleSelector']):
     '''Define a selection based on a single attribute
     
     Can be defined in config file or as single string
@@ -422,14 +423,16 @@ class SingleSelector(Selector, InlineConfigurable):
 
     reject_missing: bool = True
 
-    def __post_init__(self):
+    _op: Optional[Callable[[Any, Any], bool]] = field(default=None, init=False, repr=False)
+
+    def __post_init__(self) -> None:
         cmp_op = CMP_OPS.get(self.op)
         if cmp_op is None:
             raise ValueError(f"Unknown operator: {self.op}")
         if self.invert:
-            self._op = lambda l, r: not cmp_op(l, r)
+            object.__setattr__(self, '_op', lambda l, r: not cmp_op(l, r))
         else:
-            self._op = cmp_op
+            object.__setattr__(self, '_op', cmp_op)
 
     @staticmethod
     def inline_to_dict(in_str: str) -> Dict[str, Any]:
@@ -439,12 +442,12 @@ class SingleSelector(Selector, InlineConfigurable):
         match = re.match(r'^\s*(?P<invert>!?)\s*(?P<attr>\S+)\s+(?P<op>\S+)\s+(?P<rvalue>.+?)\s*$', in_str)
         if not match:
             raise ValueError(f"Invalid in_str for Selector: {in_str}")
-        res = match.groupdict()
+        res: Dict[str, Any] = match.groupdict()
         if res['invert'] == '!':
             res['invert'] = True
         return res
 
-    def get_read_elems(self) -> FrozenLazySet:
+    def get_read_elems(self) -> FrozenLazySet[str]:
         return FrozenLazySet((self.attr,))
 
     def test_ds(self, ds: Dataset) -> bool:
@@ -452,11 +455,12 @@ class SingleSelector(Selector, InlineConfigurable):
         if lvalue is None:
             return not self.reject_missing
         # TODO: Probably want some type coalescing for DS, maybe dates?
+        assert self._op is not None
         return self._op(lvalue, self.rvalue)
 
 
 @dataclass(frozen=True)
-class MultiSelector(Selector, TomlConfigurable):
+class MultiSelector(Selector, TomlConfigurable['MultiSelector']):
     '''Logically combine selectors for more complex selections'''
     all_of: Tuple[Selector, ...] = tuple()
 
@@ -464,7 +468,7 @@ class MultiSelector(Selector, TomlConfigurable):
 
     none_of: Tuple[Selector, ...] = tuple()
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len(self.all_of) + len(self.any_of) + len(self.none_of) == 0:
             raise ValueError("Must give at least one type of selector")
         for attr in ('all_of', 'any_of', 'none_of'):
@@ -472,8 +476,8 @@ class MultiSelector(Selector, TomlConfigurable):
             if not isinstance(val, tuple):
                 object.__setattr__(self, attr, tuple(val))
 
-    def get_read_elems(self) -> FrozenLazySet:
-        elems = LazySet()
+    def get_read_elems(self) -> FrozenLazySet[str]:
+        elems: LazySet[str] = LazySet()
         for selectors in (self.all_of, self.any_of, self.none_of):
             for s in selectors:
                 elems |= s.get_read_elems()

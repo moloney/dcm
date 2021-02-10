@@ -3,27 +3,29 @@ from __future__ import annotations
 import os, logging, asyncio, re, shutil, threading
 from contextlib import asynccontextmanager
 from glob import iglob
-from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union
+from pathlib import Path
 from queue import Empty
+from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union, Dict
 
 from pydicom.dataset import Dataset
 import janus
 
 from . import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
-from ..util import fstr_eval, PathInputType, create_thread_task
+from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 
 log = logging.getLogger(__name__)
 
 
 def _dir_crawl_worker(res_q: 'janus._SyncQueueProxy[LocalChunk]',
-                      root_path : str,
+                      root_path : Path,
                       recurse: bool = True,
                       file_ext: str = 'dcm',
                       max_chunk: int = 1000,
                       shutdown: Optional[threading.Event] = None) -> None:
     curr_files = []
-    glob_comps = [root_path]
+    # TODO: Update this to use pathlib.Path glob functionality
+    glob_comps = [str(root_path)]
     if recurse:
         glob_comps.append('**')
     if file_ext:
@@ -63,7 +65,7 @@ def make_out_path(out_fmt: str, ds: Dataset) -> str:
 
 
 def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
-                       root_path: str,
+                       root_path: Path,
                        out_fmt: str,
                        force_overwrite: bool,
                        report: LocalWriteReport,
@@ -88,8 +90,7 @@ def _disk_write_worker(data_queue: 'janus._SyncQueueProxy[Dataset]',
         if no_input:
             continue
         log.debug("disk_writer thread got a data set")
-        out_path = os.path.join(root_path,
-                                make_out_path(out_fmt, ds))
+        out_path = root_path / make_out_path(out_fmt, ds)
 
         if os.path.exists(out_path):
             if force_overwrite:
@@ -162,7 +163,7 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
                 os.remove(existing_backup)
 
 
-class LocalDir(LocalBucket, InlineConfigurable):
+class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
     '''Local directory of data without any additional meta data'''
 
     is_local = True
@@ -176,15 +177,21 @@ class LocalDir(LocalBucket, InlineConfigurable):
     '''
 
     def __init__(self,
-                 path: str,
+                 path: PathInputType,
                  recurse: bool = True,
                  file_ext: str = 'dcm',
                  max_chunk: int = 1000,
                  out_fmt: Optional[str] = None,
-                 force_overwrite: bool = False):
-        if not os.path.exists(path):
-            raise ValueError(f"Path doesn't exist: {path}")
-        self._root_path = path
+                 force_overwrite: bool = False,
+                 make_missing: bool = True):
+        self._root_path = Path(path).expanduser()
+        if not self._root_path.exists():
+            if make_missing:
+                self._root_path.mkdir(parents=True)
+            else:
+                raise ValueError(f"Path doesn't exist: {self._root_path}")
+        elif not self._root_path.is_dir():
+            raise ValueError(f"Path is a file not a directory: {self._root_path}")
         self._recurse = recurse
         self._max_chunk = max_chunk
         self._force_overwrite = force_overwrite
@@ -195,7 +202,7 @@ class LocalDir(LocalBucket, InlineConfigurable):
         self._file_ext = file_ext
         if self._file_ext:
             self._out_fmt += '.%s' % file_ext
-        self.description = self._root_path
+        self.description = str(self._root_path)
 
     @staticmethod
     def inline_to_dict(in_str: str) -> Dict[str, Any]:
@@ -215,8 +222,12 @@ class LocalDir(LocalBucket, InlineConfigurable):
             raise ValueError(f"Invalid short form for LocalDir: {in_str}")
         return res
 
+    @property
+    def root_path(self) -> Path:
+        return self._root_path
+
     def __str__(self) -> str:
-        return f'LocalDir({self.root_path})'
+        return f'LocalDir({self._root_path})'
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()
@@ -300,8 +311,7 @@ class LocalDir(LocalBucket, InlineConfigurable):
                                       report)
                                      )
         async for src_path, ds in chunk.gen_paths_and_data():
-            dest_path = os.path.join(self._root_path,
-                                     make_out_path(self._out_fmt, ds))
+            dest_path = self._root_path / make_out_path(self._out_fmt, ds)
             if method == TransferMethod.SYMLINK:
                 src_path = os.path.abspath(src_path)
             await oob_q.async_q.put((src_path, dest_path))

@@ -83,7 +83,7 @@ async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs)
         for dest in dyn_dests:
             expect_qrs[dest].add(ds)
     trans_qrs = {}
-    with SyncManager(src_repo, dests) as sm:
+    async with SyncManager(src_repo, dests) as sm:
         async for transfer in sm.gen_transfers():
             trans_level = transfer.chunk.qr.level
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
@@ -112,7 +112,7 @@ async def test_repo_sync_single_static(make_local_node, make_dcmtk_net_repo, sub
     dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
     static_route = StaticRoute([dest1_repo])
     dests = [static_route]
-    with SyncManager(src_repo, dests) as sm:
+    async with SyncManager(src_repo, dests) as sm:
         async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
@@ -137,7 +137,7 @@ async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_spec
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo), required_elems=['PatientID'])
     dests = [static_route, dyn_route]
-    with SyncManager(src_repo, dests) as sm:
+    async with SyncManager(src_repo, dests) as sm:
         async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
@@ -164,7 +164,7 @@ async def test_bucket_sync(make_local_dir, make_local_node, make_dcmtk_net_repo,
     dyn_route = DynamicRoute(make_lookup(dest2_repo, dest3_repo),
                              required_elems=['PatientID'])
     dests = [static_route, dyn_route]
-    with SyncManager(src_bucket, dests) as sm:
+    async with SyncManager(src_bucket, dests) as sm:
         async for transfer in sm.gen_transfers():
             await sm.exec_transfer(transfer)
     dest1_dir = Path(dest1_dir)

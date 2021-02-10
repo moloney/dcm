@@ -1,13 +1,14 @@
 import os, time, shutil, random, tarfile, logging, re
 from copy import deepcopy
 import subprocess as sp
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 from pathlib import Path
 
 import pydicom
 import psutil
 from pytest import fixture, mark
 
+from ..conf import _default_conf, DcmConfig
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode
 from ..store.net_repo import NetRepo
@@ -317,3 +318,20 @@ def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
 #
 #
 #    yield _make_store
+
+@fixture
+def make_dcm_config_file():
+    with NamedTemporaryFile('wt') as conf_f:
+        def _make_dcm_config_file(config_str=_default_conf):
+            conf_f.write(config_str)
+            conf_f.file.flush()
+            return conf_f.name
+        yield _make_dcm_config_file
+
+
+@fixture
+def make_dcm_config(make_dcm_config_file):
+    def _make_dcm_config(config_str=_default_conf):
+        config_path = make_dcm_config_file(config_str)
+        return DcmConfig(config_path)
+    return _make_dcm_config

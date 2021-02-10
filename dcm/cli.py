@@ -4,6 +4,7 @@ import sys, os, logging, json
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
+from datetime import datetime
 
 import pydicom
 from pydicom.dataset import Dataset
@@ -20,7 +21,7 @@ from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
 from .filt import make_edit_filter, MultiFilter
-from .route import StaticRoute, Router
+from .route import StaticRoute, DynamicTransferReport, Router
 from .store import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
@@ -188,8 +189,8 @@ def conf(params, show, path):
               help="Local DICOM network node properties")
 def echo(params, remote, local):
     '''Test connectivity with remote node'''
-    local = params['config'].get_local(local)
-    remote_node = params['config'].get_remote()
+    local = params['config'].get_local_node(local)
+    remote_node = params['config'].get_remote_node(remote)
     net_ent = LocalEntity(local)
     res = asyncio.run(net_ent.echo(remote_node))
     if res:
@@ -266,9 +267,15 @@ def query(params, remote, query, level, query_res, since, before,
         else:
             cli_error("Invalid level: %s" % level)
     if query_res is None and not sys.stdin.isatty():
+        log.debug("Reading query_res from stdin")
         query_res = sys.stdin
     if query_res is not None:
-        query_res = json_serializer.loads(query_res.readhints())
+        in_str = query_res.read()
+        if in_str:
+            query_res = json_serializer.loads(in_str)
+        else:
+            query_res = None
+
     if sys.stdout.isatty():
         if out_format is None:
             out_format = 'tree'
@@ -278,8 +285,8 @@ def query(params, remote, query, level, query_res, since, before,
             out_format = 'json'
     if out_format not in ('tree', 'json'):
         cli_error("Invalid out-format: %s" % out_format)
-    local = params['config'].get_local(local)
-    remote_node = params['config'].get_remote(remote)
+    local = params['config'].get_local_node(local)
+    remote_node = params['config'].get_remote_node(remote)
     net_ent = LocalEntity(local)
     qdat = _build_query(query, since, before)
     if len(qdat) == 0 and query_res is None and not assume_yes:
@@ -325,10 +332,11 @@ def query(params, remote, query, level, query_res, since, before,
 @click.option('--method', '-m', help="Transfer method to use",
               type=click.Choice([m.name for m in TransferMethod],
                                 case_sensitive=False))
-@click.option('--validate', is_flag=True, default=False,
-              help="All synced data is retrieved back from the dests and "
-              "compared to the original data. Differing elements produce "
-              "warnings.")
+# Expose this when it is working
+#@click.option('--validate', is_flag=True, default=False,
+#              help="All synced data is retrieved back from the dests and "
+#              "compared to the original data. Differing elements produce "
+#              "warnings.")
 @click.option('--keep-errors', is_flag=True, default=False,
               help="Don't skip inconsistent/unexpected incoming data")
 @click.option('--dry-run', '-n', is_flag=True, default=False,
@@ -348,7 +356,7 @@ def query(params, remote, query, level, query_res, since, before,
               help="Don't display progress bars")
 @click.option('--no-report', is_flag=True, help="Don't print report")
 def sync(params, dests, source, query, query_res, since, before, edit, edit_json, 
-         trust_level, force_all, method, validate, keep_errors, dry_run, local,
+         trust_level, force_all, method, keep_errors, dry_run, local,
          dir_format, no_recurse, in_file_ext, out_file_ext, no_progress, 
          no_report):
     '''Sync DICOM data from a one or more sources to one or more destinations
@@ -362,9 +370,8 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     in the same way `dests` are specified, except it cannot be a 'route'.
     '''
     # Check for incompatible options
-    if validate and dry_run:
-        cli_error("Can't do validation on a dry run!")
-
+    #if validate and dry_run:
+    #    cli_error("Can't do validation on a dry run!")
 
     # Disable progress for non-interactive output or dry runs
     if not sys.stdout.isatty() or dry_run:
@@ -378,15 +385,22 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
     if query_res is not None:
-        query_res = json_serializer.loads(query_res.read())
+        in_str = query_res.read()
+        if in_str:
+            query_res = json_serializer.loads(in_str)
+        else:
+            query_res = None
+
+    # Determine the local node being used
+    local = params['config'].get_local_node(local)
     
     # Pass source options that override config through to the config parser
     params['config'].set_local_dir_kwargs(recurse=not no_recurse,
-                                          file_ext=in_file_ext) 
-
-    # Figure out any local/source info
-    local = params['config'].get_local(local)
-    if source is None:
+                                          file_ext=in_file_ext)
+    params['config'].set_net_repo_kwargs(local=local)
+    
+    # Figure out source info
+    if len(source) == 0:
         if query_res is None or query_res.prov.source is None:
             cli_error("No data source specified")
         sources = [NetRepo(local, query_res.prov.source)]
@@ -427,14 +441,47 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     params['config'].set_static_route_kwargs(**static_route_kwargs)
     params['config'].set_dynamic_route_kwargs(**dynamic_route_kwargs)
 
+    # Do samity check that no sources are in dests. This is especially easy 
+    # mistake as earlier versions took the first positional arg to be the 
+    # source
+    for dest in dests:
+        try:
+            d_bucket = params['config'].get_bucket(dest)
+        except Exception:
+            pass
+        else:
+            if any(s == d_bucket for s in sources):
+                cli_error(f"The dest {dest} is also a source!")
+            continue
+        try:
+            static_route = params['config'].get_static_route(dest)
+        except Exception:
+            pass
+        else:
+            for d in static_route.dests:
+                if any(s == d_bucket for s in sources):
+                    cli_error(f"The dest {d} is also a source!")
+            continue
+        try:
+            sel_dest_map = params['config'].get_selector_dest_map(dest)
+        except Exception:
+            pass
+        else:
+            for _, s_dests in sel_dest_map.routing_map:
+                for d in s_dests:
+                    if any(s == d_bucket for s in sources):
+                        cli_error(f"The dest {d} is also a source!")
+            continue
+        cli_error(f"Unknown dest: {dest}")
+
     # Convert dests to routes
     dests = params['config'].get_routes(dests)
 
     # Handle validate option
-    if validate:
-        validators = [make_basic_validator()]
-    else:
-        validators = None
+    #if validate:
+    #    validators = [make_basic_validator()]
+    #else:
+    #    validators = None
 
     # Handle trust-level option
     trust_level = QueryLevel[trust_level.upper()]
@@ -451,13 +498,16 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
                 else:
                     report = None
                 qr_reports.append(report)
-            
-        qrs = [deepcopy(query_res) for _ in sources]
+        
+        if query_res is None:
+            qrs = None
+        else:
+            qrs = [deepcopy(query_res) for _ in sources]
 
         base_kwargs = {'trust_level': trust_level,
                        'force_all': force_all,
                        'keep_errors': keep_errors,
-                       'validators': validators,
+                       #'validators': validators,
                       }
         sm_kwargs = []
         sync_reports = []
@@ -472,7 +522,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             sm_kwargs.append(kwargs)
             sync_reports.append(sync_report)
         
-        asyncio.run(sync_data(sources, dests, query, qrs, qr_reports, sm_kwargs, dry_run))
+        asyncio.run(sync_data(sources, dests, None, qrs, qr_reports, sm_kwargs, dry_run))
 
     for report in sync_reports:
         report.log_issues()
@@ -480,15 +530,32 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             print(report)
 
 
-async def _do_route(local, router):
+async def _do_route(local, router, inactive_timeout=None):
     local_ent = LocalEntity(local)
     event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
-    async with router.route() as route_q:
+    report = DynamicTransferReport()
+    last_update = None
+    if inactive_timeout:
+        last_update = datetime.now()
+        last_reported = 0
+    async with router.route(report=report) as route_q:
         fwd_cb = make_queue_data_cb(route_q)
         async with local_ent.listen(fwd_cb, event_filter=event_filter):
             print("Listener started, hit Ctrl-c to exit")
-            while True:
-                await asyncio.sleep(1.0)
+            try:
+                while True:
+                    await asyncio.sleep(1.0)
+                    if last_update is not None:
+                        n_reported = report.n_reported
+                        if n_reported != last_reported:
+                            last_update = datetime.now()
+                            last_reported = n_reported
+                        elif (datetime.now() - last_update).total_seconds() > inactive_timeout:
+                            print("Timeout due to inactivity")
+                            break
+            finally:
+                print("Listener shutting down")
+
 
 
 @click.command()
@@ -504,10 +571,13 @@ async def _do_route(local, router):
               help="Output format for any local output directories")
 @click.option('--out-file-ext', default='dcm',
               help="File extension for local output directories")
-def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext):
+@click.option('--inactive-timeout', type=int, 
+              help="Stop listening after this many seconds of inactivity")
+def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext,
+            inactive_timeout):
     '''Listen for incoming DICOM files on network and forward to dests
     '''
-    local = params['config'].get_local(local)
+    local = params['config'].get_local_node(local)
     
     # Pass dest options that override config through to the config parser
     params['config'].set_local_dir_kwargs(out_fmt=dir_format, 
@@ -541,7 +611,7 @@ def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext):
     dests = params['config'].get_routes(dests)
 
     router = Router(dests)
-    asyncio.run(_do_route(local, router))
+    asyncio.run(_do_route(local, router, inactive_timeout))
 
 
 def make_print_cb(fmt, elem_filter=None):

@@ -37,7 +37,7 @@ from .query import (QueryLevel, QueryResult, InconsistentDataError, uid_elems,
                     req_elems, opt_elems, choose_level, minimal_copy,
                     get_all_uids)
 from .report import CountableReport, MultiListReport, MultiError, ProgressHookBase
-from .util import json_serializer, JsonSerializable, TomlConfigurable, create_thread_task
+from .util import json_serializer, JsonSerializable, InlineConfigurable, create_thread_task
 
 
 log = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ QR_MODELS = {'PatientRoot' :
 
 @json_serializer
 @dataclass(frozen=True)
-class DcmNode(JsonSerializable, InlineConfigurable):
+class DcmNode(JsonSerializable, InlineConfigurable['DcmNode']):
     '''DICOM network entity info'''
     host: str
     '''Hostname of the node'''
@@ -181,7 +181,7 @@ class DcmNode(JsonSerializable, InlineConfigurable):
         if len(toks) > 3:
             raise ValueError("Too many tokens for node specification: %s" %
                             in_str)
-        res = {'host' : toks[0]}
+        res: Dict[str, Union[str, int]] = {'host' : toks[0]}
         if len(toks) == 3:
             res['ae_title'] = toks[1]
             res['port'] = int(toks[2])
@@ -1167,7 +1167,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             assert event_filter not in self._event_handlers
             assert all(not event_filter.collides(f)
                        for f in self._event_handlers)
-            self._event_handlers[event_filter] = handler
+            self._event_handlers[event_filter] = handler    
             try:
                 yield
             finally:

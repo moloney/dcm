@@ -56,7 +56,7 @@ class JsonSerializable(Protocol):
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> JsonSerializable:
-        return cls(**json_dict)
+        return cls(**json_dict) # type: ignore
 
 
 class _JsonSerializer:
@@ -78,7 +78,7 @@ class _JsonSerializer:
             return self._classes[classname].from_json_dict(d)
         return d
 
-    def encoder_default(self, obj: JsonSerializable) -> Dict[str, Any]:
+    def encoder_default(self, obj: Union[JsonSerializable, Any]) -> Any:
         if hasattr(obj, 'to_json_dict'):
             d = obj.to_json_dict()
             d[self._key] = type(obj).__name__
@@ -95,19 +95,20 @@ class _JsonSerializer:
 json_serializer = _JsonSerializer()
 '''Class decorator for registering JSON serializable objects'''
 
+TC_Type = TypeVar('TC_Type', covariant=True)
 
-class TomlConfigurable(Protocol):
+class TomlConfigurable(Generic[TC_Type], Protocol):
     '''Protocol for objects that are configurable through TOML'''
     @classmethod
-    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> TomlConfigurable:
-        return cls(**toml_dict)
+    def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> TC_Type:
+        return cls(**toml_dict) # type: ignore
 
     @classmethod
-    def from_toml_val(cls, val: Dict[str, Any]) -> TomlConfigurable:
+    def from_toml_val(cls, val: Dict[str, Any]) -> TC_Type:
         return cls.from_toml_dict(val)
 
 
-class InlineConfigurable(TomlConfigurable, Protocol):
+class InlineConfigurable(Generic[TC_Type], TomlConfigurable[TC_Type], Protocol):
     '''Protocol for objects that are TOML and inline configurable'''
 
     @staticmethod
@@ -115,13 +116,13 @@ class InlineConfigurable(TomlConfigurable, Protocol):
         raise NotImplementedError
 
     @classmethod
-    def from_toml_val(cls, val: Union[str, Dict[str, Any]]) -> InlineConfigurable:
+    def from_toml_val(cls, val: Union[str, Dict[str, Any]]) -> TC_Type:
         if isinstance(val, str):
             val = cls.inline_to_dict(val)
         return cls.from_toml_dict(val)
 
 
-PathInputType = Union[bytes, str, 'os.PathLike']
+PathInputType = Union[str, 'os.PathLike']
 
 
 # Generic element type

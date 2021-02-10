@@ -8,6 +8,7 @@ from __future__ import annotations
 import os, enum, logging, asyncio
 from contextlib import asynccontextmanager
 from functools import partial
+from pathlib import Path
 from typing import (Optional, AsyncIterator, Tuple, List, Iterable, Union,
                     Dict, TypeVar, Generic, Any, Type)
 from typing_extensions import Protocol, runtime_checkable
@@ -250,7 +251,7 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
     '''Protocol for most basic data stores
 
     Can just produce one or more DataChunk instances with the
-    `gen_data` method, or store data sets through the `send` method
+    `gen_data` method, or store data sets through the `send` method.
     '''
 
     description: Optional[str] = None
@@ -277,6 +278,20 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
 
     def get_empty_send_report(self) -> T_sreport:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        '''Subclasses must define this.
+        
+        If result doesn't mirror equality/hashing properties, subclasses
+        must override those too.
+        '''
+        raise NotImplementedError
+
+    def __eq__(self, other: object) -> bool:
+        return repr(self) == repr(other)
+
+    def __hash__(self) -> int:
+        return hash(repr(self))
 
 
 @runtime_checkable
@@ -352,6 +367,9 @@ class DcmRepo(DataRepo[DcmNetChunk, MultiListReport[DicomOpReport], DicomOpRepor
 
     def get_empty_oob_report(self) -> MultiListReport[DicomOpReport]:
         return MultiListReport(description=f'-> {self.description}')
+    
+    def __repr__(self) -> str:
+        return f'DcmRepo({self.remote})'
 
 
 class LocalWriteError(Exception):
@@ -431,6 +449,10 @@ class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChun
          TransferMethod.SYMLINK,
          TransferMethod.MOVE)
 
+    @property
+    def root_path(self) -> Path:
+        raise NotImplementedError
+
     @asynccontextmanager
     async def send(self,
                    report: Optional[LocalWriteReport] = None
@@ -444,3 +466,6 @@ class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChun
 
     def get_empty_oob_report(self) -> LocalWriteReport:
         return LocalWriteReport(description=f'-> {self.description}')
+
+    def __repr__(self) -> str:
+        return f'LocalDir({self.root_path})'
