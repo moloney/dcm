@@ -2,6 +2,7 @@
 import os
 from copy import deepcopy
 from pathlib import Path
+import logging
 from typing import Dict, List, Optional, Union, Any, MutableMapping, Set
 
 import toml
@@ -13,6 +14,9 @@ from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .filt import Selector, SingleSelector, MultiSelector, Filter, MultiFilter
 from .route import StaticRoute, DynamicRoute, SelectorDestMap
+
+
+log = logging.getLogger(__name__)
 
 
 class InvalidConfigError(Exception):
@@ -130,17 +134,22 @@ CONFIG_VERSION = 2
 
 
 def get_version(data: MutableMapping[str, Any]) -> int:
-    if 'local_node' in data:
+    if 'local' in data:
         return 1
     return 2
 
 
 def migrate(version: int, data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
     if version < 2:
-        local = data.get('local_node')
-        if local:
-            del data['local_node']
-            data['local_nodes'] = {'default': local}
+        log.info(f"Migrating config from version {version} to version 2")
+        default_local = data.get('local')
+        if default_local is not None:
+            del data['local']
+            data['local_nodes'] = {'default': default_local}
+        remote_nodes = data.get('remotes')
+        if remote_nodes is not None:
+            del data['remotes']
+            data['remote_nodes'] = remote_nodes
     return data
 
 
@@ -174,12 +183,12 @@ class DcmConfig:
         # Handle migrations
         version = get_version(self._raw_conf)
         if version != CONFIG_VERSION:
+            log.warn(f"Config format is out of date, migrating (%s -> %s)", 
+                     version, 
+                     CONFIG_VERSION)
             self._raw_conf = migrate(version, self._raw_conf)
             with self._config_path.open('w') as f:
                 toml.dump(self._raw_conf, f)
-
-        # Parse what we can ahead of time info this dict
-        self._conf: MutableMapping[str, Any] = {}
 
         # Pull out sections from raw config data and do sanity checks
         raw_local = self._raw_conf.get('local_nodes', {})
@@ -220,6 +229,7 @@ class DcmConfig:
                 raise InvalidConfigError(f"Error parsing local_node '{local_name}': {e}'")
         if def_local_name is not None:
             self._default_local = self._local_nodes[def_local_name]
+            log.debug("The default local node is: %s", self._default_local)
         
         # Convert remote_nodes section
         try:

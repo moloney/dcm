@@ -150,7 +150,7 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
     # Create global param dict for subcommands to use
     ctx.obj = {}
     ctx.obj['config_path'] = config
-    ctx.obj['config'] = DcmConfig(config)
+    ctx.obj['config'] = DcmConfig(config, create_if_missing=True)
 
 
 @click.command()
