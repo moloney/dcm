@@ -518,6 +518,7 @@ class SyncManager:
         if not self._extern_report:
             self.report.log_issues()
             self.report.check_errors()
+        self.report.trans_reports.done = True
         self.report.done = True
 
     async def __aenter__(self) -> SyncManager:
@@ -854,6 +855,7 @@ async def sync_data(sources: List[DataBucket[Any, Any]],
         async with AsyncExitStack() as estack:
             sync_tasks: List[asyncio.Task[None]] = []
             for sm, qr in zip(sync_mgrs, query_res):
+                log.info("Processing qr: %s", qr.to_line())
                 await estack.enter_async_context(sm)
                 async for transfer in sm.gen_transfers(qr):
                     if isinstance(transfer, StaticTransfer):
@@ -864,6 +866,9 @@ async def sync_data(sources: List[DataBucket[Any, Any]],
                         dests_str = " / ".join(dests_comps)
                     else:
                         dests_str = "DYNAMIC" # TODO: Something better here?
+                    # Mark transfer reports done to avoid warning when sync report
+                    # is marked done
+                    transfer.report.done = True
                     print('%s > %s' % (transfer.chunk, dests_str))
         log.info("Completed dry-run")
     else:
