@@ -535,7 +535,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             sm_kwargs.append(kwargs)
             sync_reports.append(sync_report)
         
-        asyncio.run(sync_data(sources, dests, None, qrs, qr_reports, sm_kwargs, dry_run))
+        asyncio.run(sync_data(sources, dests, query, qrs, qr_reports, sm_kwargs, dry_run))
 
     for report in sync_reports:
         report.log_issues()
