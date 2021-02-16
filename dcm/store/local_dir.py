@@ -171,7 +171,7 @@ class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
     default_out_fmt = ('{d.PatientID}/'
                        '{d.StudyInstanceUID}/'
                        '{d.Modality}/'
-                       '{d.SeriesNumber:03d}-{d.SeriesDescription}/'
+                       '{d.SeriesNumber:03d}-{d.ProtocolName}/'
                        '{d.SOPInstanceUID}')
     '''Default format for output paths when saving data
     '''
