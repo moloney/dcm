@@ -393,6 +393,8 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     # Build query dataset if needed
     if len(query) != 0 or since is not None or before is not None:
         query = _build_query(query, since, before)
+    else:
+        query = None
     
     # Handle query-result options
     if query_res is None and not sys.stdin.isatty():
@@ -502,7 +504,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     # Setup reporting/progress hooks and do the transfer
     with ExitStack() as estack:
         qr_reports = None
-        if len(query) > 0 or query_res is not None:
+        if query is not None or query_res is not None:
             qr_reports = []
             for src in sources:
                 if not no_progress:
