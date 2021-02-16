@@ -156,7 +156,7 @@ def migrate(version: int, data: MutableMapping[str, Any]) -> MutableMapping[str,
 class DcmConfig:
     '''Capture config and support mixing with external (eg. CLI) options
 
-    The variouse `get_*` methods will tranparently handle inputs that are 
+    The various `get_*` methods will tranparently handle inputs that are 
     named references from the config file, inline configuration strings, or 
     configuration dicts. 
     '''
@@ -420,10 +420,19 @@ class DcmConfig:
                          tuple(self.get_bucket(d) for d in dests)
                          ))
         kwargs['routing_map'] = tuple(rmap)
+        default_dests = kwargs.get('default_dests')
+        if default_dests is not None:
+            kwargs['default_dests'] = tuple(self.get_bucket(d) 
+                                            for d in default_dests)
+        exclude = kwargs.get('exclude')
+        if exclude is not None:
+            kwargs['exclude'] = tuple(self.get_selector(sel) 
+                                      for sel in exclude)
         return SelectorDestMap.from_toml_dict(kwargs)
 
     def get_route(self,
-                  in_val: Union[str, Dict[str, Any]]) -> Union[StaticRoute, DynamicRoute]:
+                  in_val: Union[str, Dict[str, Any]]
+                  ) -> Union[StaticRoute, DynamicRoute]:
         try: 
             return self.get_static_route(in_val)
         except:

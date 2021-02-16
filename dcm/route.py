@@ -220,19 +220,22 @@ class DynamicRoute(Route, _DynamicBase):
 
 @dataclass(frozen=True)
 class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
-    '''Allow construction of dynamic routes from static config file'''
+    '''Allow construction of dynamic routes from static config'''
 
     routing_map: Tuple[Tuple[Selector, Tuple[DataBucket[Any, Any], ...]], ...]
     '''One or more tuples of (selector, dests) pairs'''
+
+    default_dests: Optional[Tuple[DataBucket[Any, Any], ...]] = None
+    '''The default destinations to use when no selectors match'''
+
+    exclude: Optional[Tuple[Selector, ...]] = None
+    '''Exclude data at routing step (versus `filt` which is applied to each image)'''
 
     stop_on_first: bool = True
     '''Just return dests associated with first selector that matches'''
 
     route_level: QueryLevel = QueryLevel.STUDY
     '''The level in the DICOM hierarchy we are making routing decisions at'''
-
-    required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet, init=False)
-    '''DICOM elements that we require to make a routing decision'''
 
     dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
     '''Specify transfer methods for (some) dests
@@ -243,10 +246,11 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
     Only respected when pre-routing is used. Dynamic routing can only proxy.
     '''
 
+    required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet, init=False)
+    '''DICOM elements that we require to make a routing decision'''
+
     filt: Optional[Filter] = None
     '''Steaming data filter for editing and rejecting data sets'''
-
-
 
     def __post_init__(self) -> None:
         req_elems: LazySet[str] = LazySet()
@@ -265,8 +269,10 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
     def get_dynamic_route(self) -> DynamicRoute:
         '''Return equivalent DynamicRoute object'''
         def lookup_func(ds: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
-            if not self.stop_on_first:
-                res: List[DataBucket[Any, Any]] = []
+            res: List[DataBucket[Any, Any]] = []
+            if self.exclude:
+                if any(sel.test_ds(ds) for sel in self.exclude):
+                    return None
             for sel, dests in self.routing_map:
                 if sel.test_ds(ds):
                     if self.stop_on_first:
@@ -274,7 +280,7 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
                     else:
                         res += dests
             if not res:
-                return None
+                return self.default_dests
             return tuple(res)
         
         return DynamicRoute(lookup_func, 
