@@ -284,7 +284,8 @@ class MultiReport(BaseReport):
     def _set_done(self, val: bool) -> None:
         super()._set_done(val)
         if not all(r.done for r in self.gen_reports()):
-            log.warning("Not all sub-reports were marked done before top-level report")
+            log.warning("Not all sub-reports marked done before report: %s", 
+                        self.description)
             # TODO: Raise here?
 
     def _set_depth(self, val: int) -> None:
