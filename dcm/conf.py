@@ -60,7 +60,8 @@ _default_conf = \
 
 ## Optionally add local directories w/ specialized parameters by
 ## defining 'local_dirs'. The example below modifies default 
-## 'out_fmt' to append InstanceNumber to the filename
+## 'out_fmt' to use 'SeriesDescription' instead of the default
+## ('ProtocolName') for naming series level directories
 
 #[local_dirs]
 #
@@ -71,7 +72,7 @@ _default_conf = \
 # {d.StudyInstanceUID}/
 # {d.Modality}/
 # {d.SeriesNumber:03d}-{d.SeriesDescription}/
-# {d.SOPInstanceUID}-{d.InstanceNumber:04d}"""
+# {d.SOPInstanceUID}"""
 
 
 ## Optionally configure remote DICOM repos beyond just the 
