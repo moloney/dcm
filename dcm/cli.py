@@ -15,7 +15,7 @@ from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
 
-from .conf import DcmConfig
+from .conf import DcmConfig, _default_conf
 from .util import aclosing, json_serializer
 from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
@@ -163,17 +163,22 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
 @click.pass_obj
 @click.option('--show', is_flag=True,
               help="Just print the current config contents")
+@click.option('--show-default', is_flag=True,
+              help="Just print the default config contets")
 @click.option('--path', is_flag=True,
               help="Just print the current config path")
-def conf(params, show, path):
+def conf(params, show, show_default, path):
     '''Open the config file with your $EDITOR'''
     config_path = params['config_path']
+    # TODO: Make these mutually exclusive? Or sub-commands?
     if path:
         click.echo(config_path)
     if show:
         with open(config_path, 'r') as f:
             click.echo(f.read())
-    if path or show:
+    if show_default:
+        click.echo(_default_conf)
+    if path or show or show_default:
         return
     err = False
     while True:
