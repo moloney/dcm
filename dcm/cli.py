@@ -104,9 +104,15 @@ debug_filters = {'query_responses' : QueryResponseFilter(),
 @click.option('--quiet',
               is_flag=True,
               default=False,
-              help="Hide WARNING log messages")
+              help="Hide WARNING and below log messages")
+@click.option('--pynetdicom-log-level',
+              type=click.Choice(['DEBUG', 'INFO', 'WARN', 'ERROR'],
+                                case_sensitive=False),
+              default='WARN',
+              help="Control log level for lower level pynetdicom package")
 @click.pass_context
-def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, quiet):
+def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, quiet,
+        pynetdicom_log_level):
     '''High level DICOM file and network operations
     '''
     if quiet:
@@ -118,10 +124,10 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
     def_formatter = logging.Formatter(LOG_FORMAT)
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
-    #pynetdicom_logger = logging.getLogger('pynetdicom')
-    #pynetdicom_logger.setLevel(logging.WARN)
+    pynetdicom_logger = logging.getLogger('pynetdicom')
+    pynetdicom_logger.setLevel(getattr(logging, pynetdicom_log_level))
     stream_formatter = logging.Formatter('%(threadName)s %(name)s %(message)s')
-    stream_handler = RichHandler(show_path=False)
+    stream_handler = RichHandler(enable_link_path=False)
     stream_handler.setFormatter(stream_formatter)
     if debug:
         stream_handler.setLevel(logging.DEBUG)
@@ -169,16 +175,20 @@ def conf(params, show, path):
             click.echo(f.read())
     if path or show:
         return
+    err = False
     while True:
         click.edit(filename=config_path)
         try:
             with open(config_path, 'r') as f:
                 _ = toml.load(f)
         except toml.decoder.TomlDecodeError as e:
+            err = True
             click.echo("The config file contains an error: %s" % e)
             click.echo("The editor will be reopened so you can correct the error")
             click.pause()
         else:
+            if err:
+                click.echo("Config file is now valid")
             break
 
 
@@ -222,7 +232,10 @@ def _build_study_date(since, before):
 def _build_query(query_strs, since, before):
     qdat = Dataset()
     for query_input in query_strs:
-        q_attr, q_val = query_input.split('=')
+        try:
+            q_attr, q_val = query_input.split('=')
+        except Exception:
+            cli_error(f"Invalid query input string: {query_input}")
         setattr(qdat, q_attr, q_val)
     if since is not None or before is not None:
         if hasattr(qdat, 'StudyDate'):
