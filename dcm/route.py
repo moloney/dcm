@@ -61,9 +61,9 @@ class Route:
     input and return one as output. The dataset can be modified and None can be
     returned to reject the dataset.
     '''
+
     filt: Optional[Filter] = None
-    '''Steaming data filter for editing and rejecting data sets'''
-    ''''''
+    '''Streaming data filter for editing and rejecting data sets'''
 
     def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
         '''Return the destintations for the `data set`
@@ -707,6 +707,7 @@ class Router:
         # Nothing to do...
         if len(self._dynamic) == 0:
             return {tuple(self._static) : query_res}
+        log.info("Trying to resolve dynamic routes with queries")
 
         # Iteratively try to extract example data sets with all the elements
         # needed for routing from our QueryResult, while also performing higher
@@ -746,7 +747,7 @@ class Router:
 
         # For any studies where we don't have example data, fetch some
         if len(missing_qr) != 0:
-            log.debug("Fetching example data to make routing decisions")
+            log.info("Fetching example data to resolve dynamic routes")
             async for ds in src.retrieve(missing_qr):
                 route_uid = get_uid(route_level, ds)
                 assert route_uid not in example_data
@@ -767,6 +768,10 @@ class Router:
                     res[sub_routes_tup] = QueryResult(query_res.level)
                 sub_qr = query_res.sub_query(DataNode(route_level, route_uid))
                 res[sub_routes_tup] |= sub_qr
+            else:
+                log.info("Skipping chunk at routing stage: %s", route_uid)
+                # TODO: Track this in report
+        log.info("All dynamic routes have been resolved")
         return res
 
     @asynccontextmanager
@@ -908,5 +913,5 @@ class Router:
         if req_elems.is_enumerable():
             for e in req_elems:
                 setattr(query, e, '')
-        log.debug("The Router._fill_qr method is performing a query")
+        log.info("The Router is perfoming an intial query against the source: %s", src)
         return (query, await src.query(level, query, query_res))
