@@ -33,7 +33,13 @@ install_requires = ['pydicom >= 1.0',
                     ]
 dependency_links = \
     ['https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3']
-tests_require = ['pytest', 'pytest-asyncio', 'pytest-mypy', 'mypy', 'psutil']
+tests_require = ['pytest', 
+                 'pytest-asyncio', 
+                 'pytest-mypy', 
+                 'mypy', 
+                 'psutil',
+                 'tox',
+                 'tox-pyenv']
 
 # Extra requirements for building documentation
 extras_requires = {'doc':  ["sphinx", "numpydoc"],

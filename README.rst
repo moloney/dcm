@@ -107,11 +107,22 @@ a Sqlite database option to manage this is future work).
 Running Tests
 =============
 
-Test dependencies can be installed with the '[tests]' extra and then run with 
-pytest. For example in this directory you could run 
-``pip install .[tests] ; pytest dcm/``. This will also check mypy for errors.
+Test dependencies can be installed with the '[tests]' extra. For example in this 
+directory you could run ``pip install .[tests]``. You can then run the tests with
+``pytest``. This will also check mypy for errors. You can also just run ``mypy`` 
+in this directory (this is orders of magnitude faster than running the full test 
+suite).
+
+If you want to run the full test matrix through ``tox`` locally, it is recommended 
+that you use `pyenv <https://github.com/pyenv/pyenv>`_ to install all the versions 
+listed in ``tox.ini``, then run ``pyenv local <versions>`` where ``<versions>`` is 
+a space separted list of the specific versions to use. Finally you can run ``tox``.
+
+Many tests will be skipped if `dcmtk <https://dicom.offis.de/dcmtk.php.en>`_ is not 
+installed as we use it to provide a test server. Using (the recently released) 
+pynetdicom.apps.qrscp as an alternative test server is a high priority. 
 
 While type hints are used extensively, tests are currently a bit sparse and mostly
 targeted at high-level integration tests (which at least kicks the tires on the 
-lower level stuff). Expanding and improving tests is a great way to contribute for
-anyone interested.
+lower level stuff). Expanding and improving the tests is a great way for anyone 
+interested in contributing to get involved and learn the code base.

@@ -4,4 +4,6 @@ __pycache__
 .eggs
 .mypy_cache/
 *.egg-info/
-
+.tox
+.vscode
+.python-version
