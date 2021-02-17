@@ -107,5 +107,11 @@ a Sqlite database option to manage this is future work).
 Running Tests
 =============
 
-Test dependencies can be installed with the '[tests]' extra (e.g.  You can then run 
-``pytest dcm/`` in this directory. This will also check mypy for errors.
+Test dependencies can be installed with the '[tests]' extra and then run with 
+pytest. For example in this directory you could run 
+``pip install .[tests] ; pytest dcm/``. This will also check mypy for errors.
+
+While type hints are used extensively, tests are currently a bit sparse and mostly
+targeted at high-level integration tests (which at least kicks the tires on the 
+lower level stuff). Expanding and improving tests is a great way to contribute for
+anyone interested.
