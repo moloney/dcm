@@ -241,7 +241,7 @@ class QueryProv:
     themselves when chaining operations
     '''
 
-    src: Optional[JsonSerializable] = None
+    source: Optional[JsonSerializable] = None
     '''The source of this query result'''
 
     queried_elems: Optional[Set[str]] = None
@@ -252,12 +252,12 @@ class QueryProv:
 
     def __bool__(self) -> bool:
         return any(getattr(self, a) is not None
-                   for a in ('src', 'queried_elems', 'removed_existing_on'))
+                   for a in ('source', 'queried_elems', 'removed_existing_on'))
 
     def merged(self, other: QueryProv, keep_attrs: bool) -> QueryProv:
         result = QueryProv()
-        if self.src == other.src:
-            result.src = self.src
+        if self.source == other.source:
+            result.source = self.source
         if (keep_attrs and
             self.queried_elems is not None and
             other.queried_elems is not None
@@ -269,14 +269,14 @@ class QueryProv:
 
 
     def to_json_dict(self) -> Dict[str, Any]:
-        return {'src': self.src,
+        return {'source': self.source,
                 'queried_elems': list(self.queried_elems) if self.queried_elems is not None else None,
                 'removed_existing_on': self.removed_existing_on
                }
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryProv:
-        return cls(json_dict['src'],
+        return cls(json_dict['source'],
                    set(json_dict['queried_elems']),
                    json_dict['removed_existing_on'])
 
@@ -810,7 +810,7 @@ class QueryResult:
         max_level
             The level of detail to include in the result
         '''
-        prov = QueryProv(self.prov.src,
+        prov = QueryProv(self.prov.source,
                          removed_existing_on=self.prov.removed_existing_on)
         if node.level > self._level:
             raise InsufficientQueryLevelError()

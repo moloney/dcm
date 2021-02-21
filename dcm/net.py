@@ -1115,7 +1115,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                             pass
                             #warnings.warn(f"Remote node {remote} doesn't "
                             #              f"support querying on {missing_attr}")
-                    qr.prov.src = remote
+                    qr.prov.source = remote
                     qr.prov.queried_elems = queried_elems.copy()
                     yield qr
             await query_fut
@@ -1181,7 +1181,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         log.debug("Listener lock released")
 
     async def move(self,
-                   src: DcmNode,
+                   source: DcmNode,
                    dest: DcmNode,
                    query_res: QueryResult,
                    transfer_syntax: Optional[SOPList] = None,
@@ -1195,25 +1195,25 @@ class LocalEntity(metaclass=_SingletonEntity):
         
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         # Setup the association
-        query_model = self._choose_qr_model(src, 'move', query_res.level)
+        query_model = self._choose_qr_model(source, 'move', query_res.level)
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
         move_ae = AE(ae_title=self._local.ae_title)
         #TODO: Need different contexts here...
-        assoc = move_ae.associate(src.host,
-                                  src.port,
+        assoc = move_ae.associate(source.host,
+                                  source.port,
                                   QueryRetrievePresentationContexts,
-                                  src.ae_title)
-        
+                                  source.ae_title)
+
         # Setup args for building reports
-        dicom_op = DicomOp(provider=src, user=self._local, op_type='c-move')
+        dicom_op = DicomOp(provider=source, user=self._local, op_type='c-move')
         op_report_attrs = {'dicom_op': dicom_op,
                            'prog_hook': report._prog_hook,
                            }
 
         if not assoc.is_established:
             raise FailedAssociationError("Failed to associate with "
-                                         "remote: %s" % str(src))
+                                         "remote: %s" % str(source))
         try:
             rep_builder_task = \
                 asyncio.create_task(self._multi_report_builder(rep_q.async_q,
