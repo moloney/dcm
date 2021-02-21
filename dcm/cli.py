@@ -508,13 +508,15 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
 
     # Setup reporting/progress hooks and do the transfer
     with ExitStack() as estack:
+        if not no_progress:
+            prog_hook = RichProgressHook(estack.enter_context(Progress(transient=True)))
+
         qr_reports = None
         if query is not None or query_res is not None:
             qr_reports = []
             for src in sources:
                 if not no_progress:
-                    prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
-                    report = MultiListReport(description='init-query', prog_hook=prog)
+                    report = MultiListReport(description='init-query', prog_hook=prog_hook)
                 else:
                     report = None
                 qr_reports.append(report)
@@ -533,10 +535,9 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
         sync_reports = []
         for src in sources:
             if not no_progress:
-                prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+                sync_report = SyncReport(prog_hook=prog_hook)
             else:
-                prog = None
-            sync_report = SyncReport(prog_hook=prog)
+                sync_report = SyncReport()
             kwargs = deepcopy(base_kwargs)
             kwargs['report'] = sync_report
             sm_kwargs.append(kwargs)
