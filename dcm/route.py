@@ -725,31 +725,29 @@ class Router:
         while True:
             new_missing_qr = QueryResult(level=missing_qr.level)
             for pth, sub_uids in missing_qr.walk():
-                if pth.level >= route_level:
-                    if pth.level != query_res.level:
-                        # We only want to visit one sub-element
-                        # TODO: Try to choose one with least instances?
-                        del sub_uids[1:]
-                        continue
-                    lvl_uid = pth.uids[-1]
-                    ds = deepcopy(missing_qr[lvl_uid])
-                    for k in self.required_elems:
-                        # TODO: Some PACS might return a blank field instead of missing the attr?
-                        if k not in ds:
-                            new_missing_qr.add(ds)
-                            break
-                    else:
-                        route_uid = pth.uids[route_level]
-                        assert route_uid not in example_data
-                        example_data[route_uid] = ds
-            if len(new_missing_qr) == 0:
-                missing_qr = new_missing_qr
-                break
-            if missing_qr.level == QueryLevel.IMAGE:
+                if pth.level < route_level:
+                    continue
+                if pth.level != missing_qr.level:
+                    # We only want to visit one sub-element
+                    # TODO: Allow user defined sorting here?
+                    del sub_uids[1:]
+                    continue
+                lvl_uid = pth.uids[-1]
+                ds = deepcopy(missing_qr[lvl_uid])
+                for k in self.required_elems:
+                    if k not in ds:
+                        new_missing_qr.add(ds)
+                        break
+                else:
+                    route_uid = pth.uids[route_level]
+                    assert route_uid not in example_data
+                    example_data[route_uid] = ds
+            missing_qr = new_missing_qr
+            if len(missing_qr) == 0 or missing_qr.level == QueryLevel.IMAGE:
                 break
             missing_qr = await src.query(QueryLevel(missing_qr.level + 1),
                                          query,
-                                         new_missing_qr)
+                                         missing_qr)
 
         # For any studies where we don't have example data, fetch some
         if len(missing_qr) != 0:
