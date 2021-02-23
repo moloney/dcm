@@ -285,7 +285,7 @@ class DicomOpReport(CountableReport):
                         assert self.n_errors < n_error
                         self.errors.append((status, data_set))
         else:
-            if self._has_sub_ops:
+            if self._has_sub_ops or data_set is None:
                 self._final_status = status
                 n_success = getattr(status, sub_op_attrs['completed'], None)
                 if n_success is not None:
