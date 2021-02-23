@@ -130,6 +130,9 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
                 n_inst = 1
             else:
                 n_inst = query_res.n_instances(path.end)
+            if n_inst == 0:
+                # Skip empty studies/series
+                continue
             if n_inst is not None:
                 if n_inst + len(curr_qr) < self.chunk_size:
                     curr_qr |= query_res.sub_query(path.end)
