@@ -1104,20 +1104,21 @@ class QueryResult:
         return '%s Level QR: %s' % (self.level.name, descr)
 
 
-async def chunk_qrs(qr_gen: AsyncIterator[QueryResult],
-                    chunk_size: int = 10) -> AsyncIterator[QueryResult]:
-    '''Generator wrapper that aggregates QueryResults into larger chunks'''
-    try:
-        first = await qr_gen.__anext__()
-    except StopAsyncIteration:
-        return
-    level = first.level
-    res = QueryResult(level)
-    res |= first
-    res_size = 1
-    async for qr in qr_gen:
-        if res_size == chunk_size:
-            yield res
-            res = QueryResult(level)
-            res |= first
-            res_size = 1
+# TODO: Fix this or remove it
+# async def chunk_qrs(qr_gen: AsyncIterator[QueryResult],
+#                     chunk_size: int = 10) -> AsyncIterator[QueryResult]:
+#     '''Generator wrapper that aggregates QueryResults into larger chunks'''
+#     try:
+#         first = await qr_gen.__anext__()
+#     except StopAsyncIteration:
+#         return
+#     level = first.level
+#     res = QueryResult(level)
+#     res |= first
+#     res_size = 1
+#     async for qr in qr_gen:
+#         if res_size == chunk_size:
+#             yield res
+#             res = QueryResult(level)
+#             res |= first
+#             res_size = 1
