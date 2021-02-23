@@ -388,7 +388,7 @@ CMP_OPS = {'==' : operator.eq,
            '<=' : operator.le,
            '>' : operator.gt,
            '>=' : operator.ge,
-           '~=' : lambda l, r: re.match(l, r), 
+           '~=' : lambda l, r: re.match(r, l),
            'in' : lambda l, r: l in r
           }
 
