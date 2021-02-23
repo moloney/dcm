@@ -256,6 +256,9 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
         req_elems: LazySet[str] = LazySet()
         for sel, _ in self.routing_map:
             req_elems |= sel.get_read_elems()
+        if self.exclude:
+            for sel in self.exclude:
+                req_elems |= sel.get_read_elems()
         object.__setattr__(self, 'required_elems', FrozenLazySet(req_elems))
 
     @classmethod
