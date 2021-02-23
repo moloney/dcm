@@ -5,6 +5,7 @@ import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
 from datetime import datetime
+from typing import Optional, Callable, Awaitable
 
 import pydicom
 from pydicom.dataset import Dataset
@@ -548,10 +549,22 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
     for report in sync_reports:
         report.log_issues()
         if not no_report:
-            print(report)
+            click.echo(report)
+            click.echo("\n")
 
 
-async def _do_route(local, router, inactive_timeout=None):
+def _make_route_data_cb(res_q: asyncio.Queue[Dataset]
+                      ) -> Callable[[evt.Event], Awaitable[int]]:
+    '''Return callback that queues dataset/metadata from incoming events'''
+    async def callback(event: evt.Event) -> int:
+        # TODO: Do we need to embed the file_meta here?
+        await res_q.put(event.dataset)
+        return 0x0 # Success
+    return callback
+
+async def _do_route(local: DcmNode,
+                    router: Router,
+                    inactive_timeout: Optional[int]=None) -> None:
     local_ent = LocalEntity(local)
     event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
     report = DynamicTransferReport()
@@ -560,7 +573,7 @@ async def _do_route(local, router, inactive_timeout=None):
         last_update = datetime.now()
         last_reported = 0
     async with router.route(report=report) as route_q:
-        fwd_cb = make_queue_data_cb(route_q)
+        fwd_cb = _make_route_data_cb(route_q)
         async with local_ent.listen(fwd_cb, event_filter=event_filter):
             print("Listener started, hit Ctrl-c to exit")
             try:
@@ -571,9 +584,10 @@ async def _do_route(local, router, inactive_timeout=None):
                         if n_reported != last_reported:
                             last_update = datetime.now()
                             last_reported = n_reported
-                        elif (datetime.now() - last_update).total_seconds() > inactive_timeout:
-                            print("Timeout due to inactivity")
-                            break
+                        elif inactive_timeout is not None:
+                            if (datetime.now() - last_update).total_seconds() > inactive_timeout:
+                                print("Timeout due to inactivity")
+                                break
             finally:
                 print("Listener shutting down")
 

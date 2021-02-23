@@ -785,7 +785,7 @@ class Router:
     async def route(self,
                     keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                     report: Optional[DynamicTransferReport] = None) \
-                        -> AsyncIterator['asyncio.Queue[Dataset]']:
+                        -> AsyncIterator['asyncio.Queue[Optional[Dataset]]']:
         '''Produces queue where datasets can be put for dynamic routing
 
         Parameters
@@ -800,7 +800,7 @@ class Router:
         '''
         if not self.can_dyn_route:
             raise NoValidTransferMethodError()
-        data_q: 'asyncio.Queue[Dataset]' = asyncio.Queue()
+        data_q: 'asyncio.Queue[Optional[Dataset]]' = asyncio.Queue()
         route_task = asyncio.create_task(self._route(data_q,
                                                      keep_errors,
                                                      report)
@@ -813,7 +813,7 @@ class Router:
             await route_task
 
     async def _route(self,
-                     data_q: 'asyncio.Queue[Dataset]',
+                     data_q: 'asyncio.Queue[Optional[Dataset]]',
                      keep_errors: Union[bool, Tuple[IncomingErrorType, ...]],
                      report: Optional[DynamicTransferReport]) -> None:
         if report is None:
@@ -827,17 +827,16 @@ class Router:
             n_pushed = 0
             while True:
                 try:
-                    in_data = await asyncio.wait_for(data_q.get(),
-                                                     min(assoc_cache.next_timeout, 5.0))
+                    ds = await asyncio.wait_for(data_q.get(),
+                                                min(assoc_cache.next_timeout, 5.0))
                 except asyncio.TimeoutError:
                     await assoc_cache.update_cache()
                     continue
                 # TODO: Do we want this? Or should we just use task canceling?
                 #       What happens if a user pushes None accidentally? Just
                 #       use a different sentinel value?
-                if in_data is None:
+                if ds is None:
                     break
-                ds, file_meta = in_data
                 filter_dest_map = self.get_filter_dest_map(ds)
                 n_filt = len([f for f in filter_dest_map if f is not None])
                 # Only make copy of the data set if needed
