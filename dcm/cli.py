@@ -16,8 +16,9 @@ from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
 
-from .conf import DcmConfig, _default_conf
-from .util import aclosing, json_serializer
+from .conf import DcmConfig, _default_conf, NoLocalNodeError
+from .util import str_to_tag, aclosing, json_serializer
+from .lazyset import AllElems, LazySet
 from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
 from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
@@ -33,11 +34,6 @@ from .diff import diff_data_sets
 
 log = logging.getLogger('dcm.cli')
 
-#logging.basicConfig(level=logging.DEBUG)
-#logging.getLogger("asyncio").setLevel(logging.DEBUG)
-
-
-# TODO: We should iteratively produce/consume json in streaming fashion
 
 def cli_error(msg, exit_code=1):
     '''Print msg to stderr and exit with non-zero exit code'''
@@ -130,6 +126,8 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
     stream_formatter = logging.Formatter('%(threadName)s %(name)s %(message)s')
     stream_handler = RichHandler(enable_link_path=False)
     stream_handler.setFormatter(stream_formatter)
+    #logging.getLogger("asyncio").setLevel(logging.DEBUG)
+
     if debug:
         stream_handler.setLevel(logging.DEBUG)
     elif verbose:
@@ -346,7 +344,7 @@ def query(params, remote, query, level, query_res, since, before,
               help="If sub-component counts match at this query level, assume "
               "the data matches. Improves performance but sacrifices accuracy")
 @click.option('--force-all', '-f', is_flag=True, default=False,
-              help="Force all data on src to be transfered, even if it "
+              help="Force all data on the source to be transfered, even if it "
               "appears to already exist on the dest")
 @click.option('--method', '-m', help="Transfer method to use",
               type=click.Choice([m.name for m in TransferMethod],
@@ -364,19 +362,18 @@ def query(params, remote, query, level, query_res, since, before,
               help="Local DICOM network node properties")
 @click.option('--dir-format',
               help="Output format for any local output directories")
-@click.option('--no-recurse', is_flag=True, default=False,
+@click.option('--recurse/--no-recurse', default=None, is_flag=True,
               help="Don't recurse into input directories")
-@click.option('--in-file-ext', default='dcm',
+@click.option('--in-file-ext',
               help="File extension for local input directories")
-@click.option('--out-file-ext', default='dcm',
+@click.option('--out-file-ext',
               help="File extension for local output directories")
-@click.option('--no-progress',
-              is_flag=True,
+@click.option('--no-progress', is_flag=True,
               help="Don't display progress bars")
 @click.option('--no-report', is_flag=True, help="Don't print report")
 def sync(params, dests, source, query, query_res, since, before, edit, edit_json, 
          trust_level, force_all, method, keep_errors, dry_run, local,
-         dir_format, no_recurse, in_file_ext, out_file_ext, no_progress, 
+         dir_format, recurse, in_file_ext, out_file_ext, no_progress,
          no_report):
     '''Sync DICOM data from a one or more sources to one or more destinations
 
@@ -413,24 +410,37 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             query_res = None
 
     # Determine the local node being used
+    try:
     local = params['config'].get_local_node(local)
+    except NoLocalNodeError:
+        local = None
     
     # Pass source options that override config through to the config parser
-    params['config'].set_local_dir_kwargs(recurse=not no_recurse,
-                                          file_ext=in_file_ext)
+    local_dir_kwargs = {}
+    if recurse is not None:
+        local_dir_kwargs['recurse'] = recurse
+    if in_file_ext is not None:
+        local_dir_kwargs['file_ext'] = in_file_ext
+    params['config'].set_local_dir_kwargs(**local_dir_kwargs)
     params['config'].set_net_repo_kwargs(local=local)
     
     # Figure out source info
     if len(source) == 0:
         if query_res is None or query_res.prov.source is None:
             cli_error("No data source specified")
+        if local is None:
+            raise NoLocalNodeError("No local DICOM node configured")
         sources = [NetRepo(local, query_res.prov.source)]
     else:
         sources = [params['config'].get_bucket(s) for s in source]
 
     # Pass dest options that override config through to the config parser
-    params['config'].set_local_dir_kwargs(out_fmt=dir_format, 
-                                          file_ext=out_file_ext)
+    local_dir_kwargs = {}
+    if dir_format is not None:
+        local_dir_kwargs['out_fmt'] = dir_format
+    if out_file_ext is not None:
+        local_dir_kwargs['file_ext'] = out_file_ext
+    params['config'].set_local_dir_kwargs(**local_dir_kwargs)
     
     # Some command line options override route configuration
     static_route_kwargs = {}
@@ -655,31 +665,33 @@ def make_print_cb(fmt, elem_filter=None):
             elem = elem_filter(elem)
             if elem is None:
                 return
-        print(fmt.format(elem=elem))
+        try:
+            print(fmt.format(elem=elem, ds=ds))
+        except Exception:
+            log.warn("Couldn't apply format to elem: %s", elem)
     return print_cb
 
 
-def make_ignore_filter(ignore_ids, ignore_private):
-    ignore_keys = set()
-    ignore_tags = set()
-    for ig_id in ignore_ids:
-        if ig_id[0].isupper():
-            ignore_keys.add(ig_id)
+def _make_elem_filter(include, exclude, exclude_private):
+    if len(include) == 0:
+        include_tags = LazySet(AllElems)
         else:
-            try:
-                group_num, elem_num = [int(x, 0) for x in ig_id.split(',')]
-            except Exception:
-                raise ValueError("Invalid element ID: %s" % ig_id)
-            ignore_tags.add(pydicom.tag.Tag(group_num, elem_num))
-    def ignore_filter(elem):
-        if elem.keyword in ignore_keys:
+        include_tags = set()
+        for in_str in include:
+            include_tags.add(str_to_tag(in_str))
+        include_tags = LazySet(include_tags)
+    exclude_tags = set()
+    for in_str in exclude:
+        exclude_tags.add(str_to_tag(in_str))
+    exclude_tags = LazySet(exclude_tags)
+    include_tags -= exclude_tags
+    def elem_filter(elem):
+        tag = elem.tag
+        if exclude_private and elem.tag.group % 2 == 1:
             return None
-        if elem.tag in ignore_tags:
-            return None
-        if ignore_private and elem.tag.group % 2 == 1:
-            return None
+        if tag in include_tags:
         return elem
-    return ignore_filter
+    return elem_filter
 
 
 @click.command()
@@ -692,28 +704,29 @@ def make_ignore_filter(ignore_ids, ignore_private):
               help="Output format: plain/json")
 @click.option('--plain-fmt',
               default='{elem}',
-              help="Format string applied to each element for 'plain' output")
-@click.option('--ignore', '-i', multiple=True,
-              help='Ignore elements by keyword or tag')
-@click.option('--ignore-private', is_flag=True, default=False,
-              help="Ignore all private elements")
-def dump(params, dcm_files, out_format, plain_fmt, ignore, ignore_private):
+              help="Format string applied to each element for 'plain' output. Can "
+              "reference 'elem' (the pydicom Element) and 'ds' (the pydicom Dataset) "
+              "objects in the format string.")
+@click.option('--include', '-i', multiple=True,
+              help='Include elements by keyword or tag. Default is to include everything')
+@click.option('--exclude', '-e', multiple=True,
+              help='exclude elements by keyword or tag')
+@click.option('--exclude-private', is_flag=True, default=False,
+              help="exclude all private elements")
+def dump(params, dcm_files, out_format, plain_fmt, include, exclude, exclude_private):
     '''Dump contents of DICOM files'''
-    if ignore:
-        ignore_filter = make_ignore_filter(ignore, ignore_private)
-    else:
-        ignore_filter = None
+    elem_filter = _make_elem_filter(include, exclude, exclude_private)
     if out_format == 'plain':
-        print_cb = make_print_cb(plain_fmt, ignore_filter)
+        print_cb = make_print_cb(plain_fmt, elem_filter)
         for pth in dcm_files:
             ds = pydicom.dcmread(pth)
             ds.walk(print_cb)
     elif out_format == 'json':
         for pth in dcm_files:
             ds = pydicom.dcmread(pth)
-            click.echo(json.dumps(normalize(ds, ignore_filter), indent=4))
+            click.echo(json.dumps(normalize(ds, elem_filter), indent=4))
     else:
-        cli.error("Unknown out-format: '%s'" % out_format)
+        cli_error("Unknown out-format: '%s'" % out_format)
 
 
 @click.command()

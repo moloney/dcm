@@ -86,6 +86,7 @@ class RichProgressHook(ProgressHookBase[RichProgressTask]):
 
     def end(self, task: RichProgressTask) -> None:
         if task._task is not None:
+            self._progress.update(task._task, visible=False)
             self._progress.stop_task(task._task)
             task._task = None
         
@@ -113,14 +114,18 @@ class BaseReport:
     '''Abstract base class for all reports'''
     def __init__(self, 
                  description: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  ):
         self._description = description
+        self._meta_data = {} if meta_data is None else meta_data
         self._depth = -1
         self._set_depth(depth)
         self._prog_hook: Optional[ProgressHookBase[Any]] = None
         self._set_prog_hook(prog_hook)
+        self._start_time = datetime.now()
+        self._end_time: Optional[datetime] = None
         self._done = False
 
     @property
@@ -185,8 +190,14 @@ class BaseReport:
 
     def __str__(self) -> str:
         lines = [f'{self.description}:']
+        for k, v in self._meta_data.items():
+            lines.append(f'  * {k}: {v}')
         done_stat = 'COMPLETED' if self._done else 'PENDING'
         lines.append(f'  * status: {done_stat}')
+        lines.append(f'  * start time: {self._start_time}')
+        if self._end_time is not None:
+            lines.append(f'  * end time: {self._end_time}')
+            lines.append(f'  * duration: {self._end_time - self._start_time}')
         has_err = self.has_errors
         has_warn = self.has_warnings
         fail_details = ''
@@ -198,7 +209,7 @@ class BaseReport:
         elif has_warn:
             fail_details = 'warnings detected'
         if fail_details:
-            lines.append(f'  * success: False ({fail_details}')
+            lines.append(f'  * success: False ({fail_details})')
         else:
             lines.append(f'  * success: True')
         return '\n'.join(lines)
@@ -215,6 +226,7 @@ class BaseReport:
         if self._done:
             raise ValueError("Report was already marked done")
         self._done = True
+        self._end_time = datetime.now()
 
     def _set_depth(self, val: int) -> None:
         if val < 0:
@@ -272,20 +284,18 @@ class MultiReport(BaseReport):
     
     def __str__(self) -> str:
         lines = [super().__str__()]
-        if not self.all_success:
             lines.append('\n  Sub-Reports:')
             for rep in self.gen_reports():
-                if rep.all_success:
-                    continue
                 rep_str = str(rep).replace('\n', '\n    ')
                 lines.append(f'    * {rep_str}')
         return '\n'.join(lines)
 
     def _set_done(self, val: bool) -> None:
         super()._set_done(val)
-        if not all(r.done for r in self.gen_reports()):
-            log.warning("Not all sub-reports marked done before report: %s", 
-                        self.description)
+        for sub_report in self.gen_reports():
+            if not sub_report.done:
+                log.warning("Sub-report '%s' not marked done before parent '%s'",
+                            sub_report.description, self.description)
             # TODO: Raise here?
 
     def _set_depth(self, val: int) -> None:
@@ -318,6 +328,7 @@ class CountableReport(BaseReport):
 
     def __init__(self, 
                  description: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0, 
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -325,7 +336,7 @@ class CountableReport(BaseReport):
         self._n_expected = n_expected
         self._n_input = 0
         self._task = None
-        super().__init__(description, depth, prog_hook)
+        super().__init__(description, meta_data, depth, prog_hook)
 
     @property
     def n_expected(self) -> Optional[int]:
@@ -417,10 +428,11 @@ class SummaryReport(MultiReport, CountableReport, Generic[R]):
 
     def __init__(self, 
                  description: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0, 
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,):
-        CountableReport.__init__(self, description, depth, prog_hook, n_expected)
+        CountableReport.__init__(self, description, meta_data, depth, prog_hook, n_expected)
 
     def gen_reports(self) -> Iterator[R]:
         raise NotImplementedError
@@ -498,12 +510,13 @@ class MultiListReport(SummaryReport[R]):
     '''Sequence of reports of the same type'''
     def __init__(self, 
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
                  ):
         self._sub_reports: List[R] = []
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
         
     def __getitem__(self, idx: int) -> R:
         return self._sub_reports[idx]
@@ -553,12 +566,13 @@ class MultiDictReport(SummaryReport[R], Generic[K, R]):
     '''Collection of related reports, each identified with a unique key'''
     def __init__(self, 
                  description: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
                  ):
         self._sub_reports: Dict[K, R] = {}
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
 
     def __getitem__(self, key: K) -> R:
         return self._sub_reports[key]

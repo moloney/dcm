@@ -23,6 +23,10 @@ class InvalidConfigError(Exception):
     '''Raised if invalid configuration is detected'''
 
 
+class NoLocalNodeError(Exception):
+    '''Raised when the local DICOM node info is requested but missing'''
+
+
 _default_conf = \
 '''
 ########################################################
@@ -300,7 +304,7 @@ class DcmConfig:
         '''Get local DcmNode corresponding to `in_val`'''
         if in_val is None:
             if self._default_local is None:
-                raise ValueError("No local nodes defined")
+                raise NoLocalNodeError("No local nodes defined")
             return self._default_local
         return self._get_node(in_val, self._local_nodes)
 

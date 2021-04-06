@@ -123,9 +123,10 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
         no_input = False
         try:
             #TODO: Stop ignoring types when this is fixed: https://github.com/aio-libs/janus/issues/267
-            in_paths = paths_queue.get(timeout=0.2) #type: ignore
+            in_paths = paths_queue.get(timeout=0.5) #type: ignore
         except Empty:
             no_input = True
+            log.debug("Out-of-band worker timed out waiting for data")
         else:
             if in_paths is None:
                 break
@@ -136,7 +137,7 @@ def _oob_transfer_worker(paths_queue: 'janus._SyncQueueProxy[Optional[Tuple[Path
             continue
         in_paths = cast(Tuple[PathInputType, PathInputType], in_paths)
         src, dest = (os.fspath(x) for x in in_paths)
-        log.debug("_oob_transfer_worker got some paths")
+        log.debug("_oob_transfer_worker got some paths: (%s -> %s)", src, dest)
         existing_backup: Optional[Union[str, bytes]] = None
         if os.path.exists(dest):
             if force_overwrite:
@@ -259,6 +260,7 @@ class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
             report = LocalWriteReport()
         else:
             extern_report = True
+        report._meta_data['root_path'] = self._root_path
         send_q: janus.Queue[Dataset] = janus.Queue(10)
         send_fut = create_thread_task(_disk_write_worker,
                                       (send_q.sync_q,
@@ -292,6 +294,7 @@ class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
             report = LocalWriteReport()
         else:
             extern_report = True
+        report._meta_data['root_path'] = self._root_path
         # At least for now, python seeems to lack the ability to define only
         # the required args to a callable while ignoring kwargs
         op: Callable[..., Any]
@@ -304,6 +307,7 @@ class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
         elif method == TransferMethod.SYMLINK:
             op = os.symlink
         oob_q: janus.Queue[Optional[Tuple[PathInputType, PathInputType]]] = janus.Queue(10)
+        log.info("Starting out-of-band transfer worker")
         oob_fut = create_thread_task(_oob_transfer_worker,
                                      (oob_q.sync_q,
                                       op,
@@ -315,8 +319,11 @@ class LocalDir(LocalBucket, InlineConfigurable['LocalDir']):
             if method == TransferMethod.SYMLINK:
                 src_path = os.path.abspath(src_path)
             await oob_q.async_q.put((src_path, dest_path))
+        log.info("About to shutdown oob transfer worker")
         await oob_q.async_q.put(None)
         await oob_fut
+        log.info("Oob transfer worker shutdown, marking report done")
+        report.done = True
         if not extern_report:
             report.log_issues()
             report.check_errors()

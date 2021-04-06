@@ -234,7 +234,7 @@ class DicomOpReport(CountableReport):
         self._n_success = 0
         self._has_sub_ops = False
         self._final_status: Optional[Dataset] = None
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, {'dicom_op': self.dicom_op}, depth, prog_hook, n_expected)
 
     @property
     def n_success(self) -> int:
@@ -257,7 +257,6 @@ class DicomOpReport(CountableReport):
             self.errors.append((status, data_set))
             self.count_input()
             return
-
         status_category = code_to_category(status.Status)
         if status_category == 'Pending':
             self._has_sub_ops = True
@@ -307,7 +306,8 @@ class DicomOpReport(CountableReport):
                         self.warnings.append((status, data_set))
                     elif status_category == 'Failure':
                         self.errors.append((status, data_set))
-                log.debug(f"DicomOpReport ({self.dicom_op.op_type}) got final status after sub-ops, marking self as done")
+                log.debug(f"DicomOpReport (%s <%s> %s) got final status after sub-ops, marking self as done",
+                          self.dicom_op.user, self.dicom_op.op_type, self.dicom_op.provider)
                 self.done = True
             else:
                 if status_category == 'Success':
@@ -378,6 +378,7 @@ class IncomingDataReport(CountableReport):
     '''Generic incoming data report'''
     def __init__(self, 
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -387,7 +388,7 @@ class IncomingDataReport(CountableReport):
         self.retrieved = QueryResult(level=QueryLevel.IMAGE)
         self.inconsistent: List[Tuple[str, ...]] = []
         self.duplicate: List[Tuple[str, ...]] = []
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -441,7 +442,7 @@ class IncomingDataReport(CountableReport):
             if dupe:
                 self.duplicate.append(get_all_uids(data_set))
                 return IncomingErrorType.DUPLICATE in self.keep_errors
-        self.retrieved.add(data_set)
+        self.retrieved.add(minimal_copy(data_set))
         return True
 
     def log_issues(self) -> None:
@@ -514,6 +515,7 @@ class RetrieveReport(IncomingDataReport):
     
     def __init__(self, 
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -524,7 +526,7 @@ class RetrieveReport(IncomingDataReport):
         self.missing: Optional[QueryResult] = None
         self.unexpected: List[Tuple[str, ...]] = []
         self.move_report: MultiListReport[DicomOpReport] = MultiListReport()
-        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def requested(self) -> Optional[QueryResult]:
@@ -853,7 +855,8 @@ class _SingletonEntity(type):
             cls._instances[key] = super(_SingletonEntity, cls).__call__(*args, **kwargs)
         return cls._instances[key]
 
-
+# TODO: Need to set max threads based on number of sources, or somehow be smarter
+#       about it as it is a potential source of deadlocks if too low
 # TODO: Need to listen for association aborted events and handle them
 class LocalEntity(metaclass=_SingletonEntity):
     '''Low level interface to DICOM networking functionality
@@ -873,12 +876,16 @@ class LocalEntity(metaclass=_SingletonEntity):
     def __init__(self,
                  local: DcmNode,
                  transfer_syntaxes: Optional[SOPList] = None,
-                 max_threads: int = 8):
+                 max_threads: int = 32):
         self._local = local
         if transfer_syntaxes is None:
             self._default_ts = ALL_TRANSFER_SYNTAXES[:]
         else:
             self._default_ts = transfer_syntaxes
+        self._ae = AE(ae_title=self._local.ae_title)
+        # Certain operations can be slow to start up
+        self._ae.dimse_timeout = 180
+
         self._thread_pool = ThreadPoolExecutor(max_threads)
         self._listener_lock = FifoLock()
         self._lock_types: Dict[EventFilter, type] = {}
@@ -896,13 +903,10 @@ class LocalEntity(metaclass=_SingletonEntity):
         Returns True if successful, else False.
         '''
         loop = asyncio.get_event_loop()
-        echo_ae = AE(ae_title=self._local.ae_title)
-        assoc = echo_ae.associate(remote.host,
-                                  remote.port,
-                                  VerificationPresentationContexts,
-                                  remote.ae_title)
-        if not assoc.is_established:
-            log.error("Failed to associate with remote: %s" % str(remote))
+        try:
+            assoc = await self._associate(remote, VerificationPresentationContexts)
+        except FailedAssociationError:
+            log.warn("Failed to associae for 'echo'")
             return False
         try:
             status = await loop.run_in_executor(self._thread_pool,
@@ -966,11 +970,13 @@ class LocalEntity(metaclass=_SingletonEntity):
         '''
         if report is None:
             extern_report = False
-            report = MultiListReport()
+            report = MultiListReport(meta_data={'remote': remote, 'level': level})
         else:
             extern_report = True
-        if report.description is None:
+        if report._description is None:
             report.description = 'queries'
+        report._meta_data['remote'] = remote
+        report._meta_data['level'] = level
 
         level, query = self._prep_query(level, query, query_res)
 
@@ -1051,19 +1057,10 @@ class LocalEntity(metaclass=_SingletonEntity):
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
-        # Build an AE to perform the query
-        qr_ae = AE(ae_title=self._local.ae_title)
-
         # TODO: We should be making the association in a seperate thread too, right?
         # Create association with the remote node
-        log.debug("Making association with %s" % (remote,))
-        assoc = qr_ae.associate(remote.host,
-                                remote.port,
-                                QueryRetrievePresentationContexts,
-                                remote.ae_title)
-        if not assoc.is_established:
-            raise FailedAssociationError("Can't associate with remote "
-                                         "node: %s" % str(remote))
+        log.debug("Making association with %s for query" % (remote,))
+        assoc = await self._associate(remote, QueryRetrievePresentationContexts)
 
         # Setup args for building reports
         dicom_op = DicomOp(provider=remote, user=self._local, op_type='c-find')
@@ -1192,20 +1189,20 @@ class LocalEntity(metaclass=_SingletonEntity):
             report = MultiListReport()
         else:
             extern_report = True
+        if report._description is None:
+            report.description = 'move'
+        report._meta_data['source'] = source
+        report._meta_data['dest'] = dest
         
-        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         # Setup the association
         query_model = self._choose_qr_model(source, 'move', query_res.level)
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        move_ae = AE(ae_title=self._local.ae_title)
-        #TODO: Need different contexts here...
-        assoc = move_ae.associate(source.host,
-                                  source.port,
-                                  QueryRetrievePresentationContexts,
-                                  source.ae_title)
+        log.debug(f"About to associate with {source} to move data")
+        assoc = await self._associate(source, QueryRetrievePresentationContexts)
 
-        # Setup args for building reports
+        # Setup queue args for building reports
+        rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         dicom_op = DicomOp(provider=source, user=self._local, op_type='c-move')
         op_report_attrs = {'dicom_op': dicom_op,
                            'prog_hook': report._prog_hook,
@@ -1265,15 +1262,19 @@ class LocalEntity(metaclass=_SingletonEntity):
         else:
             extern_report = True
         report.requested = query_res
+        report._meta_data['remote'] = remote
+
         # TODO: Stop ignoring type errors here once mypy fixes issue #3004
         if keep_errors is not None:
             report.keep_errors = keep_errors # type: ignore
         event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)),
                                    ae_titles=frozenset((remote.ae_title,))
                                   )
-        res_q: asyncio.Queue[Tuple[Dataset, Dataset]] = asyncio.Queue()
+        res_q: asyncio.Queue[Tuple[Dataset, Dataset]] = asyncio.Queue(10)
         retrieve_cb = make_queue_data_cb(res_q)
+        log.debug("The 'retrieve' method is about to start listening")
         async with self.listen(retrieve_cb, event_filter):
+            log.debug("The 'retrieve' method is about to fire up a move task")
             move_task = asyncio.create_task(self.move(remote,
                                                       self._local,
                                                       query_res,
@@ -1296,7 +1297,9 @@ class LocalEntity(metaclass=_SingletonEntity):
                 # Remove any Group 0x0002 elements that may have been included
                 ds = ds[0x00030000:]
                 # Add the file_meta to the data set and yield it
-                file_meta.ImplementationVersionName = __version__
+                # TODO: Get implementation UID and set it here
+                #file_meta.ImplementationUID = ...
+                #file_meta.ImplementationVersionName = __version__
                 ds.file_meta = file_meta
                 ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
                 ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR
@@ -1349,15 +1352,10 @@ class LocalEntity(metaclass=_SingletonEntity):
         report.dicom_op.op_type = 'c-store'
         send_q: janus.Queue[Dataset] = janus.Queue(10)
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
-        send_ae = AE(ae_title=self._local.ae_title)
+
         log.debug(f"About to associate with {remote} to send data")
-        assoc = send_ae.associate(remote.host,
-                                  remote.port,
-                                  default_store_scu_pcs,
-                                  remote.ae_title)
-        if not assoc.is_established:
-            raise FailedAssociationError("Failed to associate with "
-                                         "remote: %s" % str(remote))
+        assoc = await self._associate(remote, default_store_scu_pcs)
+
         try:
             rep_builder_task = \
                 asyncio.create_task(self._single_report_builder(rep_q.async_q,
@@ -1400,7 +1398,10 @@ class LocalEntity(metaclass=_SingletonEntity):
         async for ds in self.retrieve(remote, query_res, report=report):
             out_path = str(dest_dir / ds.SOPInstanceUID) + '.dcm'
             await loop.run_in_executor(self._thread_pool,
-                                       partial(pydicom.dcmwrite, out_path, ds))
+                                       partial(pydicom.dcmwrite,
+                                               out_path,
+                                               ds,
+                                               write_like_original=False))
             out_files.append(out_path)
         return out_files
 
@@ -1418,6 +1419,23 @@ class LocalEntity(metaclass=_SingletonEntity):
                                                         str(src_path))
                                                )
                 await send_q.put(ds)
+
+    async def _associate(self,
+                         remote: DcmNode,
+                         pres_contexts: List[PresentationContext]
+                         ) -> Association:
+        loop = asyncio.get_event_loop()
+        assoc = await loop.run_in_executor(self._thread_pool,
+                                           self._ae.associate,
+                                           remote.host,
+                                           remote.port,
+                                           pres_contexts,
+                                           remote.ae_title)
+        if not assoc.is_established:
+            raise FailedAssociationError("Failed to associate with remote: %s",
+                                         str(remote))
+        log.debug("Successfully associated with remote: %s", remote)
+        return assoc
 
     def _prep_query(self,
                     level: Optional[QueryLevel],
@@ -1457,6 +1475,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         log.debug("Starting a threaded listener")
         # TODO: How to handle presentation contexts in generic way?
         ae = AE(ae_title=self._local.ae_title)
+        ae.dimse_timeout = 180
         for context in presentation_contexts:
             ae.add_supported_context(context.abstract_syntax,
                                      self._default_ts)
@@ -1509,6 +1528,11 @@ class LocalEntity(metaclass=_SingletonEntity):
         while True:
             res = await res_q.get()
             if res is None:
+                if not curr_op_report.done:
+                    if len(curr_op_report) != 0:
+                        pass
+                        #import pdb ; pdb.set_trace()
+                    curr_op_report.done = True
                 report.done = True
                 break
             if curr_op_report.done:

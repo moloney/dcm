@@ -336,6 +336,7 @@ class ProxyReport(CountableReport):
 
     def __init__(self, 
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -346,7 +347,7 @@ class ProxyReport(CountableReport):
         self.inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
         self.duplicate: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
         self._n_success = 0
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
@@ -474,6 +475,7 @@ class DynamicTransferReport(ProxyReport):
     '''Track what data is being routed where and any store results'''
     def __init__(self, 
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -481,7 +483,7 @@ class DynamicTransferReport(ProxyReport):
                  ):
         self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = \
             MultiDictReport(prog_hook=prog_hook)
-        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def n_success(self) -> int:

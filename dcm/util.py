@@ -13,6 +13,8 @@ from typing import (AsyncGenerator, Any, AsyncIterator, Dict, List, TypeVar,
 from typing_extensions import Protocol
 
 from pydicom import Dataset
+from pydicom.tag import Tag
+from pydicom.datadict import tag_for_keyword
 from rich.progress import Progress, Task
 
 
@@ -25,6 +27,20 @@ def dict_to_ds(data_dict: Dict[str, Any]) -> Dataset:
     for k, v in data_dict.items():
         setattr(ds, k, v)
     return ds
+
+
+def str_to_tag(in_str: str) -> Tag:
+    '''Convert string representation to pydicom Tag
+
+    The string can be a keyword, or two numbers separated by a comma
+    '''
+    if in_str[0].isupper():
+        return tag_for_keyword(in_str)
+    try:
+        group_num, elem_num = [int(x.strip(), 0) for x in in_str.split(',')]
+    except Exception:
+        raise ValueError("Invalid element ID: %s" % in_str)
+    return Tag(group_num, elem_num)
 
 
 class DicomDataError(Exception):

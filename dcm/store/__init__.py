@@ -114,7 +114,8 @@ class DcmNetChunk(RepoChunk):
             rep_descr = None
         else:
             rep_descr = description + '-retrieve'
-        self.report = RetrieveReport(description=rep_descr, n_expected=self.n_expected)
+        self.report = RetrieveReport(description=rep_descr,
+                                     n_expected=self.n_expected)
 
     def __repr__(self) -> str:
         return f'DcmNetChunk({self.repo}, {self.qr})'
@@ -150,14 +151,14 @@ class LocalIncomingReport(IncomingDataReport):
 
     def __init__(self, 
                  description: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
                  keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
                  ):
         self.invalid: List[PathInputType] = []
-        super().__init__(description, depth, prog_hook, n_expected, keep_errors)
-    '''Track any paths that were determined to not be valid DICOM files'''
+        super().__init__(description, meta_data, depth, prog_hook, n_expected, keep_errors)
 
     @property
     def n_input(self) -> int:
@@ -212,7 +213,10 @@ class LocalChunk(DataChunk):
             rep_descr = str(os.path.dirname(self.files[0])) + ' ...'
         else:
             rep_descr = description + '-incoming'
-        self.report = LocalIncomingReport(description=rep_descr, n_expected=self.n_expected)
+        self.report = LocalIncomingReport(description=rep_descr,
+                                          meta_data={'first_file': self.files[0],
+                                                     'last_file': self.files[-1]},
+                                          n_expected=self.n_expected)
 
     @property
     def n_expected(self) -> Optional[int]:
@@ -237,6 +241,7 @@ class LocalChunk(DataChunk):
             if not self.report.add(ds):
                 continue
             yield f, ds
+        self.report.done = True
 
 
 T_chunk = TypeVar('T_chunk', bound=DataChunk, covariant=True)
@@ -257,6 +262,8 @@ class DataBucket(Generic[T_chunk, T_sreport], Protocol):
     description: Optional[str] = None
 
     _supported_methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
+
+    _streaming_methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
 
     @property
     def n_chunks(self) -> Optional[int]:
@@ -339,6 +346,13 @@ class OobCapable(Generic[T_oob_chunk, T_oob_report], Protocol):
         '''Perform out-of-band transfer instead of proxying data'''
         raise NotImplementedError
 
+    async def oob_send(self,
+                       method: TransferMethod, chunk: T_oob_chunk,
+                       report: T_oob_report = None
+                       ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+        '''Produce queue for streaming out-of-band transfer'''
+        raise NotImplementedError
+
     def get_empty_oob_report(self) -> T_oob_report:
         raise NotImplementedError
 
@@ -363,10 +377,10 @@ class DcmRepo(DataRepo[DcmNetChunk, MultiListReport[DicomOpReport], DicomOpRepor
         yield
 
     def get_empty_send_report(self) -> DicomOpReport:
-        return DicomOpReport(description=f'-> {self.description}')
+        return DicomOpReport()
 
     def get_empty_oob_report(self) -> MultiListReport[DicomOpReport]:
-        return MultiListReport(description=f'-> {self.description}')
+        return MultiListReport(description='OutOfBandTransfer', meta_data={'remote': self.remote})
     
     def __repr__(self) -> str:
         return f'DcmRepo({self.remote})'
@@ -387,6 +401,7 @@ class LocalWriteReport(CountableReport):
 
     def __init__(self,
                  description: Optional[str] = None, 
+                 meta_data: Optional[Dict[str, Any]] = None,
                  depth: int = 0,
                  prog_hook: Optional[ProgressHookBase[Any]] = None,
                  n_expected: Optional[int] = None,
@@ -394,7 +409,7 @@ class LocalWriteReport(CountableReport):
         self.write_errors: Dict[Exception, List[PathInputType]] = {}
         self.successful: List[PathInputType] = []
         self.skipped: List[PathInputType] = []
-        super().__init__(description, depth, prog_hook, n_expected)
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
 
     @property
     def n_success(self) -> int:
@@ -449,6 +464,12 @@ class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChun
          TransferMethod.SYMLINK,
          TransferMethod.MOVE)
 
+    _streaming_methods: Tuple[TransferMethod, ...] = \
+        (TransferMethod.PROXY,
+         TransferMethod.LINK,
+         TransferMethod.SYMLINK,
+         TransferMethod.MOVE)
+
     @property
     def root_path(self) -> Path:
         raise NotImplementedError
@@ -462,10 +483,10 @@ class LocalBucket(DataBucket[LocalChunk, LocalWriteReport], OobCapable[LocalChun
         yield
 
     def get_empty_send_report(self) -> LocalWriteReport:
-        return LocalWriteReport(description=f'-> {self.description}')
+        return LocalWriteReport(meta_data={'root_path': self.root_path})
 
     def get_empty_oob_report(self) -> LocalWriteReport:
-        return LocalWriteReport(description=f'-> {self.description}')
+        return LocalWriteReport(meta_data={'root_path': self.root_path})
 
     def __repr__(self) -> str:
         return f'LocalDir({self.root_path})'
