@@ -1,21 +1,44 @@
-'''Define static/dynamic routes for copying DICOM data between storage abstractions'''
+"""Define static/dynamic routes for copying DICOM data between storage abstractions"""
 from __future__ import annotations
 import asyncio, logging
 from copy import copy, deepcopy
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import (Optional, Tuple, Callable, Dict, List, Union, Iterable,
-                    AsyncIterator, AsyncContextManager, Any, cast)
+from typing import (
+    Optional,
+    Tuple,
+    Callable,
+    Dict,
+    List,
+    Union,
+    Iterable,
+    AsyncIterator,
+    AsyncContextManager,
+    Any,
+    cast,
+)
 from contextlib import asynccontextmanager
 
 import janus
 from pydicom import Dataset
 
 from .lazyset import LazySet, FrozenLazySet
-from .query import (QueryLevel, QueryResult, DataNode, InconsistentDataError,
-                    get_uid, minimal_copy)
+from .query import (
+    QueryLevel,
+    QueryResult,
+    DataNode,
+    InconsistentDataError,
+    get_uid,
+    minimal_copy,
+)
 from .filt import Filter, DataTransform, get_transform, Selector
-from .report import CountableReport, MultiListReport, MultiDictReport, MultiKeyedError, ProgressHookBase
+from .report import (
+    CountableReport,
+    MultiListReport,
+    MultiDictReport,
+    MultiKeyedError,
+    ProgressHookBase,
+)
 from .util import DuplicateDataError, TomlConfigurable
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
 from .store import DataBucket, DataRepo, TransferMethod, LocalWriteReport
@@ -25,8 +48,14 @@ log = logging.getLogger(__name__)
 
 
 class NoValidTransferMethodError(Exception):
-    '''Error raised when we are unable to select a valid transfer method'''
-    def __init__(self, src_dest_pair: Optional[Tuple[DataBucket[Any, Any], DataBucket[Any, Any]]]=None):
+    """Error raised when we are unable to select a valid transfer method"""
+
+    def __init__(
+        self,
+        src_dest_pair: Optional[
+            Tuple[DataBucket[Any, Any], DataBucket[Any, Any]]
+        ] = None,
+    ):
         self.src_dest_pair = src_dest_pair
 
     def __str__(self) -> str:
@@ -53,22 +82,24 @@ class NoValidTransferMethodError(Exception):
 #       function?
 @dataclass(frozen=True)
 class Route:
-    '''Abstract base class for all Routes
+    """Abstract base class for all Routes
 
     The main functionality of routes is to map datasets to destinations.
 
     Routes can have a filter associated with them, which take a dataset as
     input and return one as output. The dataset can be modified and None can be
     returned to reject the dataset.
-    '''
+    """
 
     filt: Optional[Filter] = None
-    '''Streaming data filter for editing and rejecting data sets'''
+    """Streaming data filter for editing and rejecting data sets"""
 
-    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
-        '''Return the destintations for the `data set`
+    def get_dests(
+        self, data_set: Dataset
+    ) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
+        """Return the destintations for the `data set`
 
-        Must be implemented by all subclasses.'''
+        Must be implemented by all subclasses."""
         raise NotImplementedError
 
     def get_filtered(self, data_set: Dataset) -> Optional[Dataset]:
@@ -80,20 +111,21 @@ class Route:
 @dataclass(frozen=True)
 class _StaticBase:
     dests: Tuple[DataBucket[Any, Any], ...]
-    '''Static tuple of destinations'''
+    """Static tuple of destinations"""
 
     methods: Tuple[TransferMethod, ...] = (TransferMethod.PROXY,)
-    '''The transfer methods to use, in order of preference
+    """The transfer methods to use, in order of preference
 
     This will automatically be paired down to the methods supported by all the
     dests (or just allow PROXY if we have a filter). If no valid transfer
     methods are given a `NoValidTransferMethodError` will be raised.
-    '''
+    """
 
 
 @dataclass(frozen=True)
-class StaticRoute(Route, _StaticBase, TomlConfigurable['StaticRoute']):
-    '''Static route that sends all (unfiltered) data to same dests'''
+class StaticRoute(Route, _StaticBase, TomlConfigurable["StaticRoute"]):
+    """Static route that sends all (unfiltered) data to same dests"""
+
     def __post_init__(self) -> None:
         if self.filt is not None:
             if TransferMethod.PROXY not in self.methods:
@@ -106,15 +138,15 @@ class StaticRoute(Route, _StaticBase, TomlConfigurable['StaticRoute']):
                     avail_methods.append(meth)
             if len(avail_methods) == 0:
                 raise NoValidTransferMethodError()
-        object.__setattr__(self, 'dests', tuple(self.dests))
-        object.__setattr__(self, 'methods', tuple(avail_methods))
+        object.__setattr__(self, "dests", tuple(self.dests))
+        object.__setattr__(self, "methods", tuple(avail_methods))
 
     @classmethod
     def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> StaticRoute:
         kwargs = deepcopy(toml_dict)
-        methods = kwargs.get('methods')
+        methods = kwargs.get("methods")
         if methods is not None:
-            kwargs['methods'] = tuple(TransferMethod[m.upper()] for m in methods)
+            kwargs["methods"] = tuple(TransferMethod[m.upper()] for m in methods)
         return cls(**kwargs)
 
     def get_dests(self, data_set: Dataset) -> Tuple[DataBucket[Any, Any], ...]:
@@ -127,39 +159,44 @@ class StaticRoute(Route, _StaticBase, TomlConfigurable['StaticRoute']):
         raise NoValidTransferMethodError()
 
     def __str__(self) -> str:
-        return 'Static: %s' % ','.join(str(d) for d in self.dests)
+        return "Static: %s" % ",".join(str(d) for d in self.dests)
 
 
 @dataclass(frozen=True)
 class _DynamicBase:
     lookup: Callable[[Dataset], Optional[Tuple[DataBucket[Any, Any], ...]]]
-    '''Callable takes a dataset and returns destinations'''
+    """Callable takes a dataset and returns destinations"""
 
     route_level: QueryLevel = QueryLevel.STUDY
-    '''The level in the DICOM hierarchy we are making routing decisions at'''
+    """The level in the DICOM hierarchy we are making routing decisions at"""
 
     required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet)
-    '''DICOM elements that we require to make a routing decision'''
+    """DICOM elements that we require to make a routing decision"""
 
-    dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
-    '''Specify transfer methods for (some) dests
+    dest_methods: Optional[
+        Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]
+    ] = None
+    """Specify transfer methods for (some) dests
 
     Use `None` as the key to specify the default transfer methods for all dests
     not explicitly listed.
 
     Only respected when pre-routing is used. Dynamic routing can only proxy.
-    '''
+    """
 
 
 @dataclass(frozen=True)
 class DynamicRoute(Route, _DynamicBase):
-    '''Dynamic route which determines destinations based on the data.
+    """Dynamic route which determines destinations based on the data.
 
     Routing decisions are made before applying the filter to the data.
-    '''
+    """
+
     def __post_init__(self) -> None:
         if self.dest_methods is not None:
-            avail_meths: Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]] = {}
+            avail_meths: Dict[
+                Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]
+            ] = {}
             for dest, methods in self.dest_methods.items():
                 if self.filt is not None:
                     if TransferMethod.PROXY not in methods:
@@ -172,31 +209,33 @@ class DynamicRoute(Route, _DynamicBase):
                     if len(meths) == 0:
                         raise NoValidTransferMethodError()
                     avail_meths[dest] = meths
-            object.__setattr__(self,
-                               'dest_methods',
-                               avail_meths)
+            object.__setattr__(self, "dest_methods", avail_meths)
         if self.route_level not in QueryLevel:
             raise ValueError("Invalid route_level: %s" % self.route_level)
         if not isinstance(self.required_elems, FrozenLazySet):
-            object.__setattr__(self,
-                               'required_elems',
-                               FrozenLazySet(self.required_elems))
+            object.__setattr__(
+                self, "required_elems", FrozenLazySet(self.required_elems)
+            )
 
-    def get_dests(self, data_set: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
+    def get_dests(
+        self, data_set: Dataset
+    ) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
         dests = self.lookup(data_set)
         if dests is None:
             return None
         return tuple(dests)
 
     def get_static_routes(self, data_set: Dataset) -> Optional[Tuple[StaticRoute, ...]]:
-        '''Resolve this dynamic route into one or more static routes'''
+        """Resolve this dynamic route into one or more static routes"""
         dests = self.lookup(data_set)
         if dests is None:
             return dests
         dests = tuple(dests)
 
         if self.dest_methods is not None:
-            meths_dests_map: Dict[Tuple[TransferMethod, ...], List[DataBucket[Any, Any]]] = {}
+            meths_dests_map: Dict[
+                Tuple[TransferMethod, ...], List[DataBucket[Any, Any]]
+            ] = {}
             default_methods = self.dest_methods.get(None)
             if default_methods is None:
                 default_methods = (TransferMethod.PROXY,)
@@ -207,50 +246,54 @@ class DynamicRoute(Route, _DynamicBase):
                 if d_methods not in meths_dests_map:
                     meths_dests_map[d_methods] = []
                 meths_dests_map[d_methods].append(dest)
-            return tuple(StaticRoute(tuple(sub_dests),
-                                     filt=deepcopy(self.filt),
-                                     methods=meths)
-                         for meths, sub_dests in meths_dests_map.items())
+            return tuple(
+                StaticRoute(tuple(sub_dests), filt=deepcopy(self.filt), methods=meths)
+                for meths, sub_dests in meths_dests_map.items()
+            )
         else:
             return (StaticRoute(dests, filt=deepcopy(self.filt)),)
 
     def __str__(self) -> str:
-        return 'Dynamic on: %s' % self.required_elems
+        return "Dynamic on: %s" % self.required_elems
 
 
 @dataclass(frozen=True)
-class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
-    '''Allow construction of dynamic routes from static config'''
+class SelectorDestMap(TomlConfigurable["SelectorDestMap"]):
+    """Allow construction of dynamic routes from static config"""
 
     routing_map: Tuple[Tuple[Selector, Tuple[DataBucket[Any, Any], ...]], ...]
-    '''One or more tuples of (selector, dests) pairs'''
+    """One or more tuples of (selector, dests) pairs"""
 
     default_dests: Optional[Tuple[DataBucket[Any, Any], ...]] = None
-    '''The default destinations to use when no selectors match'''
+    """The default destinations to use when no selectors match"""
 
     exclude: Optional[Tuple[Selector, ...]] = None
-    '''Exclude data at routing step (versus `filt` which is applied to each image)'''
+    """Exclude data at routing step (versus `filt` which is applied to each image)"""
 
     stop_on_first: bool = True
-    '''Just return dests associated with first selector that matches'''
+    """Just return dests associated with first selector that matches"""
 
     route_level: QueryLevel = QueryLevel.STUDY
-    '''The level in the DICOM hierarchy we are making routing decisions at'''
+    """The level in the DICOM hierarchy we are making routing decisions at"""
 
-    dest_methods: Optional[Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]] = None
-    '''Specify transfer methods for (some) dests
+    dest_methods: Optional[
+        Dict[Optional[DataBucket[Any, Any]], Tuple[TransferMethod, ...]]
+    ] = None
+    """Specify transfer methods for (some) dests
 
     Use `None` as the key to specify the default transfer methods for all dests
     not explicitly listed.
 
     Only respected when pre-routing is used. Dynamic routing can only proxy.
-    '''
+    """
 
-    required_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet, init=False)
-    '''DICOM elements that we require to make a routing decision'''
+    required_elems: FrozenLazySet[str] = field(
+        default_factory=FrozenLazySet, init=False
+    )
+    """DICOM elements that we require to make a routing decision"""
 
     filt: Optional[Filter] = None
-    '''Steaming data filter for editing and rejecting data sets'''
+    """Steaming data filter for editing and rejecting data sets"""
 
     def __post_init__(self) -> None:
         req_elems: LazySet[str] = LazySet()
@@ -259,18 +302,19 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
         if self.exclude:
             for sel in self.exclude:
                 req_elems |= sel.get_read_elems()
-        object.__setattr__(self, 'required_elems', FrozenLazySet(req_elems))
+        object.__setattr__(self, "required_elems", FrozenLazySet(req_elems))
 
     @classmethod
     def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> SelectorDestMap:
         kwargs = deepcopy(toml_dict)
-        route_level = kwargs.get('route_level')
+        route_level = kwargs.get("route_level")
         if route_level is not None:
-            kwargs['route_level'] = QueryLevel[route_level.upper()]
+            kwargs["route_level"] = QueryLevel[route_level.upper()]
         return cls(**kwargs)
 
     def get_dynamic_route(self) -> DynamicRoute:
-        '''Return equivalent DynamicRoute object'''
+        """Return equivalent DynamicRoute object"""
+
         def lookup_func(ds: Dataset) -> Optional[Tuple[DataBucket[Any, Any], ...]]:
             res: List[DataBucket[Any, Any]] = []
             if self.exclude:
@@ -285,27 +329,31 @@ class SelectorDestMap(TomlConfigurable['SelectorDestMap']):
             if not res:
                 return self.default_dests
             return tuple(res)
-        
-        return DynamicRoute(lookup_func, 
-                            route_level=self.route_level, 
-                            required_elems=self.required_elems, 
-                            dest_methods=self.dest_methods,
-                            filt=self.filt)
+
+        return DynamicRoute(
+            lookup_func,
+            route_level=self.route_level,
+            required_elems=self.required_elems,
+            dest_methods=self.dest_methods,
+            filt=self.filt,
+        )
 
 
 class ProxyTransferError(Exception):
-    def __init__(self,
-                 store_errors: Optional[MultiKeyedError] = None,
-                 inconsistent: Optional[Dict[StaticRoute, List[Tuple[Dataset, Dataset]]]] = None,
-                 duplicate: Optional[Dict[StaticRoute, List[Tuple[Dataset, Dataset]]]] = None,
-                 incoming_error: Optional[IncomingDataError] = None):
+    def __init__(
+        self,
+        store_errors: Optional[MultiKeyedError] = None,
+        inconsistent: Optional[Dict[StaticRoute, List[Tuple[Dataset, Dataset]]]] = None,
+        duplicate: Optional[Dict[StaticRoute, List[Tuple[Dataset, Dataset]]]] = None,
+        incoming_error: Optional[IncomingDataError] = None,
+    ):
         self.store_errors = store_errors
         self.inconsistent = inconsistent
         self.duplicate = duplicate
         self.incoming_error = incoming_error
 
     def __str__(self) -> str:
-        res = ['ProxyTransferError:']
+        res = ["ProxyTransferError:"]
         if self.inconsistent is not None:
             res.append("%d inconsistent data sets" % len(self.inconsistent))
         if self.duplicate is not None:
@@ -315,7 +363,7 @@ class ProxyTransferError(Exception):
                 res.append(str(err))
         if self.incoming_error is not None:
             res.append(str(self.incoming_error))
-        return '\n\t'.join(res)
+        return "\n\t".join(res)
 
 
 # TODO: Some annoying overlap with IncomingDataReport here, but not clear we
@@ -332,17 +380,18 @@ class ProxyTransferError(Exception):
 #       happens in a RetrieveReport
 #
 class ProxyReport(CountableReport):
-    '''Abstract base class for reports on proxy transfers'''
+    """Abstract base class for reports on proxy transfers"""
 
-    def __init__(self, 
-                 description: Optional[str] = None, 
-                 meta_data: Optional[Dict[str, Any]] = None,
-                 depth: int = 0,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None,
-                 n_expected: Optional[int] = None,
-                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                 ):
-        self.keep_errors = keep_errors #type: ignore
+    def __init__(
+        self,
+        description: Optional[str] = None,
+        meta_data: Optional[Dict[str, Any]] = None,
+        depth: int = 0,
+        prog_hook: Optional[ProgressHookBase[Any]] = None,
+        n_expected: Optional[int] = None,
+        keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+    ):
+        self.keep_errors = keep_errors  # type: ignore
         self.sent: Dict[StaticRoute, DataTransform] = {}
         self.inconsistent: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
         self.duplicate: Dict[StaticRoute, List[Tuple[Dataset, Dataset]]] = {}
@@ -351,7 +400,7 @@ class ProxyReport(CountableReport):
 
     @property
     def keep_errors(self) -> Tuple[IncomingErrorType, ...]:
-        '''Whether or not we are forwarding inconsistent/duplicate data'''
+        """Whether or not we are forwarding inconsistent/duplicate data"""
         return self._keep_errors
 
     @keep_errors.setter
@@ -384,14 +433,11 @@ class ProxyReport(CountableReport):
 
     @property
     def n_sent(self) -> int:
-        '''Number of times datasets were sent out'''
-        res = sum(len(trans.new) * len(sr.dests)
-                  for sr, trans in self.sent.items())
+        """Number of times datasets were sent out"""
+        res = sum(len(trans.new) * len(sr.dests) for sr, trans in self.sent.items())
         if self.keep_errors:
-            res += sum(len(x) * len(sr.dests)
-                       for sr, x in self.inconsistent.items())
-            res += sum(len(x) * len(sr.dests)
-                       for sr, x in self.duplicate.items())
+            res += sum(len(x) * len(sr.dests) for sr, x in self.inconsistent.items())
+            res += sum(len(x) * len(sr.dests) for sr, x in self.duplicate.items())
         return res
 
     @property
@@ -404,22 +450,20 @@ class ProxyReport(CountableReport):
 
     @property
     def n_reported(self) -> int:
-        '''Number store results that have been reported so far'''
+        """Number store results that have been reported so far"""
         raise NotImplementedError
 
     @property
     def all_reported(self) -> bool:
-        '''True if all sent data sets have a reported result
-        '''
+        """True if all sent data sets have a reported result"""
         assert self.n_reported <= self.n_sent
         return self.n_sent == self.n_reported
 
     def add(self, route: StaticRoute, old_ds: Dataset, new_ds: Dataset) -> bool:
-        '''Add the route with pre/post filtering dataset to the report'''
+        """Add the route with pre/post filtering dataset to the report"""
         self.count_input()
         if route not in self.sent:
-            self.sent[route] = get_transform(QueryResult(QueryLevel.IMAGE),
-                                             route.filt)
+            self.sent[route] = get_transform(QueryResult(QueryLevel.IMAGE), route.filt)
         try:
             self.sent[route].add(old_ds, new_ds)
         except InconsistentDataError:
@@ -437,7 +481,7 @@ class ProxyReport(CountableReport):
         return True
 
     def log_issues(self) -> None:
-        '''Produce log messages for any warning/error statuses'''
+        """Produce log messages for any warning/error statuses"""
         n_inconsist = self.n_inconsistent
         if n_inconsist:
             if self.keep_errors:
@@ -452,7 +496,7 @@ class ProxyReport(CountableReport):
                 log.error("Skipped %d duplicate data sets" % n_duplicate)
 
     def check_errors(self) -> None:
-        '''Raise an exception if any errors have occured so far'''
+        """Raise an exception if any errors have occured so far"""
         if self.n_errors:
             inconsist = None
             if self.inconsistent:
@@ -472,18 +516,23 @@ StoreReportType = Union[DicomOpReport, LocalWriteReport]
 
 
 class DynamicTransferReport(ProxyReport):
-    '''Track what data is being routed where and any store results'''
-    def __init__(self, 
-                 description: Optional[str] = None, 
-                 meta_data: Optional[Dict[str, Any]] = None,
-                 depth: int = 0,
-                 prog_hook: Optional[ProgressHookBase[Any]] = None,
-                 n_expected: Optional[int] = None,
-                 keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                 ):
-        self.store_reports: MultiDictReport[DataBucket[Any, Any], MultiListReport[StoreReportType]] = \
-            MultiDictReport(prog_hook=prog_hook)
-        super().__init__(description, meta_data, depth, prog_hook, n_expected, keep_errors)
+    """Track what data is being routed where and any store results"""
+
+    def __init__(
+        self,
+        description: Optional[str] = None,
+        meta_data: Optional[Dict[str, Any]] = None,
+        depth: int = 0,
+        prog_hook: Optional[ProgressHookBase[Any]] = None,
+        n_expected: Optional[int] = None,
+        keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+    ):
+        self.store_reports: MultiDictReport[
+            DataBucket[Any, Any], MultiListReport[StoreReportType]
+        ] = MultiDictReport(prog_hook=prog_hook)
+        super().__init__(
+            description, meta_data, depth, prog_hook, n_expected, keep_errors
+        )
 
     @property
     def n_success(self) -> int:
@@ -501,19 +550,21 @@ class DynamicTransferReport(ProxyReport):
     def n_reported(self) -> int:
         return self.store_reports.n_input
 
-    def add_store_report(self, dest: DataBucket[Any, Any], store_report: StoreReportType) -> None:
-        '''Add a DicomOpReport to keep track of'''
+    def add_store_report(
+        self, dest: DataBucket[Any, Any], store_report: StoreReportType
+    ) -> None:
+        """Add a DicomOpReport to keep track of"""
         if dest not in self.store_reports:
             self.store_reports[dest] = MultiListReport(prog_hook=self._prog_hook)
         self.store_reports[dest].append(store_report)
 
     def log_issues(self) -> None:
-        '''Produce log messages for any warning/error statuses'''
+        """Produce log messages for any warning/error statuses"""
         super().log_issues()
         self.store_reports.log_issues()
 
     def check_errors(self) -> None:
-        '''Raise an exception if any errors have occured so far'''
+        """Raise an exception if any errors have occured so far"""
         if self.n_errors:
             err = None
             try:
@@ -529,7 +580,7 @@ class DynamicTransferReport(ProxyReport):
             raise err
 
     def clear(self) -> None:
-        '''Clear current info about data sets we have results for'''
+        """Clear current info about data sets we have results for"""
         # TODO: If n_sent != n_reported here we will go out of sync. I guess
         #       this would need to be managed at a higher level if it is
         #       needed. Not clear if it makes sense to do anything about it
@@ -540,9 +591,10 @@ class DynamicTransferReport(ProxyReport):
 
 @dataclass
 class _CacheEntry:
-    '''Entry in a SendAssociationCache'''
-    ctx_mgr: AsyncContextManager['janus._AsyncQueueProxy[Dataset]']
-    send_q: 'janus._AsyncQueueProxy[Dataset]'
+    """Entry in a SendAssociationCache"""
+
+    ctx_mgr: AsyncContextManager["janus._AsyncQueueProxy[Dataset]"]
+    send_q: "janus._AsyncQueueProxy[Dataset]"
     op_report: DicomOpReport
     last_use: datetime
 
@@ -551,25 +603,27 @@ class _CacheEntry:
 #       query/move/send. Could then use that everywhere, and use it to
 #       manage max association limits on any node.
 class SendAssociationCache:
-    def __init__(self, timeout: float = 30.):
-        '''Keeps cache of recent associations'''
+    def __init__(self, timeout: float = 30.0):
+        """Keeps cache of recent associations"""
         self._timeout = timeout
         self._cache: Dict[DataBucket[Any, Any], _CacheEntry] = {}
 
     @property
     def next_timeout(self) -> float:
-        '''Number of seconds until the next cache entry will timeout'''
+        """Number of seconds until the next cache entry will timeout"""
         next_timeout = self._timeout
         now = datetime.now()
         for cache_entry in self._cache.values():
-            td = (now - cache_entry.last_use)
+            td = now - cache_entry.last_use
             timeout = max(self._timeout - td.total_seconds(), 0)
             if timeout < next_timeout:
                 next_timeout = timeout
         return next_timeout
 
-    async def send(self, ds: Dataset, dest: DataBucket[Any, Any]) -> Optional[DicomOpReport]:
-        '''Send a data set to dests, utilizing the cache of active associations'''
+    async def send(
+        self, ds: Dataset, dest: DataBucket[Any, Any]
+    ) -> Optional[DicomOpReport]:
+        """Send a data set to dests, utilizing the cache of active associations"""
         res = None
         cache_entry = self._cache.get(dest, None)
         if cache_entry is None:
@@ -586,10 +640,10 @@ class SendAssociationCache:
         return res
 
     async def update_cache(self) -> Dict[DataBucket[Any, Any], DicomOpReport]:
-        '''Close associations that haven't been used in a while
+        """Close associations that haven't been used in a while
 
         Returns reports for all closed associations.
-        '''
+        """
         curr_time = datetime.now()
         reports = {}
         for dest, cache_entry in self._cache.items():
@@ -602,10 +656,10 @@ class SendAssociationCache:
         return reports
 
     async def empty_cache(self) -> Dict[DataBucket[Any, Any], DicomOpReport]:
-        '''Close all associations
+        """Close all associations
 
         Returns dict of dest/op_report for all closed associations.
-        '''
+        """
         reports = {}
         for dest, cache_entry in self._cache.items():
             await cache_entry.ctx_mgr.__aexit__(None, None, None)
@@ -615,12 +669,13 @@ class SendAssociationCache:
 
 
 class InsufficientElemsError(Exception):
-    '''We don't have the required DICOM elements for the operation'''
+    """We don't have the required DICOM elements for the operation"""
 
 
 class Router:
-    '''Work with multiple dynamic/static routes'''
-    def __init__(self, routes : Iterable[Route], assoc_cache_time: int = 20):
+    """Work with multiple dynamic/static routes"""
+
+    def __init__(self, routes: Iterable[Route], assoc_cache_time: int = 20):
         self._routes = tuple(routes)
         self._assoc_cache_time = assoc_cache_time
         self._static: List[StaticRoute] = []
@@ -652,7 +707,7 @@ class Router:
 
     @property
     def required_elems(self) -> FrozenLazySet[str]:
-        '''All required DICOM elements for making routing decisions'''
+        """All required DICOM elements for making routing decisions"""
         return self._required_elems
 
     @property
@@ -667,8 +722,10 @@ class Router:
     def can_dyn_route(self) -> bool:
         return self._all_proxy
 
-    def get_filter_dest_map(self, ds: Dataset) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
-        '''Get dict mapping filters to lists of destinations'''
+    def get_filter_dest_map(
+        self, ds: Dataset
+    ) -> Dict[Optional[Filter], Tuple[DataBucket[Any, Any], ...]]:
+        """Get dict mapping filters to lists of destinations"""
         selected: Dict[Optional[Filter], List[DataBucket[Any, Any]]] = {}
         for route in self._routes:
             dests = route.get_dests(ds)
@@ -679,14 +736,15 @@ class Router:
                 selected[filt] = list(dests)
             else:
                 selected[filt] += dests
-        return {k : tuple(v) for k, v in selected.items()}
+        return {k: tuple(v) for k, v in selected.items()}
 
-    async def pre_route(self,
-                        src: DataRepo[Any, Any, Any, Any],
-                        query: Union[Dict[str, Any], Dataset] = None,
-                        query_res: QueryResult = None
-                       ) -> Dict[Tuple[StaticRoute,...], QueryResult]:
-        '''Pre-calculate any dynamic routing for data on `src`
+    async def pre_route(
+        self,
+        src: DataRepo[Any, Any, Any, Any],
+        query: Union[Dict[str, Any], Dataset] = None,
+        query_res: QueryResult = None,
+    ) -> Dict[Tuple[StaticRoute, ...], QueryResult]:
+        """Pre-calculate any dynamic routing for data on `src`
 
         If DICOM elements needed for routing decisions can't be queried for, we
         will retrieve an example data set for that study.
@@ -707,7 +765,7 @@ class Router:
         result : dict
             Maps tuples of StaticRoute objects to QueryResults defining all of
             the data that should be sent to those routes.
-        '''
+        """
         route_level = self._route_level
         if route_level == QueryLevel.IMAGE:
             raise ValueError("Can't pre-route at IMAGE level")
@@ -717,7 +775,7 @@ class Router:
 
         # Nothing to do...
         if len(self._dynamic) == 0:
-            return {tuple(self._static) : query_res}
+            return {tuple(self._static): query_res}
         log.info("Trying to resolve dynamic routes with queries")
 
         # Iteratively try to extract example data sets with all the elements
@@ -750,9 +808,9 @@ class Router:
             missing_qr = new_missing_qr
             if len(missing_qr) == 0 or missing_qr.level == QueryLevel.IMAGE:
                 break
-            missing_qr = await src.query(QueryLevel(missing_qr.level + 1),
-                                         query,
-                                         missing_qr)
+            missing_qr = await src.query(
+                QueryLevel(missing_qr.level + 1), query, missing_qr
+            )
 
         # For any studies where we don't have example data, fetch some
         if len(missing_qr) != 0:
@@ -764,7 +822,7 @@ class Router:
         assert len(example_data) == query_res.get_count(route_level)
 
         # Resolve all dynamic routes into data specific static routes
-        res: Dict[Tuple[StaticRoute,...], QueryResult] = {}
+        res: Dict[Tuple[StaticRoute, ...], QueryResult] = {}
         for route_uid, ds in example_data.items():
             sub_routes = copy(self._static)
             for route in self._dynamic:
@@ -784,11 +842,12 @@ class Router:
         return res
 
     @asynccontextmanager
-    async def route(self,
-                    keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-                    report: Optional[DynamicTransferReport] = None) \
-                        -> AsyncIterator['asyncio.Queue[Optional[Dataset]]']:
-        '''Produces queue where datasets can be put for dynamic routing
+    async def route(
+        self,
+        keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
+        report: Optional[DynamicTransferReport] = None,
+    ) -> AsyncIterator["asyncio.Queue[Optional[Dataset]]"]:
+        """Produces queue where datasets can be put for dynamic routing
 
         Parameters
         ----------
@@ -799,14 +858,11 @@ class Router:
             Pass a DynamicTransferReport in to be filled out on the fly
 
             Provides insight into what data is being routed where
-        '''
+        """
         if not self.can_dyn_route:
             raise NoValidTransferMethodError()
-        data_q: 'asyncio.Queue[Optional[Dataset]]' = asyncio.Queue()
-        route_task = asyncio.create_task(self._route(data_q,
-                                                     keep_errors,
-                                                     report)
-                                        )
+        data_q: "asyncio.Queue[Optional[Dataset]]" = asyncio.Queue()
+        route_task = asyncio.create_task(self._route(data_q, keep_errors, report))
         try:
             yield data_q
         finally:
@@ -814,23 +870,26 @@ class Router:
                 await data_q.put(None)
             await route_task
 
-    async def _route(self,
-                     data_q: 'asyncio.Queue[Optional[Dataset]]',
-                     keep_errors: Union[bool, Tuple[IncomingErrorType, ...]],
-                     report: Optional[DynamicTransferReport]) -> None:
+    async def _route(
+        self,
+        data_q: "asyncio.Queue[Optional[Dataset]]",
+        keep_errors: Union[bool, Tuple[IncomingErrorType, ...]],
+        report: Optional[DynamicTransferReport],
+    ) -> None:
         if report is None:
             extern_report = False
             report = DynamicTransferReport()
         else:
             extern_report = True
-        report.keep_errors = keep_errors # type: ignore
+        report.keep_errors = keep_errors  # type: ignore
         assoc_cache = SendAssociationCache(self._assoc_cache_time)
         try:
             n_pushed = 0
             while True:
                 try:
-                    ds = await asyncio.wait_for(data_q.get(),
-                                                min(assoc_cache.next_timeout, 5.0))
+                    ds = await asyncio.wait_for(
+                        data_q.get(), min(assoc_cache.next_timeout, 5.0)
+                    )
                 except asyncio.TimeoutError:
                     await assoc_cache.update_cache()
                     continue
@@ -863,8 +922,7 @@ class Router:
                         continue
                     # Initiate the transfers
                     coros = [assoc_cache.send(filt_ds, dest) for dest in dests]
-                    log.debug("Router forwarding data set to %d dests" %
-                              len(dests))
+                    log.debug("Router forwarding data set to %d dests" % len(dests))
                     op_reports = await asyncio.gather(*coros)
                     for op_report, dest in zip(op_reports, dests):
                         if op_report is not None:
@@ -883,12 +941,13 @@ class Router:
             report.log_issues()
             report.check_errors()
 
-    async def _fill_qr(self,
-                       src: DataRepo[Any, Any, Any, Any],
-                       query: Optional[Dataset],
-                       query_res: Optional[QueryResult]
-                      ) -> Tuple[Dataset, QueryResult]:
-        '''Perform a query against the src if needed'''
+    async def _fill_qr(
+        self,
+        src: DataRepo[Any, Any, Any, Any],
+        query: Optional[Dataset],
+        query_res: Optional[QueryResult],
+    ) -> Tuple[Dataset, QueryResult]:
+        """Perform a query against the src if needed"""
         if query is None:
             query = Dataset()
         req_elems = self.required_elems
@@ -902,9 +961,9 @@ class Router:
                 # Nothing we need to query for
                 return (query, query_res)
             elif req_elems.is_enumerable():
-                if (query_res.prov.queried_elems is not None and
-                    all(e in query_res.prov.queried_elems for e in req_elems)
-                   ):
+                if query_res.prov.queried_elems is not None and all(
+                    e in query_res.prov.queried_elems for e in req_elems
+                ):
                     # All required elems were already queried for
                     return (query, query_res)
                 # Check if all required elems already exist
@@ -920,6 +979,6 @@ class Router:
                     return (query, query_res)
         if req_elems.is_enumerable():
             for e in req_elems:
-                setattr(query, e, '')
+                setattr(query, e, "")
         log.info("The Router is perfoming an intial query against the source: %s", src)
         return (query, await src.query(level, query, query_res))

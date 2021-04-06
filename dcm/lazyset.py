@@ -1,30 +1,42 @@
 from __future__ import annotations
 from enum import Enum
-from typing import (Optional, Set, Iterator, Iterable, Union, Any, ClassVar,
-                    Type, FrozenSet, TypeVar, Generic)
+from typing import (
+    Optional,
+    Set,
+    Iterator,
+    Iterable,
+    Union,
+    Any,
+    ClassVar,
+    Type,
+    FrozenSet,
+    TypeVar,
+    Generic,
+)
 from typing_extensions import Final
 
 
 class _AllElems(Enum):
     token = 0
+
+
 AllElems: Final = _AllElems.token
 
 
 class LazyEnumerationError(Exception):
-    '''Raised when attempting to iterate a LazySet that can't be enumerated
-    '''
+    """Raised when attempting to iterate a LazySet that can't be enumerated"""
 
 
 # Generic LazySet type
-S = TypeVar('S', bound='_BaseLazySet[Any]')
+S = TypeVar("S", bound="_BaseLazySet[Any]")
 
 
 # Generic element type
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class _BaseLazySet(Generic[T]):
-    '''Common functionality for LazySet and FrozenLazySet'''
+    """Common functionality for LazySet and FrozenLazySet"""
 
     _set_type: ClassVar[Union[Type[Set[Any]], Type[FrozenSet[Any]]]] = set
 
@@ -32,9 +44,13 @@ class _BaseLazySet(Generic[T]):
 
     _exclude: Union[Set[T], FrozenSet[T], _AllElems]
 
-    def __init__(self,
-                 elems: Optional[Union[_BaseLazySet[T], Set[T], FrozenSet[T], Iterable[T], _AllElems]] = None,
-                 exclude: Optional[Union[Set[T], FrozenSet[T], Iterable[T], _AllElems]] = None):
+    def __init__(
+        self,
+        elems: Optional[
+            Union[_BaseLazySet[T], Set[T], FrozenSet[T], Iterable[T], _AllElems]
+        ] = None,
+        exclude: Optional[Union[Set[T], FrozenSet[T], Iterable[T], _AllElems]] = None,
+    ):
         if exclude is None:
             if isinstance(elems, _BaseLazySet):
                 if elems._elems is AllElems:
@@ -57,20 +73,21 @@ class _BaseLazySet(Generic[T]):
                     if elems is AllElems:
                         self._elems = elems
                     elif isinstance(elems, self._set_type):
-                        self._elems = elems.copy() # type: ignore
+                        self._elems = elems.copy()  # type: ignore
                     else:
                         self._elems = self._set_type(elems)
         else:
             if elems is not AllElems:
-                raise ValueError("The 'elems' must be set to AllElems if "
-                                 "'exclude' is not None")
+                raise ValueError(
+                    "The 'elems' must be set to AllElems if " "'exclude' is not None"
+                )
             if exclude is AllElems:
                 self._elems = self._set_type()
                 self._exclude = self._set_type()
             else:
                 self._elems = elems
                 if isinstance(exclude, self._set_type):
-                    self._exclude = exclude.copy() # type: ignore
+                    self._exclude = exclude.copy()  # type: ignore
                 else:
                     self._exclude = self._set_type(exclude)
 
@@ -81,14 +98,14 @@ class _BaseLazySet(Generic[T]):
         return elem in self._elems
 
     def __repr__(self) -> str:
-        return f'{type(self)}({self._elems}, exclude={self._exclude})'
+        return f"{type(self)}({self._elems}, exclude={self._exclude})"
 
     def __str__(self) -> str:
         if self._elems is AllElems:
-            res = 'All Elements'
+            res = "All Elements"
             if self._exclude:
                 assert self._exclude is not AllElems
-                res += 'exclude %s' % set(self._exclude)
+                res += "exclude %s" % set(self._exclude)
         else:
             res = str(set(self._elems))
         return res
@@ -142,10 +159,10 @@ class _BaseLazySet(Generic[T]):
         if self._elems is AllElems:
             raise LazyEnumerationError
         return len(self._elems)
-    
+
     def __eq__(self, other: object) -> bool:
-        o_elems = getattr(other, '_elems', None)
-        o_exclude = getattr(other, '_exclude', None)
+        o_elems = getattr(other, "_elems", None)
+        o_exclude = getattr(other, "_exclude", None)
         return self._elems == o_elems and self._exclude == o_exclude
 
     def excludes(self) -> Iterator[T]:
@@ -162,10 +179,10 @@ class _BaseLazySet(Generic[T]):
 
 
 class LazySet(_BaseLazySet[T]):
-    '''Set like object that can contain all elements without enumerating them
+    """Set like object that can contain all elements without enumerating them
 
     Can also represent exclusive sets (everything except...)
-    '''
+    """
 
     _set_type = set
 
@@ -218,7 +235,7 @@ class LazySet(_BaseLazySet[T]):
 
 
 class FrozenLazySet(_BaseLazySet[T]):
-    '''Frozen LazySet'''
+    """Frozen LazySet"""
 
     _set_type = frozenset
 

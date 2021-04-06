@@ -13,25 +13,25 @@ def make_dataset(attrs=None, level=QueryLevel.IMAGE):
         for attr in req_elems[lvl]:
             val = attrs.get(attr)
             if val is None:
-                if attr == 'PatientID':
-                    val = 'test_id'
-                elif attr == 'PatientName':
-                    val = 'test_name'
-                elif attr == 'StudyInstanceUID':
-                    val = '1.2.3.' + str(random.randint(1, 1000000000))
-                elif attr == 'StudyDate':
-                    val = '20150101'
-                elif attr == 'StudyTime':
-                    val = '120101.1'
-                elif attr == 'SeriesInstanceUID':
-                    val = '1.2.3.' + str(random.randint(1, 1000000000))
-                elif attr == 'SeriesNumber':
+                if attr == "PatientID":
+                    val = "test_id"
+                elif attr == "PatientName":
+                    val = "test_name"
+                elif attr == "StudyInstanceUID":
+                    val = "1.2.3." + str(random.randint(1, 1000000000))
+                elif attr == "StudyDate":
+                    val = "20150101"
+                elif attr == "StudyTime":
+                    val = "120101.1"
+                elif attr == "SeriesInstanceUID":
+                    val = "1.2.3." + str(random.randint(1, 1000000000))
+                elif attr == "SeriesNumber":
                     val = 1
-                elif attr == 'Modality':
-                    val = 'MR'
-                elif attr == 'SOPInstanceUID':
-                    val = '1.2.3.' + str(random.randint(1, 1000000000))
-                elif attr == 'InstanceNumber':
+                elif attr == "Modality":
+                    val = "MR"
+                elif attr == "SOPInstanceUID":
+                    val = "1.2.3." + str(random.randint(1, 1000000000))
+                elif attr == "InstanceNumber":
                     val = 1
             setattr(ds, attr, val)
         if lvl == level:
@@ -50,30 +50,30 @@ def hierarchy_data(request):
 
     curr_attrs = {}
     for pat_idx in range(num_patients):
-        pat_id = 'testid_%d' % pat_idx
+        pat_id = "testid_%d" % pat_idx
         pat_ids.append(pat_id)
-        curr_attrs['PatientID'] = pat_id
+        curr_attrs["PatientID"] = pat_id
         if level == QueryLevel.PATIENT:
             data_sets.append(make_dataset(curr_attrs))
             continue
         for study_idx in range(num_studies):
-            study_uid = '1.2.3.%d.%d' % (pat_idx, study_idx)
+            study_uid = "1.2.3.%d.%d" % (pat_idx, study_idx)
             study_uids.append(study_uid)
-            curr_attrs['StudyInstanceUID'] = study_uid
+            curr_attrs["StudyInstanceUID"] = study_uid
             if level == QueryLevel.STUDY:
                 data_sets.append(make_dataset(curr_attrs))
                 continue
             for series_idx in range(num_series):
-                series_uid = study_uid + '.%d' % series_idx
+                series_uid = study_uid + ".%d" % series_idx
                 series_uids.append(series_uid)
-                curr_attrs['SeriesInstanceUID'] = series_uid
+                curr_attrs["SeriesInstanceUID"] = series_uid
                 if level == QueryLevel.SERIES:
                     data_sets.append(make_dataset(curr_attrs))
                     continue
                 for inst_idx in range(num_instances):
-                    inst_uid = series_uid + '.%d' % inst_idx
+                    inst_uid = series_uid + ".%d" % inst_idx
                     inst_uids.append(inst_uid)
-                    curr_attrs['SOPInstanceUID'] = inst_uid
+                    curr_attrs["SOPInstanceUID"] = inst_uid
                     assert level == QueryLevel.IMAGE
                     data_sets.append(make_dataset(curr_attrs))
     for dupe_idx in range(n_dupes):
@@ -81,20 +81,14 @@ def hierarchy_data(request):
     return level, data_sets, pat_ids, study_uids, series_uids, inst_uids
 
 
+add_rm_data_params = list(
+    itertools.product(QueryLevel, [1, 2], [1, 3], [3, 4], [5, 6], [0, 3])
+)
 
 
-add_rm_data_params = list(itertools.product(QueryLevel,
-                                            [1,2],
-                                            [1,3],
-                                            [3,4],
-                                            [5,6],
-                                            [0,3])
-                         )
-
-
-@mark.parametrize('hierarchy_data', add_rm_data_params, indirect=True)
+@mark.parametrize("hierarchy_data", add_rm_data_params, indirect=True)
 def test_add_remove(hierarchy_data):
-    '''Test basic add/remove operations on a QueryResult'''
+    """Test basic add/remove operations on a QueryResult"""
     level, data_sets, pat_ids, study_uids, series_uids, inst_uids = hierarchy_data
     for lvl in QueryLevel:
         if lvl > level:
@@ -106,8 +100,8 @@ def test_add_remove(hierarchy_data):
         if lvl > QueryLevel.PATIENT:
             assert sorted(x for x in qr.studies()) == sorted(study_uids)
             for pat_id in qr.patients():
-                pat_idx = int(pat_id.split('_')[-1])
-                uid_prefix = '1.2.3.%d' % pat_idx
+                pat_idx = int(pat_id.split("_")[-1])
+                uid_prefix = "1.2.3.%d" % pat_idx
                 for study_uid in qr.studies(pat_id):
                     assert study_uid in study_uids
                     assert study_uid.startswith(uid_prefix)
@@ -136,23 +130,19 @@ def test_add_remove(hierarchy_data):
             assert len([x for x in qr.instances()]) == 0
 
 
-walk_data_params = list(itertools.product(QueryLevel,
-                                          [1,3],
-                                          [1,5],
-                                          [1,7],
-                                          [1,11],
-                                          [0])
-                       )
+walk_data_params = list(
+    itertools.product(QueryLevel, [1, 3], [1, 5], [1, 7], [1, 11], [0])
+)
 
 
-@mark.parametrize('hierarchy_data', walk_data_params, indirect=['hierarchy_data'])
+@mark.parametrize("hierarchy_data", walk_data_params, indirect=["hierarchy_data"])
 def test_walk(hierarchy_data):
-    '''Test the QueryResult.walk generator'''
+    """Test the QueryResult.walk generator"""
     level, data_sets, pat_ids, study_uids, series_uids, inst_uids = hierarchy_data
     qr = QueryResult(level)
     for ds in data_sets:
         qr.add(ds)
-    seen_sets = {lvl:set() for lvl in QueryLevel}
+    seen_sets = {lvl: set() for lvl in QueryLevel}
     for path, sub_uids in qr.walk():
         curr_uid = path.uids[-1]
         assert curr_uid not in seen_sets[path.level]
@@ -166,7 +156,7 @@ def test_walk(hierarchy_data):
     assert sorted(seen_sets[QueryLevel.IMAGE]) == sorted(inst_uids)
 
 
-@mark.parametrize('hierarchy_data', walk_data_params, indirect=['hierarchy_data'])
+@mark.parametrize("hierarchy_data", walk_data_params, indirect=["hierarchy_data"])
 def test_equality(hierarchy_data):
     level, data_sets, pat_ids, study_uids, series_uids, inst_uids = hierarchy_data
     qr1 = QueryResult(level)
@@ -180,7 +170,7 @@ def test_equality(hierarchy_data):
     # TODO: Include tests with sub-counts
 
 
-@mark.parametrize('hierarchy_data', walk_data_params, indirect=['hierarchy_data'])
+@mark.parametrize("hierarchy_data", walk_data_params, indirect=["hierarchy_data"])
 def test_json(hierarchy_data):
     level, data_sets, pat_ids, study_uids, series_uids, inst_uids = hierarchy_data
     qr1 = QueryResult(level)
@@ -208,20 +198,29 @@ def test_intersect():
 
 
 def test_intersect_multi_level():
-    series_ds = make_dataset({'StudyInstanceUID': '1.2.3.4',
-                              'SeriesInstanceUID': '1.2.3.4.0',
-                              },
-                             level=QueryLevel.SERIES)
-    inst_ds = make_dataset({'StudyInstanceUID': '1.2.3.4',
-                            'SeriesInstanceUID': '1.2.3.4.0',
-                            'SOPInstanceUID': '1.2.3.4.0.0'
-                            },
-                           level=QueryLevel.IMAGE)
-    excl_ds = make_dataset({'StudyInstanceUID': '1.2.3.4',
-                            'SeriesInstanceUID': '1.2.3.4.1',
-                            'SOPInstanceUID': '1.2.3.4.1.0'
-                            },
-                           level=QueryLevel.IMAGE)
+    series_ds = make_dataset(
+        {
+            "StudyInstanceUID": "1.2.3.4",
+            "SeriesInstanceUID": "1.2.3.4.0",
+        },
+        level=QueryLevel.SERIES,
+    )
+    inst_ds = make_dataset(
+        {
+            "StudyInstanceUID": "1.2.3.4",
+            "SeriesInstanceUID": "1.2.3.4.0",
+            "SOPInstanceUID": "1.2.3.4.0.0",
+        },
+        level=QueryLevel.IMAGE,
+    )
+    excl_ds = make_dataset(
+        {
+            "StudyInstanceUID": "1.2.3.4",
+            "SeriesInstanceUID": "1.2.3.4.1",
+            "SOPInstanceUID": "1.2.3.4.1.0",
+        },
+        level=QueryLevel.IMAGE,
+    )
     series_qr = QueryResult(QueryLevel.SERIES)
     series_qr.add(series_ds)
     inst_qr = QueryResult(QueryLevel.IMAGE)

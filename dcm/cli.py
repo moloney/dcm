@@ -1,4 +1,4 @@
-'''Command line interface'''
+"""Command line interface"""
 from __future__ import annotations
 import sys, os, logging, json
 import asyncio
@@ -32,101 +32,107 @@ from .normalize import normalize
 from .diff import diff_data_sets
 
 
-log = logging.getLogger('dcm.cli')
+log = logging.getLogger("dcm.cli")
 
 
 def cli_error(msg, exit_code=1):
-    '''Print msg to stderr and exit with non-zero exit code'''
-    click.secho(msg, err=True, fg='red')
+    """Print msg to stderr and exit with non-zero exit code"""
+    click.secho(msg, err=True, fg="red")
     sys.exit(exit_code)
 
 
 class QueryResponseFilter(logging.Filter):
     def filter(self, record):
-        if (record.name == 'dcm.net' and
-            record.levelno == logging.DEBUG and
-            record.msg.startswith("Got query response:")
-           ):
+        if (
+            record.name == "dcm.net"
+            and record.levelno == logging.DEBUG
+            and record.msg.startswith("Got query response:")
+        ):
             return False
         return True
 
 
 class PerformedQueryFilter(logging.Filter):
     def filter(self, record):
-        if (record.name == 'dcm.net' and
-            record.levelno == logging.DEBUG and
-            record.msg.startswith("Performing query:")
-           ):
+        if (
+            record.name == "dcm.net"
+            and record.levelno == logging.DEBUG
+            and record.msg.startswith("Performing query:")
+        ):
             return False
         return True
 
 
-debug_filters = {'query_responses' : QueryResponseFilter(),
-                 'performed_queries' : PerformedQueryFilter(),
-                }
+debug_filters = {
+    "query_responses": QueryResponseFilter(),
+    "performed_queries": PerformedQueryFilter(),
+}
 
 
 @click.group()
-@click.option('--config',
-              type=click.Path(dir_okay=False,
-                              readable=True,
-                              resolve_path=True),
-              envvar='DCM_CONFIG_PATH',
-              default=os.path.join(click.get_app_dir('dcm'), 'dcm_conf.toml'),
-              help="Path to TOML config file",
-             )
-@click.option('--log-path',
-              type=click.Path(dir_okay=False,
-                              readable=True,
-                              writable=True,
-                              resolve_path=True),
-              envvar='DCM_LOG_PATH',
-              help="Save logging output to this file")
-@click.option('--file-log-level',
-              type=click.Choice(['DEBUG', 'INFO', 'WARN', 'ERROR'],
-                                case_sensitive=False),
-              default='INFO',
-              help="Log level to use when logging to a file")
-@click.option('--verbose', '-v',
-              is_flag=True,
-              default=False,
-              help="Print INFO log messages")
-@click.option('--debug',
-              is_flag=True,
-              default=False,
-              help="Print DEBUG log messages")
-@click.option('--debug-filter',
-              multiple=True,
-              help="Selectively filter debug log messages")
-@click.option('--quiet',
-              is_flag=True,
-              default=False,
-              help="Hide WARNING and below log messages")
-@click.option('--pynetdicom-log-level',
-              type=click.Choice(['DEBUG', 'INFO', 'WARN', 'ERROR'],
-                                case_sensitive=False),
-              default='WARN',
-              help="Control log level for lower level pynetdicom package")
+@click.option(
+    "--config",
+    type=click.Path(dir_okay=False, readable=True, resolve_path=True),
+    envvar="DCM_CONFIG_PATH",
+    default=os.path.join(click.get_app_dir("dcm"), "dcm_conf.toml"),
+    help="Path to TOML config file",
+)
+@click.option(
+    "--log-path",
+    type=click.Path(dir_okay=False, readable=True, writable=True, resolve_path=True),
+    envvar="DCM_LOG_PATH",
+    help="Save logging output to this file",
+)
+@click.option(
+    "--file-log-level",
+    type=click.Choice(["DEBUG", "INFO", "WARN", "ERROR"], case_sensitive=False),
+    default="INFO",
+    help="Log level to use when logging to a file",
+)
+@click.option(
+    "--verbose", "-v", is_flag=True, default=False, help="Print INFO log messages"
+)
+@click.option("--debug", is_flag=True, default=False, help="Print DEBUG log messages")
+@click.option(
+    "--debug-filter", multiple=True, help="Selectively filter debug log messages"
+)
+@click.option(
+    "--quiet", is_flag=True, default=False, help="Hide WARNING and below log messages"
+)
+@click.option(
+    "--pynetdicom-log-level",
+    type=click.Choice(["DEBUG", "INFO", "WARN", "ERROR"], case_sensitive=False),
+    default="WARN",
+    help="Control log level for lower level pynetdicom package",
+)
 @click.pass_context
-def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, quiet,
-        pynetdicom_log_level):
-    '''High level DICOM file and network operations
-    '''
+def cli(
+    ctx,
+    config,
+    log_path,
+    file_log_level,
+    verbose,
+    debug,
+    debug_filter,
+    quiet,
+    pynetdicom_log_level,
+):
+    """High level DICOM file and network operations"""
     if quiet:
         if verbose or debug:
             cli_error("Can't mix --quiet with --verbose/--debug")
 
     # Setup logging
-    LOG_FORMAT = '%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s'
+    LOG_FORMAT = "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s"
     def_formatter = logging.Formatter(LOG_FORMAT)
-    root_logger = logging.getLogger('')
+    root_logger = logging.getLogger("")
     root_logger.setLevel(logging.DEBUG)
-    pynetdicom_logger = logging.getLogger('pynetdicom')
+    pynetdicom_logger = logging.getLogger("pynetdicom")
     pynetdicom_logger.setLevel(getattr(logging, pynetdicom_log_level))
-    stream_formatter = logging.Formatter('%(threadName)s %(name)s %(message)s')
+    stream_formatter = logging.Formatter("%(threadName)s %(name)s %(message)s")
     stream_handler = RichHandler(enable_link_path=False)
     stream_handler.setFormatter(stream_formatter)
-    #logging.getLogger("asyncio").setLevel(logging.DEBUG)
+    # logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
     if debug:
         stream_handler.setLevel(logging.DEBUG)
@@ -154,26 +160,25 @@ def cli(ctx, config, log_path, file_log_level, verbose, debug, debug_filter, qui
 
     # Create global param dict for subcommands to use
     ctx.obj = {}
-    ctx.obj['config_path'] = config
-    ctx.obj['config'] = DcmConfig(config, create_if_missing=True)
+    ctx.obj["config_path"] = config
+    ctx.obj["config"] = DcmConfig(config, create_if_missing=True)
 
 
 @click.command()
 @click.pass_obj
-@click.option('--show', is_flag=True,
-              help="Just print the current config contents")
-@click.option('--show-default', is_flag=True,
-              help="Just print the default config contets")
-@click.option('--path', is_flag=True,
-              help="Just print the current config path")
+@click.option("--show", is_flag=True, help="Just print the current config contents")
+@click.option(
+    "--show-default", is_flag=True, help="Just print the default config contets"
+)
+@click.option("--path", is_flag=True, help="Just print the current config path")
 def conf(params, show, show_default, path):
-    '''Open the config file with your $EDITOR'''
-    config_path = params['config_path']
+    """Open the config file with your $EDITOR"""
+    config_path = params["config_path"]
     # TODO: Make these mutually exclusive? Or sub-commands?
     if path:
         click.echo(config_path)
     if show:
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             click.echo(f.read())
     if show_default:
         click.echo(_default_conf)
@@ -183,7 +188,7 @@ def conf(params, show, show_default, path):
     while True:
         click.edit(filename=config_path)
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 _ = toml.load(f)
         except toml.decoder.TomlDecodeError as e:
             err = True
@@ -198,13 +203,12 @@ def conf(params, show, show_default, path):
 
 @click.command()
 @click.pass_obj
-@click.argument('remote')
-@click.option('--local',
-              help="Local DICOM network node properties")
+@click.argument("remote")
+@click.option("--local", help="Local DICOM network node properties")
 def echo(params, remote, local):
-    '''Test connectivity with remote node'''
-    local = params['config'].get_local_node(local)
-    remote_node = params['config'].get_remote_node(remote)
+    """Test connectivity with remote node"""
+    local = params["config"].get_local_node(local)
+    remote_node = params["config"].get_remote_node(remote)
     net_ent = LocalEntity(local)
     res = asyncio.run(net_ent.echo(remote_node))
     if res:
@@ -218,63 +222,73 @@ def _hr_to_dcm_date(in_str):
         dt = dateparser.parse(in_str)
     except Exception:
         cli_error(f"Unable to parse date: 'in_str'")
-    return dt.strftime('%Y%m%d')
+    return dt.strftime("%Y%m%d")
 
 
 def _build_study_date(since, before):
     if since is not None:
         since_str = _hr_to_dcm_date(since)
     else:
-        since_str = ''
+        since_str = ""
     if before is not None:
-        before_str =  _hr_to_dcm_date(before)
+        before_str = _hr_to_dcm_date(before)
     else:
-        before_str = ''
-    return f'{since_str}-{before_str}'
+        before_str = ""
+    return f"{since_str}-{before_str}"
 
 
 def _build_query(query_strs, since, before):
     qdat = Dataset()
     for query_input in query_strs:
         try:
-            q_attr, q_val = query_input.split('=')
+            q_attr, q_val = query_input.split("=")
         except Exception:
             cli_error(f"Invalid query input string: {query_input}")
         setattr(qdat, q_attr, q_val)
     if since is not None or before is not None:
-        if hasattr(qdat, 'StudyDate'):
+        if hasattr(qdat, "StudyDate"):
             cli_error("Do not specify 'StudyDate' when using '--since' or '--before'")
-        setattr(qdat, 'StudyDate', _build_study_date(since, before))
+        setattr(qdat, "StudyDate", _build_study_date(since, before))
     return qdat
 
 
 @click.command()
 @click.pass_obj
-@click.argument('remote')
-@click.argument('query', nargs=-1)
-@click.option('--level',
-              default=None,
-              help="Level of detail: patient/study/series/image")
-@click.option('--query-res',
-              type=click.File('rb'),
-              help='A result from a previous query to refine')
-@click.option('--since', help="Only return studies since this date")
-@click.option('--before', help="Only return studies before this date")
-@click.option('--local',
-              help="Local DICOM network node properties")
-@click.option('--out-format',
-              default=None,
-              help="Output format: tree/json")
-@click.option('--assume-yes',
-              is_flag=True,
-              default=False,
-              help="Automatically answer all prompts with 'y'")
-@click.option('--no-progress',
-              is_flag=True,
-              help="Don't display progress bars")
-def query(params, remote, query, level, query_res, since, before,
-          local, out_format, assume_yes, no_progress):
-    '''Perform a query against a network node'''
+@click.argument("remote")
+@click.argument("query", nargs=-1)
+@click.option(
+    "--level", default=None, help="Level of detail: patient/study/series/image"
+)
+@click.option(
+    "--query-res",
+    type=click.File("rb"),
+    help="A result from a previous query to refine",
+)
+@click.option("--since", help="Only return studies since this date")
+@click.option("--before", help="Only return studies before this date")
+@click.option("--local", help="Local DICOM network node properties")
+@click.option("--out-format", default=None, help="Output format: tree/json")
+@click.option(
+    "--assume-yes",
+    is_flag=True,
+    default=False,
+    help="Automatically answer all prompts with 'y'",
+)
+@click.option("--no-progress", is_flag=True, help="Don't display progress bars")
+def query(
+    params,
+    remote,
+    query,
+    level,
+    query_res,
+    since,
+    before,
+    local,
+    out_format,
+    assume_yes,
+    no_progress,
+):
+    """Perform a query against a network node"""
     if level is not None:
         level = level.upper()
         for q_lvl in QueryLevel:
@@ -295,98 +309,144 @@ def query(params, remote, query, level, query_res, since, before,
 
     if sys.stdout.isatty():
         if out_format is None:
-            out_format = 'tree'
+            out_format = "tree"
     else:
         no_progress = True
         if out_format is None:
-            out_format = 'json'
-    if out_format not in ('tree', 'json'):
+            out_format = "json"
+    if out_format not in ("tree", "json"):
         cli_error("Invalid out-format: %s" % out_format)
-    local = params['config'].get_local_node(local)
-    remote_node = params['config'].get_remote_node(remote)
+    local = params["config"].get_local_node(local)
+    remote_node = params["config"].get_remote_node(remote)
     net_ent = LocalEntity(local)
     qdat = _build_query(query, since, before)
     if len(qdat) == 0 and query_res is None and not assume_yes:
-        if not click.confirm("This query hasn't been limited in any "
-                             "way and may generate a huge result, "
-                             "continue?"):
+        if not click.confirm(
+            "This query hasn't been limited in any "
+            "way and may generate a huge result, "
+            "continue?"
+        ):
             return
     with ExitStack() as estack:
         if not no_progress:
             prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
-            report = MultiListReport(description='query', prog_hook=prog)
+            report = MultiListReport(description="query", prog_hook=prog)
         else:
             report = None
-        qr = asyncio.run(net_ent.query(remote_node, level, qdat, query_res, report=report))
-    if out_format == 'tree':
+        qr = asyncio.run(
+            net_ent.query(remote_node, level, qdat, query_res, report=report)
+        )
+    if out_format == "tree":
         out = qr.to_tree()
-    elif out_format == 'json':
+    elif out_format == "json":
         out = json_serializer.dumps(qr, indent=4)
     click.echo(out)
 
 
 @click.command()
 @click.pass_obj
-@click.argument('dests', nargs=-1)
-@click.option('--source', '-s', multiple=True, help='A data source')
-@click.option('--query', '-q', multiple=True,
-              help="Only sync data matching the query")
-@click.option('--query-res',
-              type=click.File('rb'),
-              help='A result from a previous query to limit the data synced')
-@click.option('--since', help="Only return studies since this date")
-@click.option('--before', help="Only return studies before this date")
-@click.option('--edit', '-e', multiple=True,
-              help="Modify DICOM attribute in the synced data")
-@click.option('--edit-json', type=click.File('rb'),
-              help="Specify attribute modifications as JSON")
-@click.option('--trust-level', type=click.Choice([q.name for q in QueryLevel], case_sensitive=False), default='IMAGE',
-              help="If sub-component counts match at this query level, assume "
-              "the data matches. Improves performance but sacrifices accuracy")
-@click.option('--force-all', '-f', is_flag=True, default=False,
-              help="Force all data on the source to be transfered, even if it "
-              "appears to already exist on the dest")
-@click.option('--method', '-m', help="Transfer method to use",
-              type=click.Choice([m.name for m in TransferMethod],
-                                case_sensitive=False))
+@click.argument("dests", nargs=-1)
+@click.option("--source", "-s", multiple=True, help="A data source")
+@click.option("--query", "-q", multiple=True, help="Only sync data matching the query")
+@click.option(
+    "--query-res",
+    type=click.File("rb"),
+    help="A result from a previous query to limit the data synced",
+)
+@click.option("--since", help="Only return studies since this date")
+@click.option("--before", help="Only return studies before this date")
+@click.option(
+    "--edit", "-e", multiple=True, help="Modify DICOM attribute in the synced data"
+)
+@click.option(
+    "--edit-json", type=click.File("rb"), help="Specify attribute modifications as JSON"
+)
+@click.option(
+    "--trust-level",
+    type=click.Choice([q.name for q in QueryLevel], case_sensitive=False),
+    default="IMAGE",
+    help="If sub-component counts match at this query level, assume "
+    "the data matches. Improves performance but sacrifices accuracy",
+)
+@click.option(
+    "--force-all",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force all data on the source to be transfered, even if it "
+    "appears to already exist on the dest",
+)
+@click.option(
+    "--method",
+    "-m",
+    help="Transfer method to use",
+    type=click.Choice([m.name for m in TransferMethod], case_sensitive=False),
+)
 # Expose this when it is working
-#@click.option('--validate', is_flag=True, default=False,
+# @click.option('--validate', is_flag=True, default=False,
 #              help="All synced data is retrieved back from the dests and "
 #              "compared to the original data. Differing elements produce "
 #              "warnings.")
-@click.option('--keep-errors', is_flag=True, default=False,
-              help="Don't skip inconsistent/unexpected incoming data")
-@click.option('--dry-run', '-n', is_flag=True, default=False,
-              help="Don't actually do any transfers, just print them")
-@click.option('--local',
-              help="Local DICOM network node properties")
-@click.option('--dir-format',
-              help="Output format for any local output directories")
-@click.option('--recurse/--no-recurse', default=None, is_flag=True,
-              help="Don't recurse into input directories")
-@click.option('--in-file-ext',
-              help="File extension for local input directories")
-@click.option('--out-file-ext',
-              help="File extension for local output directories")
-@click.option('--no-progress', is_flag=True,
-              help="Don't display progress bars")
-@click.option('--no-report', is_flag=True, help="Don't print report")
-def sync(params, dests, source, query, query_res, since, before, edit, edit_json, 
-         trust_level, force_all, method, keep_errors, dry_run, local,
-         dir_format, recurse, in_file_ext, out_file_ext, no_progress,
-         no_report):
-    '''Sync DICOM data from a one or more sources to one or more destinations
+@click.option(
+    "--keep-errors",
+    is_flag=True,
+    default=False,
+    help="Don't skip inconsistent/unexpected incoming data",
+)
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    default=False,
+    help="Don't actually do any transfers, just print them",
+)
+@click.option("--local", help="Local DICOM network node properties")
+@click.option("--dir-format", help="Output format for any local output directories")
+@click.option(
+    "--recurse/--no-recurse",
+    default=None,
+    is_flag=True,
+    help="Don't recurse into input directories",
+)
+@click.option("--in-file-ext", help="File extension for local input directories")
+@click.option("--out-file-ext", help="File extension for local output directories")
+@click.option("--no-progress", is_flag=True, help="Don't display progress bars")
+@click.option("--no-report", is_flag=True, help="Don't print report")
+def sync(
+    params,
+    dests,
+    source,
+    query,
+    query_res,
+    since,
+    before,
+    edit,
+    edit_json,
+    trust_level,
+    force_all,
+    method,
+    keep_errors,
+    dry_run,
+    local,
+    dir_format,
+    recurse,
+    in_file_ext,
+    out_file_ext,
+    no_progress,
+    no_report,
+):
+    """Sync DICOM data from a one or more sources to one or more destinations
 
-    The `dests` can be a local directory, a DICOM network entity (given as 
+    The `dests` can be a local directory, a DICOM network entity (given as
     'hostname:aetitle:port'), or a named remote/route from your config file.
 
-    Generally you will need to use `--source` to specify the data source, unless 
-    you pass in a query result which contains a source (e.g. when doing 
-    'dcm query srcpacs ... | dcm sync destpacs'). The `--source` can be given 
+    Generally you will need to use `--source` to specify the data source, unless
+    you pass in a query result which contains a source (e.g. when doing
+    'dcm query srcpacs ... | dcm sync destpacs'). The `--source` can be given
     in the same way `dests` are specified, except it cannot be a 'route'.
-    '''
+    """
     # Check for incompatible options
-    #if validate and dry_run:
+    # if validate and dry_run:
     #    cli_error("Can't do validation on a dry run!")
 
     # Disable progress for non-interactive output or dry runs
@@ -398,7 +458,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
         query = _build_query(query, since, before)
     else:
         query = None
-    
+
     # Handle query-result options
     if query_res is None and not sys.stdin.isatty():
         query_res = sys.stdin
@@ -411,19 +471,19 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
 
     # Determine the local node being used
     try:
-    local = params['config'].get_local_node(local)
+        local = params["config"].get_local_node(local)
     except NoLocalNodeError:
         local = None
-    
+
     # Pass source options that override config through to the config parser
     local_dir_kwargs = {}
     if recurse is not None:
-        local_dir_kwargs['recurse'] = recurse
+        local_dir_kwargs["recurse"] = recurse
     if in_file_ext is not None:
-        local_dir_kwargs['file_ext'] = in_file_ext
-    params['config'].set_local_dir_kwargs(**local_dir_kwargs)
-    params['config'].set_net_repo_kwargs(local=local)
-    
+        local_dir_kwargs["file_ext"] = in_file_ext
+    params["config"].set_local_dir_kwargs(**local_dir_kwargs)
+    params["config"].set_net_repo_kwargs(local=local)
+
     # Figure out source info
     if len(source) == 0:
         if query_res is None or query_res.prov.source is None:
@@ -432,16 +492,16 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             raise NoLocalNodeError("No local DICOM node configured")
         sources = [NetRepo(local, query_res.prov.source)]
     else:
-        sources = [params['config'].get_bucket(s) for s in source]
+        sources = [params["config"].get_bucket(s) for s in source]
 
     # Pass dest options that override config through to the config parser
     local_dir_kwargs = {}
     if dir_format is not None:
-        local_dir_kwargs['out_fmt'] = dir_format
+        local_dir_kwargs["out_fmt"] = dir_format
     if out_file_ext is not None:
-        local_dir_kwargs['file_ext'] = out_file_ext
-    params['config'].set_local_dir_kwargs(**local_dir_kwargs)
-    
+        local_dir_kwargs["file_ext"] = out_file_ext
+    params["config"].set_local_dir_kwargs(**local_dir_kwargs)
+
     # Some command line options override route configuration
     static_route_kwargs = {}
     dynamic_route_kwargs = {}
@@ -455,29 +515,29 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
         edit_dict = {}
     if edit:
         for edit_str in edit:
-            attr, val = edit_str.split('=')
+            attr, val = edit_str.split("=")
             edit_dict[attr] = val
     if edit_dict:
         filt = make_edit_filter(edit_dict)
-        static_route_kwargs['filt'] = filt
-        dynamic_route_kwargs['filt'] = filt
+        static_route_kwargs["filt"] = filt
+        dynamic_route_kwargs["filt"] = filt
 
     # Convert dests/filters to a StaticRoute
     if method is not None:
         method = TransferMethod[method.upper()]
-        static_route_kwargs['methods'] = (method,)
-        dynamic_route_kwargs['methods'] = {None: (method,)}
-    
-    # Pass route options that override config through to the config parser
-    params['config'].set_static_route_kwargs(**static_route_kwargs)
-    params['config'].set_dynamic_route_kwargs(**dynamic_route_kwargs)
+        static_route_kwargs["methods"] = (method,)
+        dynamic_route_kwargs["methods"] = {None: (method,)}
 
-    # Do samity check that no sources are in dests. This is especially easy 
-    # mistake as earlier versions took the first positional arg to be the 
+    # Pass route options that override config through to the config parser
+    params["config"].set_static_route_kwargs(**static_route_kwargs)
+    params["config"].set_dynamic_route_kwargs(**dynamic_route_kwargs)
+
+    # Do samity check that no sources are in dests. This is especially easy
+    # mistake as earlier versions took the first positional arg to be the
     # source
     for dest in dests:
         try:
-            d_bucket = params['config'].get_bucket(dest)
+            d_bucket = params["config"].get_bucket(dest)
         except Exception:
             pass
         else:
@@ -485,7 +545,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
                 cli_error(f"The dest {dest} is also a source!")
             continue
         try:
-            static_route = params['config'].get_static_route(dest)
+            static_route = params["config"].get_static_route(dest)
         except Exception:
             pass
         else:
@@ -494,7 +554,7 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
                     cli_error(f"The dest {d} is also a source!")
             continue
         try:
-            sel_dest_map = params['config'].get_selector_dest_map(dest)
+            sel_dest_map = params["config"].get_selector_dest_map(dest)
         except Exception:
             pass
         else:
@@ -506,12 +566,12 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
         cli_error(f"Unknown dest: {dest}")
 
     # Convert dests to routes
-    dests = params['config'].get_routes(dests)
+    dests = params["config"].get_routes(dests)
 
     # Handle validate option
-    #if validate:
+    # if validate:
     #    validators = [make_basic_validator()]
-    #else:
+    # else:
     #    validators = None
 
     # Handle trust-level option
@@ -527,21 +587,24 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             qr_reports = []
             for src in sources:
                 if not no_progress:
-                    report = MultiListReport(description='init-query', prog_hook=prog_hook)
+                    report = MultiListReport(
+                        description="init-query", prog_hook=prog_hook
+                    )
                 else:
                     report = None
                 qr_reports.append(report)
-        
+
         if query_res is None:
             qrs = None
         else:
             qrs = [deepcopy(query_res) for _ in sources]
 
-        base_kwargs = {'trust_level': trust_level,
-                       'force_all': force_all,
-                       'keep_errors': keep_errors,
-                       #'validators': validators,
-                      }
+        base_kwargs = {
+            "trust_level": trust_level,
+            "force_all": force_all,
+            "keep_errors": keep_errors,
+            #'validators': validators,
+        }
         sm_kwargs = []
         sync_reports = []
         for src in sources:
@@ -550,11 +613,13 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             else:
                 sync_report = SyncReport()
             kwargs = deepcopy(base_kwargs)
-            kwargs['report'] = sync_report
+            kwargs["report"] = sync_report
             sm_kwargs.append(kwargs)
             sync_reports.append(sync_report)
-        
-        asyncio.run(sync_data(sources, dests, query, qrs, qr_reports, sm_kwargs, dry_run))
+
+        asyncio.run(
+            sync_data(sources, dests, query, qrs, qr_reports, sm_kwargs, dry_run)
+        )
 
     for report in sync_reports:
         report.log_issues()
@@ -563,18 +628,22 @@ def sync(params, dests, source, query, query_res, since, before, edit, edit_json
             click.echo("\n")
 
 
-def _make_route_data_cb(res_q: asyncio.Queue[Dataset]
-                      ) -> Callable[[evt.Event], Awaitable[int]]:
-    '''Return callback that queues dataset/metadata from incoming events'''
+def _make_route_data_cb(
+    res_q: asyncio.Queue[Dataset],
+) -> Callable[[evt.Event], Awaitable[int]]:
+    """Return callback that queues dataset/metadata from incoming events"""
+
     async def callback(event: evt.Event) -> int:
         # TODO: Do we need to embed the file_meta here?
         await res_q.put(event.dataset)
-        return 0x0 # Success
+        return 0x0  # Success
+
     return callback
 
-async def _do_route(local: DcmNode,
-                    router: Router,
-                    inactive_timeout: Optional[int]=None) -> None:
+
+async def _do_route(
+    local: DcmNode, router: Router, inactive_timeout: Optional[int] = None
+) -> None:
     local_ent = LocalEntity(local)
     event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
     report = DynamicTransferReport()
@@ -595,39 +664,43 @@ async def _do_route(local: DcmNode,
                             last_update = datetime.now()
                             last_reported = n_reported
                         elif inactive_timeout is not None:
-                            if (datetime.now() - last_update).total_seconds() > inactive_timeout:
+                            if (
+                                datetime.now() - last_update
+                            ).total_seconds() > inactive_timeout:
                                 print("Timeout due to inactivity")
                                 break
             finally:
                 print("Listener shutting down")
 
 
-
 @click.command()
 @click.pass_obj
-@click.argument('dests', nargs=-1)
-@click.option('--edit', '-e', multiple=True,
-              help="Modify DICOM attribute in the synced data")
-@click.option('--edit-json', type=click.File('rb'),
-              help="Specify attribute modifications as JSON")
-@click.option('--local',
-              help="Local DICOM network node properties")
-@click.option('--dir-format',
-              help="Output format for any local output directories")
-@click.option('--out-file-ext', default='dcm',
-              help="File extension for local output directories")
-@click.option('--inactive-timeout', type=int, 
-              help="Stop listening after this many seconds of inactivity")
-def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext,
-            inactive_timeout):
-    '''Listen for incoming DICOM files on network and forward to dests
-    '''
-    local = params['config'].get_local_node(local)
-    
+@click.argument("dests", nargs=-1)
+@click.option(
+    "--edit", "-e", multiple=True, help="Modify DICOM attribute in the synced data"
+)
+@click.option(
+    "--edit-json", type=click.File("rb"), help="Specify attribute modifications as JSON"
+)
+@click.option("--local", help="Local DICOM network node properties")
+@click.option("--dir-format", help="Output format for any local output directories")
+@click.option(
+    "--out-file-ext", default="dcm", help="File extension for local output directories"
+)
+@click.option(
+    "--inactive-timeout",
+    type=int,
+    help="Stop listening after this many seconds of inactivity",
+)
+def forward(
+    params, dests, edit, edit_json, local, dir_format, out_file_ext, inactive_timeout
+):
+    """Listen for incoming DICOM files on network and forward to dests"""
+    local = params["config"].get_local_node(local)
+
     # Pass dest options that override config through to the config parser
-    params['config'].set_local_dir_kwargs(out_fmt=dir_format, 
-                                          file_ext=out_file_ext)
-    
+    params["config"].set_local_dir_kwargs(out_fmt=dir_format, file_ext=out_file_ext)
+
     # Some command line options override route configuration
     static_route_kwargs = {}
     dynamic_route_kwargs = {}
@@ -641,19 +714,19 @@ def forward(params, dests, edit, edit_json, local, dir_format, out_file_ext,
         edit_dict = {}
     if edit:
         for edit_str in edit:
-            attr, val = edit_str.split('=')
+            attr, val = edit_str.split("=")
             edit_dict[attr] = val
     if edit_dict:
         filt = make_edit_filter(edit_dict)
-        static_route_kwargs['filt'] = filt
-        dynamic_route_kwargs['filt'] = filt
-    
+        static_route_kwargs["filt"] = filt
+        dynamic_route_kwargs["filt"] = filt
+
     # Pass route options that override config through to the config parser
-    params['config'].set_static_route_kwargs(**static_route_kwargs)
-    params['config'].set_dynamic_route_kwargs(**dynamic_route_kwargs)
+    params["config"].set_static_route_kwargs(**static_route_kwargs)
+    params["config"].set_dynamic_route_kwargs(**dynamic_route_kwargs)
 
     # Convert dests to routes
-    dests = params['config'].get_routes(dests)
+    dests = params["config"].get_routes(dests)
 
     router = Router(dests)
     asyncio.run(_do_route(local, router, inactive_timeout))
@@ -669,13 +742,14 @@ def make_print_cb(fmt, elem_filter=None):
             print(fmt.format(elem=elem, ds=ds))
         except Exception:
             log.warn("Couldn't apply format to elem: %s", elem)
+
     return print_cb
 
 
 def _make_elem_filter(include, exclude, exclude_private):
     if len(include) == 0:
         include_tags = LazySet(AllElems)
-        else:
+    else:
         include_tags = set()
         for in_str in include:
             include_tags.add(str_to_tag(in_str))
@@ -685,43 +759,52 @@ def _make_elem_filter(include, exclude, exclude_private):
         exclude_tags.add(str_to_tag(in_str))
     exclude_tags = LazySet(exclude_tags)
     include_tags -= exclude_tags
+
     def elem_filter(elem):
         tag = elem.tag
         if exclude_private and elem.tag.group % 2 == 1:
             return None
         if tag in include_tags:
-        return elem
+            return elem
+
     return elem_filter
 
 
 @click.command()
 @click.pass_obj
-@click.argument('dcm_files',
-                type=click.Path(exists=True, readable=True),
-                nargs=-1)
-@click.option('--out-format',
-              default='plain',
-              help="Output format: plain/json")
-@click.option('--plain-fmt',
-              default='{elem}',
-              help="Format string applied to each element for 'plain' output. Can "
-              "reference 'elem' (the pydicom Element) and 'ds' (the pydicom Dataset) "
-              "objects in the format string.")
-@click.option('--include', '-i', multiple=True,
-              help='Include elements by keyword or tag. Default is to include everything')
-@click.option('--exclude', '-e', multiple=True,
-              help='exclude elements by keyword or tag')
-@click.option('--exclude-private', is_flag=True, default=False,
-              help="exclude all private elements")
+@click.argument("dcm_files", type=click.Path(exists=True, readable=True), nargs=-1)
+@click.option("--out-format", default="plain", help="Output format: plain/json")
+@click.option(
+    "--plain-fmt",
+    default="{elem}",
+    help="Format string applied to each element for 'plain' output. Can "
+    "reference 'elem' (the pydicom Element) and 'ds' (the pydicom Dataset) "
+    "objects in the format string.",
+)
+@click.option(
+    "--include",
+    "-i",
+    multiple=True,
+    help="Include elements by keyword or tag. Default is to include everything",
+)
+@click.option(
+    "--exclude", "-e", multiple=True, help="exclude elements by keyword or tag"
+)
+@click.option(
+    "--exclude-private",
+    is_flag=True,
+    default=False,
+    help="exclude all private elements",
+)
 def dump(params, dcm_files, out_format, plain_fmt, include, exclude, exclude_private):
-    '''Dump contents of DICOM files'''
+    """Dump contents of DICOM files"""
     elem_filter = _make_elem_filter(include, exclude, exclude_private)
-    if out_format == 'plain':
+    if out_format == "plain":
         print_cb = make_print_cb(plain_fmt, elem_filter)
         for pth in dcm_files:
             ds = pydicom.dcmread(pth)
             ds.walk(print_cb)
-    elif out_format == 'json':
+    elif out_format == "json":
         for pth in dcm_files:
             ds = pydicom.dcmread(pth)
             click.echo(json.dumps(normalize(ds, elem_filter), indent=4))
@@ -731,10 +814,10 @@ def dump(params, dcm_files, out_format, plain_fmt, include, exclude, exclude_pri
 
 @click.command()
 @click.pass_obj
-@click.argument('left')
-@click.argument('right')
+@click.argument("left")
+@click.argument("right")
 def diff(params, left, right):
-    '''Show differences between two data sets'''
+    """Show differences between two data sets"""
     left = pydicom.dcmread(left)
     right = pydicom.dcmread(right)
     diffs = diff_data_sets(left, right)
@@ -753,5 +836,5 @@ cli.add_command(diff)
 
 
 # Entry point
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

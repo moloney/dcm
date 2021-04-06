@@ -1,4 +1,4 @@
-'''DICOM data filtering'''
+"""DICOM data filtering"""
 from __future__ import annotations
 import logging, operator, re
 from dataclasses import dataclass, field
@@ -10,8 +10,15 @@ from pydicom.uid import generate_uid
 
 from .util import DuplicateDataError, TomlConfigurable, InlineConfigurable
 from .lazyset import LazySet, FrozenLazySet, AllElems
-from .query import (QueryLevel, QueryResult, DataNode, get_uid, uid_elems,
-                    QueryLevelMismatchError, InconsistentDataError)
+from .query import (
+    QueryLevel,
+    QueryResult,
+    DataNode,
+    get_uid,
+    uid_elems,
+    QueryLevelMismatchError,
+    InconsistentDataError,
+)
 
 
 log = logging.getLogger(__name__)
@@ -22,21 +29,25 @@ uid_elem_set = FrozenLazySet(uid_elems.values())
 
 @dataclass(frozen=True)
 class _BaseFilter:
-    read_elems: FrozenLazySet[str] = field(default_factory=lambda: FrozenLazySet(AllElems))
-    '''Elements the function needs to read to make any modifications'''
+    read_elems: FrozenLazySet[str] = field(
+        default_factory=lambda: FrozenLazySet(AllElems)
+    )
+    """Elements the function needs to read to make any modifications"""
 
-    write_elems: FrozenLazySet[str] = field(default_factory=lambda: FrozenLazySet(AllElems))
-    '''Elements that might be modified by the function'''
+    write_elems: FrozenLazySet[str] = field(
+        default_factory=lambda: FrozenLazySet(AllElems)
+    )
+    """Elements that might be modified by the function"""
 
     # TODO: Invertible is misleading, you could "invert" from a fan-out mapping
     #       (one input gets multiple outputs) but we don't want to include that
     #       here.
     invertible_elems: FrozenLazySet[str] = field(default_factory=FrozenLazySet)
-    '''Elements where values are only modified in isolated/deterministic way
+    """Elements where values are only modified in isolated/deterministic way
 
     The same input value for these elements should always get the same output
     value.
-    '''
+    """
 
     def __call__(self, data_set: Dataset) -> Dataset:
         raise NotImplementedError
@@ -53,25 +64,27 @@ class _BaseFilter:
 @dataclass(frozen=True)
 class _SingleFilter:
     func: Callable[[Dataset], Optional[Dataset]]
-    '''A function that takes a DICOM data set and can return a modified
-    version, or None to signify the data should be skipped'''
+    """A function that takes a DICOM data set and can return a modified
+    version, or None to signify the data should be skipped"""
 
 
 @dataclass(frozen=True)
 class Filter(_BaseFilter, _SingleFilter):
-    '''Callable for modifying data sets with info about its read/write needs
+    """Callable for modifying data sets with info about its read/write needs
 
     By default it is assumed the filter needs access to the full data set and
     can modify any element in any way. More info can be provided by setting
     the various `*_elems` attributes which will allow for various optimizations.
-    '''
+    """
 
     def __post_init__(self) -> None:
         # Make sure invertible_elems is subset of write_elems
         if self.invertible_elems:
-            object.__setattr__(self, 'write_elems', self.write_elems | self.invertible_elems)
+            object.__setattr__(
+                self, "write_elems", self.write_elems | self.invertible_elems
+            )
         # Make sure all LazySets are Frozen
-        for attr in ('read_elems', 'write_elems', 'invertible_elems'):
+        for attr in ("read_elems", "write_elems", "invertible_elems"):
             val = getattr(self, attr)
             if not isinstance(val, FrozenLazySet):
                 object.__setattr__(self, attr, FrozenLazySet(val))
@@ -79,21 +92,20 @@ class Filter(_BaseFilter, _SingleFilter):
     def __call__(self, data_set: Dataset) -> Dataset:
         return self.func(data_set)
 
-    def get_dependencies(self, 
-                         elems: Any
-                         ) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
+    def get_dependencies(
+        self, elems: Any
+    ) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
         return ([self.func], self.read_elems)
 
 
 @dataclass(frozen=True)
 class _MultiFilter:
     filters: Tuple[Filter, ...]
-    '''The collection of filters'''
+    """The collection of filters"""
 
 
 @dataclass(frozen=True)
 class MultiFilter(_BaseFilter, _MultiFilter):
-
     def __post_init__(self) -> None:
         read_elems: LazySet[str] = LazySet()
         write_elems: LazySet[str] = LazySet()
@@ -105,11 +117,13 @@ class MultiFilter(_BaseFilter, _MultiFilter):
             invertible_elems |= filt.invertible_elems
             uninvertible |= filt.write_elems - filt.invertible_elems
         invertible_elems -= uninvertible
-        object.__setattr__(self, 'read_elems', FrozenLazySet(read_elems))
-        object.__setattr__(self, 'write_elems',  FrozenLazySet(write_elems))
-        object.__setattr__(self, 'invertible_elems',  FrozenLazySet(invertible_elems))
+        object.__setattr__(self, "read_elems", FrozenLazySet(read_elems))
+        object.__setattr__(self, "write_elems", FrozenLazySet(write_elems))
+        object.__setattr__(self, "invertible_elems", FrozenLazySet(invertible_elems))
 
-    def get_dependencies(self, elems: Any) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
+    def get_dependencies(
+        self, elems: Any
+    ) -> Tuple[List[Callable[[Dataset], Optional[Dataset]]], FrozenLazySet[str]]:
         funcs = []
         dep_elems: LazySet[str] = LazySet()
         for filt in self.filters:
@@ -128,44 +142,44 @@ class MultiFilter(_BaseFilter, _MultiFilter):
 
 @dataclass
 class DataCollection:
-    '''Collection of dicom data that can include inconsistent/duplicate data
-    '''
+    """Collection of dicom data that can include inconsistent/duplicate data"""
+
     qr: QueryResult
-    '''Captures all the consistent non-duplicate data'''
+    """Captures all the consistent non-duplicate data"""
 
     inconsistent: List[Dataset] = field(default_factory=list)
-    '''List of data sets that can't be stored in `qr` due to inconsistancy'''
+    """List of data sets that can't be stored in `qr` due to inconsistancy"""
 
     duplicate: List[Dataset] = field(default_factory=list)
-    '''List of data sets that are duplicates of those in `qr`'''
+    """List of data sets that are duplicates of those in `qr`"""
 
 
 class DataTransform:
-    '''Transforms data, and keeps track so it can be reversed
+    """Transforms data, and keeps track so it can be reversed
 
     Abstract base class. All subclasses should have two QueryResult attributes
     `old` and `new` (which should be treated as read-only) plus the methods
     below.
-    '''
+    """
 
     old: QueryResult
-    '''Pre-transform data'''
+    """Pre-transform data"""
 
     new: QueryResult
-    '''Post-transform data'''
+    """Post-transform data"""
 
     def add(self, old_ds: Dataset, new_ds: Dataset) -> None:
-        '''Add pre/post transformed data set
+        """Add pre/post transformed data set
 
         Will raise InconsistentDataError or DuplicateDataError based on the
         post-filtering data
-        '''
+        """
         raise NotImplementedError
 
     def reverse(self, new_qr: QueryResult) -> DataCollection:
-        '''Invert the transformation for some subset of the new QueryResult
+        """Invert the transformation for some subset of the new QueryResult
 
-        Returns a DataCollection.'''
+        Returns a DataCollection."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -173,34 +187,38 @@ class DataTransform:
 
 
 class DummyTransform(DataTransform):
-    '''Dummy transform for efficiently handling no-op'''
+    """Dummy transform for efficiently handling no-op"""
+
     def __init__(self, qr: QueryResult):
         self.old = self.new = qr
 
     def add(self, old_ds: Dataset, new_ds: Dataset) -> None:
-        '''Add pre/post transformed data set
+        """Add pre/post transformed data set
 
         Will raise InconsistentDataError or DuplicateDataError based on the
         post-filtering data
-        '''
+        """
         assert old_ds is new_ds
         if old_ds in self.old:
             raise DuplicateDataError
         self.old.add(old_ds)
 
     def reverse(self, new_qr: QueryResult) -> DataCollection:
-        '''Invert the transformation for some subset of the new QueryResult
+        """Invert the transformation for some subset of the new QueryResult
 
-        Returns a DataCollection'''
+        Returns a DataCollection"""
         return DataCollection(new_qr)
 
 
 class FilterTransform(DataTransform):
-    '''Data transform described by Filter'''
+    """Data transform described by Filter"""
+
     def __init__(self, qr: QueryResult, filt: _BaseFilter):
-        self.old = qr #TODO: Make a copy here? Or at least document that we don't...
+        self.old = qr  # TODO: Make a copy here? Or at least document that we don't...
         self.new = QueryResult(qr.level)
-        self._new_to_old: Dict[QueryLevel, Dict[str, str]] = {lvl: {} for lvl in QueryLevel}
+        self._new_to_old: Dict[QueryLevel, Dict[str, str]] = {
+            lvl: {} for lvl in QueryLevel
+        }
         self.fixed_inconsistent: Dict[str, Dataset] = {}
         self.fixed_duplicates: Dict[str, Dataset] = {}
         self.fully_invertible = filt.invertible_uids
@@ -230,11 +248,11 @@ class FilterTransform(DataTransform):
         return new_uid
 
     def add(self, old_ds: Dataset, new_ds: Dataset) -> None:
-        '''Add pre/post transformed data set
+        """Add pre/post transformed data set
 
         Will raise InconsistentDataError or DuplicateDataError based on the
         post-filtering data
-        '''
+        """
         old_inconsistent = old_dupe = False
         try:
             old_dupe = old_ds in self.old
@@ -262,12 +280,12 @@ class FilterTransform(DataTransform):
                 self.fixed_duplicates[new_uid] = old_ds
 
     def reverse(self, new_qr: QueryResult) -> DataCollection:
-        '''Invert the remapping for some subset of the new QueryResult
+        """Invert the remapping for some subset of the new QueryResult
 
         Returns a DataCollection so we can also capture data that was duplicate
         or inconsistent prior to filtering (and thus can't be included in a
         QueryResult)
-        '''
+        """
         if new_qr.level != self.new.level:
             if new_qr.level > self.new.level or not self.fully_invertible:
                 raise QueryLevelMismatchError()
@@ -299,30 +317,37 @@ def get_transform(qr: QueryResult, filt: Optional[_BaseFilter]) -> DataTransform
         return FilterTransform(qr, filt)
 
 
-def make_uid_update_cb(uid_prefix: str = '2.25',
-                       add_uid_entropy: Optional[List[Any]] = None
-                      ) -> Callable[[Dataset, DataElement], None]:
+def make_uid_update_cb(
+    uid_prefix: str = "2.25", add_uid_entropy: Optional[List[Any]] = None
+) -> Callable[[Dataset, DataElement], None]:
     if add_uid_entropy is None:
         add_uid_entropy = []
-    if uid_prefix[-1] != '.':
-        uid_prefix += '.'
+    if uid_prefix[-1] != ".":
+        uid_prefix += "."
+
     def update_uids_cb(ds: Dataset, elem: DataElement) -> None:
-        '''Callback for updating UID values except `SOPClassUID`'''
-        if elem.VR == 'UI' and elem.keyword != 'SOPClassUID':
+        """Callback for updating UID values except `SOPClassUID`"""
+        if elem.VR == "UI" and elem.keyword != "SOPClassUID":
             if elem.VM > 1:
-                elem.value = [generate_uid(uid_prefix, [x] + add_uid_entropy) # type: ignore
-                              for x in elem.value]
+                elem.value = [
+                    generate_uid(uid_prefix, [x] + add_uid_entropy)  # type: ignore
+                    for x in elem.value
+                ]
             else:
-                elem.value = generate_uid(uid_prefix,
-                                          [elem.value] + add_uid_entropy) # type: ignore
+                elem.value = generate_uid(
+                    uid_prefix, [elem.value] + add_uid_entropy
+                )  # type: ignore
+
     return update_uids_cb
 
 
-def make_edit_filter(edit_dict: Dict[str, Any],
-                     update_uids: bool = True,
-                     uid_prefix: str = '2.25',
-                     add_uid_entropy: Optional[List[Any]] = None) -> _BaseFilter:
-    '''Make a Filter that edits some DICOM attributes
+def make_edit_filter(
+    edit_dict: Dict[str, Any],
+    update_uids: bool = True,
+    uid_prefix: str = "2.25",
+    add_uid_entropy: Optional[List[Any]] = None,
+) -> _BaseFilter:
+    """Make a Filter that edits some DICOM attributes
 
     Parameters
     ----------
@@ -334,8 +359,9 @@ def make_edit_filter(edit_dict: Dict[str, Any],
 
     add_uid_entropy : list or None
         One or more strings used as "entropy" when remapping UIDs
-    '''
+    """
     update_uids_cb = make_uid_update_cb(uid_prefix, add_uid_entropy)
+
     def edit_func(ds: Dataset) -> Dataset:
         # TODO: Handle nested attributes (VR of SQ)
         for attr_name, val in edit_dict.items():
@@ -345,9 +371,10 @@ def make_edit_filter(edit_dict: Dict[str, Any],
                 setattr(ds, attr_name, val)
         if update_uids:
             ds.walk(update_uids_cb)
-            if hasattr(ds, 'file_meta'):
+            if hasattr(ds, "file_meta"):
                 ds.file_meta.MediaStorageSOPInstanceUID = ds.SOPInstanceUID
         return ds
+
     if update_uids is False:
         write_elems = FrozenLazySet(edit_dict.keys())
     else:
@@ -357,44 +384,53 @@ def make_edit_filter(edit_dict: Dict[str, Any],
     return edit_filter
 
 
-def make_reject_filter(reject_dict: Dict[str, Tuple[Callable[[Dataset, Dataset], Any], Any]]
-                       ) -> _BaseFilter:
-    '''Make a filter that rejects certain datasets
-    
-    This is useful when you want to limit a transfer based on attributes that can't be 
+def make_reject_filter(
+    reject_dict: Dict[str, Tuple[Callable[[Dataset, Dataset], Any], Any]]
+) -> _BaseFilter:
+    """Make a filter that rejects certain datasets
+
+    This is useful when you want to limit a transfer based on attributes that can't be
     queried for.
-    
+
     Parameters
     ----------
     reject_dict
         Maps keywords to (operator, rvalue) tuples defining which datasets to reject
-    '''
+    """
+
     def reject_func(ds: Dataset) -> Optional[Dataset]:
         for attr_name, (op, val) in reject_dict.items():
             if not hasattr(ds, attr_name):
-                log.warning("Dataset doesn't have '{attr_name}' element for reject filter")
+                log.warning(
+                    "Dataset doesn't have '{attr_name}' element for reject filter"
+                )
                 continue
             if op(getattr(ds, attr_name), val):
                 return None
         return ds
+
     read_elems = FrozenLazySet(reject_dict.keys())
-    reject_filter = Filter(reject_func, read_elems=read_elems, write_elems=FrozenLazySet())
+    reject_filter = Filter(
+        reject_func, read_elems=read_elems, write_elems=FrozenLazySet()
+    )
     return reject_filter
 
 
-CMP_OPS = {'==' : operator.eq,
-           '!=' : operator.ne,
-           '<' : operator.lt,
-           '<=' : operator.le,
-           '>' : operator.gt,
-           '>=' : operator.ge,
-           '~=' : lambda l, r: re.match(r, l),
-           'in' : lambda l, r: l in r
-          }
+CMP_OPS = {
+    "==": operator.eq,
+    "!=": operator.ne,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+    "~=": lambda l, r: re.match(r, l),
+    "in": lambda l, r: l in r,
+}
 
 
 class Selector(Protocol):
-    '''Abstract base for objects that can select/reject data sets'''
+    """Abstract base for objects that can select/reject data sets"""
+
     def get_read_elems(self) -> FrozenLazySet[str]:
         raise NotImplementedError
 
@@ -402,17 +438,20 @@ class Selector(Protocol):
         raise NotImplementedError
 
     def get_filter(self) -> Filter:
-        return Filter(lambda ds: ds if self.test_ds(ds) else None,
-                      read_elems=self.get_read_elems(), 
-                      write_elems=FrozenLazySet())
+        return Filter(
+            lambda ds: ds if self.test_ds(ds) else None,
+            read_elems=self.get_read_elems(),
+            write_elems=FrozenLazySet(),
+        )
 
 
 @dataclass(frozen=True)
-class SingleSelector(Selector, InlineConfigurable['SingleSelector']):
-    '''Define a selection based on a single attribute
-    
+class SingleSelector(Selector, InlineConfigurable["SingleSelector"]):
+    """Define a selection based on a single attribute
+
     Can be defined in config file or as single string
-    '''
+    """
+
     attr: str
 
     op: str
@@ -423,28 +462,33 @@ class SingleSelector(Selector, InlineConfigurable['SingleSelector']):
 
     reject_missing: bool = True
 
-    _op: Optional[Callable[[Any, Any], bool]] = field(default=None, init=False, repr=False)
+    _op: Optional[Callable[[Any, Any], bool]] = field(
+        default=None, init=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         cmp_op = CMP_OPS.get(self.op)
         if cmp_op is None:
             raise ValueError(f"Unknown operator: {self.op}")
         if self.invert:
-            object.__setattr__(self, '_op', lambda l, r: not cmp_op(l, r))
+            object.__setattr__(self, "_op", lambda l, r: not cmp_op(l, r))
         else:
-            object.__setattr__(self, '_op', cmp_op)
+            object.__setattr__(self, "_op", cmp_op)
 
     @staticmethod
     def inline_to_dict(in_str: str) -> Dict[str, Any]:
-        '''Support simple forms to be encoded in single string'''
+        """Support simple forms to be encoded in single string"""
         # TODO: Can we use safe_eval on rvalue to convert it?
         #       Would still need more that that to support dates, use TOML?
-        match = re.match(r'^\s*(?P<invert>!?)\s*(?P<attr>\S+)\s+(?P<op>\S+)\s+(?P<rvalue>.+?)\s*$', in_str)
+        match = re.match(
+            r"^\s*(?P<invert>!?)\s*(?P<attr>\S+)\s+(?P<op>\S+)\s+(?P<rvalue>.+?)\s*$",
+            in_str,
+        )
         if not match:
             raise ValueError(f"Invalid in_str for Selector: {in_str}")
         res: Dict[str, Any] = match.groupdict()
-        if res['invert'] == '!':
-            res['invert'] = True
+        if res["invert"] == "!":
+            res["invert"] = True
         return res
 
     def get_read_elems(self) -> FrozenLazySet[str]:
@@ -460,8 +504,9 @@ class SingleSelector(Selector, InlineConfigurable['SingleSelector']):
 
 
 @dataclass(frozen=True)
-class MultiSelector(Selector, TomlConfigurable['MultiSelector']):
-    '''Logically combine selectors for more complex selections'''
+class MultiSelector(Selector, TomlConfigurable["MultiSelector"]):
+    """Logically combine selectors for more complex selections"""
+
     all_of: Tuple[Selector, ...] = tuple()
 
     any_of: Tuple[Selector, ...] = tuple()
@@ -471,7 +516,7 @@ class MultiSelector(Selector, TomlConfigurable['MultiSelector']):
     def __post_init__(self) -> None:
         if len(self.all_of) + len(self.any_of) + len(self.none_of) == 0:
             raise ValueError("Must give at least one type of selector")
-        for attr in ('all_of', 'any_of', 'none_of'):
+        for attr in ("all_of", "any_of", "none_of"):
             val = getattr(self, attr)
             if not isinstance(val, tuple):
                 object.__setattr__(self, attr, tuple(val))

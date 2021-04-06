@@ -1,4 +1,4 @@
-'''Logic for comparing DICOM data sets and data sources'''
+"""Logic for comparing DICOM data sets and data sources"""
 
 from copy import deepcopy
 from hashlib import sha256
@@ -10,21 +10,21 @@ from pydicom.tag import Tag
 
 def _shorten_bytes(val: bytes) -> bytes:
     if len(val) > 16:
-        return (b'*%d bytes, hash = %s*' %
-                (len(val), sha256(val).hexdigest().encode())
-               )
+        return b"*%d bytes, hash = %s*" % (len(val), sha256(val).hexdigest().encode())
     return val
 
 
 class DataDiff(object):
 
-    default_elem_fmt = '{elem.tag} {elem.name: <35} {elem.VR}: {value}'
+    default_elem_fmt = "{elem.tag} {elem.name: <35} {elem.VR}: {value}"
 
-    def __init__(self,
-                 tag: Tag,
-                 l_elem: Optional[DataElement],
-                 r_elem: Optional[DataElement],
-                 elem_fmt: str = default_elem_fmt):
+    def __init__(
+        self,
+        tag: Tag,
+        l_elem: Optional[DataElement],
+        r_elem: Optional[DataElement],
+        elem_fmt: str = default_elem_fmt,
+    ):
         self.tag = tag
         self.l_elem = deepcopy(l_elem)
         self.r_elem = deepcopy(r_elem)
@@ -39,14 +39,14 @@ class DataDiff(object):
     def __str__(self) -> str:
         res = []
         if self.l_elem is not None:
-            res.append('< %s' % self._format_elem(self.l_elem))
+            res.append("< %s" % self._format_elem(self.l_elem))
         if self.r_elem is not None:
-            res.append('> %s' % self._format_elem(self.r_elem))
-        return '\n'.join(res)
+            res.append("> %s" % self._format_elem(self.r_elem))
+        return "\n".join(res)
 
 
 def diff_data_sets(left: Dataset, right: Dataset) -> List[DataDiff]:
-    '''Get list of all differences between `left` and `right` data sets'''
+    """Get list of all differences between `left` and `right` data sets"""
     l_elems = iter(left)
     r_elems = iter(right)
     l_elem = r_elem = None

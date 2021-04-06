@@ -1,4 +1,4 @@
-'''Data storage abstraction for DICOM network entities'''
+"""Data storage abstraction for DICOM network entities"""
 from __future__ import annotations
 import logging
 from copy import deepcopy
@@ -18,17 +18,19 @@ from ..util import TomlConfigurable, dict_to_ds
 log = logging.getLogger(__name__)
 
 
-class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
-    '''Smart data store corresponding to a DICOM network entity'''
+class NetRepo(DcmRepo, TomlConfigurable["NetRepo"]):
+    """Smart data store corresponding to a DICOM network entity"""
 
     is_local = False
 
-    def __init__(self,
-                 local: DcmNode,
-                 remote: DcmNode,
-                 level: Optional[QueryLevel] = None,
-                 base_query: Optional[Dataset] = None,
-                 chunk_size: int = 1000):
+    def __init__(
+        self,
+        local: DcmNode,
+        remote: DcmNode,
+        level: Optional[QueryLevel] = None,
+        base_query: Optional[Dataset] = None,
+        chunk_size: int = 1000,
+    ):
         self._local_ent = LocalEntity(local)
         self._remote = remote
         self._level = level
@@ -39,27 +41,27 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
     @classmethod
     def from_toml_dict(cls, toml_dict: Dict[str, Any]) -> NetRepo:
         kwargs = deepcopy(toml_dict)
-        level = kwargs.get('level')
+        level = kwargs.get("level")
         if level is not None:
-            kwargs['level'] = QueryLevel[level.upper()]
-        base_query = kwargs.get('base_query')
+            kwargs["level"] = QueryLevel[level.upper()]
+        base_query = kwargs.get("base_query")
         if base_query is not None:
-            kwargs['base_query'] = dict_to_ds(base_query)
+            kwargs["base_query"] = dict_to_ds(base_query)
         return cls(**kwargs)
 
     def __getstate__(self) -> Dict[str, Any]:
-        state = {k: v for k, v in self.__dict__.items() if k != '_local_ent'}
-        state['local'] = self._local_ent._local
+        state = {k: v for k, v in self.__dict__.items() if k != "_local_ent"}
+        state["local"] = self._local_ent._local
         return state
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
-        self._local_ent = LocalEntity(state['local'])
-        del state['local']
+        self._local_ent = LocalEntity(state["local"])
+        del state["local"]
         for attr, val in state.items():
             setattr(self, attr, val)
 
     def __repr__(self) -> str:
-        return f'NetRepo({self._local_ent.local}, {self._remote})'
+        return f"NetRepo({self._local_ent.local}, {self._remote})"
 
     def __str__(self) -> str:
         return str(self._remote)
@@ -72,11 +74,13 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
     def base_query(self) -> Dataset:
         return deepcopy(self._base_query)
 
-    async def query(self,
-                    level: Optional[QueryLevel] = None,
-                    query: Optional[Dataset] = None,
-                    query_res: Optional[QueryResult] = None,
-                    report: Optional[MultiListReport[DicomOpReport]] = None) -> QueryResult:
+    async def query(
+        self,
+        level: Optional[QueryLevel] = None,
+        query: Optional[Dataset] = None,
+        query_res: Optional[QueryResult] = None,
+        report: Optional[MultiListReport[DicomOpReport]] = None,
+    ) -> QueryResult:
         if level is None:
             if query_res is not None:
                 level = query_res.level
@@ -88,19 +92,18 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
             else:
                 query = deepcopy(query)
                 query.update(self._base_query)
-        return await self._local_ent.query(self._remote,
-                                           level,
-                                           query,
-                                           query_res,
-                                           report=report)
+        return await self._local_ent.query(
+            self._remote, level, query, query_res, report=report
+        )
 
-    def queries(self,
-                level: Optional[QueryLevel] = None,
-                query: Optional[Dataset] = None,
-                query_res: Optional[QueryResult] = None,
-                report: Optional[MultiListReport[DicomOpReport]] = None
-                ) -> AsyncIterator[QueryResult]:
-        '''Returns async generator that produces partial QueryResult objects'''
+    def queries(
+        self,
+        level: Optional[QueryLevel] = None,
+        query: Optional[Dataset] = None,
+        query_res: Optional[QueryResult] = None,
+        report: Optional[MultiListReport[DicomOpReport]] = None,
+    ) -> AsyncIterator[QueryResult]:
+        """Returns async generator that produces partial QueryResult objects"""
         if level is None:
             if query_res is not None:
                 level = query_res.level
@@ -118,11 +121,10 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
         async for chunk in self.gen_query_chunks(qr):
             yield chunk
 
-    async def gen_query_chunks(self,
-                               query_res: QueryResult
-                               ) -> AsyncIterator[DcmNetChunk]:
-        '''Generate chunks of data corresponding to `query_res`
-        '''
+    async def gen_query_chunks(
+        self, query_res: QueryResult
+    ) -> AsyncIterator[DcmNetChunk]:
+        """Generate chunks of data corresponding to `query_res`"""
         curr_qr = QueryResult(query_res.level)
         for path, sub_uids in query_res.walk():
             n_inst: Optional[int]
@@ -153,27 +155,26 @@ class NetRepo(DcmRepo, TomlConfigurable['NetRepo']):
             yield DcmNetChunk(self, curr_qr)
 
     @asynccontextmanager
-    async def send(self,
-                   report: Optional[DicomOpReport] = None
-                   ) -> AsyncIterator['janus._AsyncQueueProxy[Dataset]']:
+    async def send(
+        self, report: Optional[DicomOpReport] = None
+    ) -> AsyncIterator["janus._AsyncQueueProxy[Dataset]"]:
         async with self._local_ent.send(self._remote, report=report) as send_q:
             yield send_q
 
-    def retrieve(self,
-                 query_res: QueryResult,
-                 report: Optional[RetrieveReport] = None
-                 ) -> AsyncIterator[Dataset]:
+    def retrieve(
+        self, query_res: QueryResult, report: Optional[RetrieveReport] = None
+    ) -> AsyncIterator[Dataset]:
         return self._local_ent.retrieve(self._remote, query_res, report)
 
-    async def oob_transfer(self,
-                           method: TransferMethod,
-                           chunk: DcmNetChunk,
-                           report: Optional[MultiListReport[DicomOpReport]] = None
-                           ) -> None:
-        '''Perform out-of-band transfer instead of proxying data'''
+    async def oob_transfer(
+        self,
+        method: TransferMethod,
+        chunk: DcmNetChunk,
+        report: Optional[MultiListReport[DicomOpReport]] = None,
+    ) -> None:
+        """Perform out-of-band transfer instead of proxying data"""
         if method != TransferMethod.REMOTE_COPY:
             raise ValueError("Unsupported transfer method: %s" % method)
-        await self._local_ent.move(chunk.repo.remote,
-                                   self._remote,
-                                   chunk.qr,
-                                   report=report)
+        await self._local_ent.move(
+            chunk.repo.remote, self._remote, chunk.qr, report=report
+        )
