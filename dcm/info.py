@@ -39,13 +39,16 @@ dependency_links = [
     "https://github.com/pydicom/pynetdicom3/tarball/master#egg=pynetdicom3"
 ]
 tests_require = [
+    "mypy",
+    "black",
     "pytest",
     "pytest-asyncio",
     "pytest-mypy",
-    "mypy",
+    "pytest-black",
     "psutil",
     "tox",
     "tox-pyenv",
+    "pre-commit",
 ]
 
 # Extra requirements for building documentation

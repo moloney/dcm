@@ -335,8 +335,8 @@ def make_uid_update_cb(
                 ]
             else:
                 elem.value = generate_uid(
-                    uid_prefix, [elem.value] + add_uid_entropy
-                )  # type: ignore
+                    uid_prefix, [elem.value] + add_uid_entropy  # type: ignore
+                )
 
     return update_uids_cb
 
