@@ -2,6 +2,9 @@
 dcm
 ===
 
+.. image:: https://codecov.io/gh/moloney/dcm/branch/main/graph/badge.svg
+  :target: https://codecov.io/gh/moloney/dcm
+
 This is a Python package and CLI application for performing high-level DICOM
 file and network operations. This includes performing queries, performing
 'rsync' like data transfers, routing data (including dynamic routing), sorting
