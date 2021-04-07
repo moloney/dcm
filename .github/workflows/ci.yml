@@ -26,3 +26,7 @@ jobs:
         pip install tox tox-gh-actions tox-poetry-dev-dependencies
     - name: Test with tox
       run: tox
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        files: ./coverage.xml
