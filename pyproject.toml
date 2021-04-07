@@ -1,0 +1,77 @@
+[tool.poetry]
+name = "dcm"
+version = "0.1.0-dev"
+description = "\"High level DICOM file/network operations\""
+authors = ["Brendan Moloney <moloney@ohsu.edu>"]
+readme = "README.rst"
+homepage = "https://github.com/moloney/dcm"
+keywords = ["dicom", "network"]
+license = "MIT"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+]
+
+[tool.poetry.scripts]
+dcm = 'dcm.cli:cli'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+pynetdicom = "^1.5.6"
+pydicom = "^2.1.2"
+toml = "^0.10.2"
+fifolock = "^0.0.20"
+janus = "^0.6.1"
+click = "^7.1.2"
+tree-format = "^0.1.2"
+rich = "^10.1.0"
+typing-extensions = "^3.7.4"
+dateparser = "^1.0.0"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.12.0"
+ipython = "^7.22.0"
+pytest = "^6.2.3"
+black = "^20.8b1"
+mypy = "^0.812"
+psutil = "^5.8.0"
+tox = "^3.23.0"
+pytest-asyncio = "^0.14.0"
+pytest-mypy = "^0.8.1"
+pytest-black = "^0.3.12"
+tox-pyenv = "^1.1.0"
+importlib-metadata = "<2.0"
+tox-poetry-dev-dependencies = "^0.0.9"
+pytest-cov = "^2.11.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = "dcm/"
+required_plugins = ["pytest-asyncio", "pytest-mypy", "pytest-black"]
+addopts = "--mypy --black --cov=dcm"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py37,py38,py39
+
+[gh-actions]
+python =
+    3.7: py37
+    3.8: py38
+    3.9: py39
+
+[testenv]
+poetry_add_dev_dependencies = True
+commands =
+    pytest
+"""

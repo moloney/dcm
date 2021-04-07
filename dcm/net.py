@@ -52,7 +52,7 @@ from pynetdicom.transport import ThreadedAssociationServer
 from pynetdicom.presentation import PresentationContext
 
 
-from .info import __version__
+from . import __version__
 from .query import (
     QueryLevel,
     QueryResult,

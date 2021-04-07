@@ -1,4 +1,5 @@
 *.pyc
+dist/
 __pycache__
 .pytest_cache
 .eggs
@@ -7,3 +8,4 @@ __pycache__
 .tox
 .vscode
 .python-version
+.coverage

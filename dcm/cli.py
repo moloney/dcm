@@ -16,6 +16,7 @@ from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
 
+from . import __version__
 from .conf import DcmConfig, _default_conf, NoLocalNodeError
 from .util import str_to_tag, aclosing, json_serializer
 from .lazyset import AllElems, LazySet
@@ -162,6 +163,12 @@ def cli(
     ctx.obj = {}
     ctx.obj["config_path"] = config
     ctx.obj["config"] = DcmConfig(config, create_if_missing=True)
+
+
+@click.command()
+@click.pass_obj
+def version(params):
+    click.echo(__version__)
 
 
 @click.command()
@@ -826,6 +833,7 @@ def diff(params, left, right):
 
 
 # Add our subcommands ot the CLI
+cli.add_command(version)
 cli.add_command(conf)
 cli.add_command(echo)
 cli.add_command(query)

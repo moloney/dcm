@@ -1,2 +1,4 @@
 """This package makes high-level DICOM file/network operations easy"""
-from .info import __version__
+import importlib_metadata
+
+__version__ = importlib_metadata.version("dcm")
