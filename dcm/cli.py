@@ -168,6 +168,7 @@ def cli(
 @click.command()
 @click.pass_obj
 def version(params):
+    """Print the version and exit"""
     click.echo(__version__)
 
 
