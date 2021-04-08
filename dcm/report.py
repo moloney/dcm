@@ -41,6 +41,8 @@ class ProgressTaskBase:
 
     show_indeterminate: bool
 
+    _visible: bool = field(default=False, init=False, repr=False)
+
 
 T = TypeVar("T", bound=ProgressTaskBase)
 
@@ -72,8 +74,6 @@ class RichProgressTask(ProgressTaskBase):
 
     _task: Optional[rich.progress.TaskID] = field(default=None, init=False, repr=False)
 
-    _task_opts: Dict[str, Any] = field(default_factory=dict, init=False, repr=False)
-
 
 class RichProgressHook(ProgressHookBase[RichProgressTask]):
     """Hook for console progress bar provided by `rich` package"""
@@ -89,12 +89,14 @@ class RichProgressHook(ProgressHookBase[RichProgressTask]):
         if "show_indeterminate" not in kwargs:
             kwargs["show_indeterminate"] = self.def_show_indeterminate
         res = RichProgressTask(description, total, datetime.now(), **kwargs)
-        self._update_task(res)
+        # self._update_task(res)
         return res
 
     def set_total(self, task: RichProgressTask, total: int) -> None:
+        if total == task.total:
+            return
         task.total = total
-        self._update_task(task)
+        self._update_task(task, total_dirty=True)
 
     def advance(self, task: RichProgressTask, amount: float = 1.0) -> None:
         self._update_task(task, advance=amount)
@@ -106,26 +108,35 @@ class RichProgressHook(ProgressHookBase[RichProgressTask]):
             task._task = None
 
     def _update_task(
-        self, task: RichProgressTask, advance: Optional[float] = None
+        self,
+        task: RichProgressTask,
+        advance: Optional[float] = None,
+        total_dirty: bool = False,
     ) -> None:
+        task_opts: Dict[str, Any] = {}
         if task.total is None:
             if not task.show_indeterminate:
                 return
-            task._task_opts["start"] = False
-        else:
-            task._task_opts["total"] = task.total
-        if task._task_opts.get("visible", False) == False:
+            task_opts["start"] = False
+        elif total_dirty:
+            task_opts["total"] = task.total
+        if task._visible == False:
             if (
                 task.min_seconds <= 0.0
                 or (datetime.now() - task.start_time).total_seconds() > task.min_seconds
             ):
-                task._task_opts["visible"] = True
+                task._visible = True
+                task_opts["visible"] = True
+        if not task._visible and advance is None:
+            return
         if task._task is None:
-            task._task = self._progress.add_task(task.description, **task._task_opts)
+            task_opts["total"] = task.total
+            task_opts["visible"] = task._visible
+            task._task = self._progress.add_task(task.description, **task_opts)
             if advance is not None:
                 self._progress.advance(task._task, advance)
         else:
-            self._progress.update(task._task, advance=advance, **task._task_opts)
+            self._progress.update(task._task, advance=advance, **task_opts)
 
 
 class BaseReport:
