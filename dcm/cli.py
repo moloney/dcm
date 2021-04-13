@@ -12,6 +12,7 @@ from pydicom.dataset import Dataset
 from pynetdicom import evt
 import click
 import toml
+from rich.console import Console
 from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
@@ -123,6 +124,9 @@ def cli(
         if verbose or debug:
             cli_error("Can't mix --quiet with --verbose/--debug")
 
+    # Create Rich Console outputing to stderr for logging / progress bars
+    rich_con = Console(stderr=True)
+
     # Setup logging
     LOG_FORMAT = "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s"
     def_formatter = logging.Formatter(LOG_FORMAT)
@@ -131,7 +135,7 @@ def cli(
     pynetdicom_logger = logging.getLogger("pynetdicom")
     pynetdicom_logger.setLevel(getattr(logging, pynetdicom_log_level))
     stream_formatter = logging.Formatter("%(threadName)s %(name)s %(message)s")
-    stream_handler = RichHandler(enable_link_path=False)
+    stream_handler = RichHandler(console=rich_con, enable_link_path=False)
     stream_handler.setFormatter(stream_formatter)
     # logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
@@ -163,6 +167,7 @@ def cli(
     ctx.obj = {}
     ctx.obj["config_path"] = config
     ctx.obj["config"] = DcmConfig(config, create_if_missing=True)
+    ctx.obj["rich_con"] = rich_con
 
 
 @click.command()
@@ -337,7 +342,11 @@ def query(
             return
     with ExitStack() as estack:
         if not no_progress:
-            prog = RichProgressHook(estack.enter_context(Progress(transient=True)))
+            prog = RichProgressHook(
+                estack.enter_context(
+                    Progress(console=params["rich_con"], transient=True)
+                )
+            )
             report = MultiListReport(description="query", prog_hook=prog)
         else:
             report = None
@@ -588,7 +597,11 @@ def sync(
     # Setup reporting/progress hooks and do the transfer
     with ExitStack() as estack:
         if not no_progress:
-            prog_hook = RichProgressHook(estack.enter_context(Progress(transient=True)))
+            prog_hook = RichProgressHook(
+                estack.enter_context(
+                    Progress(console=params["rich_con"], transient=True)
+                )
+            )
 
         qr_reports = None
         if query is not None or query_res is not None:
