@@ -537,6 +537,8 @@ class SyncManager:
         for dest in dests:
             if isinstance(dest, Route):
                 self._routes.append(dest)
+            else:
+                plain_dests.append(dest)
         if plain_dests:
             self._routes.append(StaticRoute(tuple(plain_dests)))
         if len(self._routes) == 0:
