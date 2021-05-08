@@ -1100,7 +1100,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             report._meta_data["query"] = query
         if query_res is not None:
             report._meta_data["level"] = query_res.level.name
-            report._meta_data["uids"] = [u for u in query_res.uids()]
+            report._meta_data["study_uids"] = [u for u in query_res.studies()]
 
         # Determine the query model
         query_model = self._choose_qr_model(remote, "find", level)
@@ -1313,7 +1313,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
         report._meta_data["level"] = query_res.level.name
-        report._meta_data["uids"] = [u for u in query_res.uids()]
+        report._meta_data["study_uids"] = [u for u in query_res.studies()]
 
         # Setup the association
         query_model = self._choose_qr_model(source, "move", query_res.level)
@@ -1383,7 +1383,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report.requested = query_res
         report._meta_data["remote"] = remote
         report._meta_data["level"] = query_res.level.name
-        report._meta_data["uids"] = [u for u in query_res.uids()]
+        report._meta_data["study_uids"] = [u for u in query_res.studies()]
 
         # TODO: Stop ignoring type errors here once mypy fixes issue #3004
         if keep_errors is not None:
