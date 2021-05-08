@@ -527,7 +527,7 @@ class SyncManager:
             self.report = report
         self.report._meta_data["source"] = self._src
         self.report._meta_data["dests"] = dests
-        self.report._meta_data["trust_level"] = self._trust_level
+        self.report._meta_data["trust_level"] = self._trust_level.name
         self.report._meta_data["force_all"] = self._force_all
         self.report._meta_data["keep_errors"] = self._keep_errors
 

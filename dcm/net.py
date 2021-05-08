@@ -64,7 +64,13 @@ from .query import (
     minimal_copy,
     get_all_uids,
 )
-from .report import CountableReport, MultiListReport, MultiError, ProgressHookBase
+from .report import (
+    BaseReport,
+    CountableReport,
+    MultiListReport,
+    MultiError,
+    ProgressHookBase,
+)
 from .util import (
     json_serializer,
     JsonSerializable,
@@ -544,11 +550,11 @@ class IncomingDataReport(CountableReport):
         if self.inconsistent:
             lines.append(f"  * inconsistent:")
             for uid in self.inconsistent:
-                lines.append(f"    {uid}")
+                lines.append(f"      {uid}")
         if self.duplicate:
             lines.append(f"  * duplicate:")
             for uid in self.duplicate:
-                lines.append(f"    {uid}")
+                lines.append(f"      {uid}")
         return "\n".join(lines)
 
 
@@ -702,10 +708,10 @@ class RetrieveReport(IncomingDataReport):
         if self.unexpected:
             lines.append(f"  * unexpected:")
             for uid in self.unexpected:
-                lines.append(f"    {uid}")
+                lines.append(f"      {uid}")
         if self.missing:
             lines.append(f"  * missing:")
-            lines.append(self.missing.to_tree().replace("\n", "    \n"))
+            lines.append(self.missing.to_tree().replace("\n", "\n      "))
         return "\n".join(lines)
 
     def _set_done(self, val: bool) -> None:
@@ -1099,8 +1105,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         if query is not None:
             report._meta_data["query"] = query
         if query_res is not None:
-            report._meta_data["level"] = query_res.level.name
-            report._meta_data["study_uids"] = [u for u in query_res.studies()]
+            self._add_qr_meta(report, query_res)
 
         # Determine the query model
         query_model = self._choose_qr_model(remote, "find", level)
@@ -1312,8 +1317,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             report.description = "move"
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
-        report._meta_data["level"] = query_res.level.name
-        report._meta_data["study_uids"] = [u for u in query_res.studies()]
+        self._add_qr_meta(report, query_res)
 
         # Setup the association
         query_model = self._choose_qr_model(source, "move", query_res.level)
@@ -1382,8 +1386,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             extern_report = True
         report.requested = query_res
         report._meta_data["remote"] = remote
-        report._meta_data["level"] = query_res.level.name
-        report._meta_data["study_uids"] = [u for u in query_res.studies()]
+        self._add_qr_meta(report, query_res)
 
         # TODO: Stop ignoring type errors here once mypy fixes issue #3004
         if keep_errors is not None:
@@ -1690,3 +1693,11 @@ class LocalEntity(metaclass=_SingletonEntity):
                 if query_model in remote.qr_models:
                     return QR_MODELS[query_model][op_type]
             raise UnsupportedQueryModelError()
+
+    def _add_qr_meta(self, report: BaseReport, query_res: QueryResult) -> None:
+        report._meta_data["qr_level"] = query_res.level
+        report._meta_data["patient_ids"] = [x for x in query_res.patients()]
+        if query_res.level > QueryLevel.PATIENT:
+            report._meta_data["study_uids"] = [x for x in query_res.studies()]
+        if query_res.level > QueryLevel.STUDY and query_res.n_series() == 1:
+            report._meta_data["series_uids"] = [x for x in query_res.series()]

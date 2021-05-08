@@ -227,7 +227,7 @@ class BaseReport:
             else:
                 lines.append(f"  * {k}:")
                 for sub_v in v:
-                    lines.append(f"    {sub_v}")
+                    lines.append(f"      {sub_v}")
         done_stat = "COMPLETED" if self._done else "PENDING"
         lines.append(f"  * status: {done_stat}")
         lines.append(f"  * start time: {self._start_time}")
