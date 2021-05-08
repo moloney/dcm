@@ -539,6 +539,18 @@ class IncomingDataReport(CountableReport):
         self.inconsistent = []
         self.duplicate = []
 
+    def __str__(self) -> str:
+        lines = [super().__str__()]
+        if self.inconsistent:
+            lines.append(f"  * inconsistent:")
+            for uid in self.inconsistent:
+                lines.append(f"    {uid}")
+        if self.duplicate:
+            lines.append(f"  * duplicate:")
+            for uid in self.duplicate:
+                lines.append(f"    {uid}")
+        return "\n".join(lines)
+
 
 class RetrieveError(IncomingDataError):
     """Capture errors that happened during a retrieve operation"""
@@ -684,6 +696,17 @@ class RetrieveReport(IncomingDataReport):
         super().clear()
         self.move_report.clear()
         self.unexpected = []
+
+    def __str__(self) -> str:
+        lines = [super().__str__()]
+        if self.unexpected:
+            lines.append(f"  * unexpected:")
+            for uid in self.unexpected:
+                lines.append(f"    {uid}")
+        if self.missing:
+            lines.append(f"  * missing:")
+            lines.append(self.missing.to_tree().replace("\n", "    \n"))
+        return "\n".join(lines)
 
     def _set_done(self, val: bool) -> None:
         super()._set_done(val)
@@ -1069,9 +1092,15 @@ class LocalEntity(metaclass=_SingletonEntity):
         if report._description is None:
             report.description = "queries"
         report._meta_data["remote"] = remote
-        report._meta_data["level"] = level
 
         level, query = self._prep_query(level, query, query_res)
+
+        report._meta_data["level"] = level
+        if query is not None:
+            report._meta_data["query"] = query
+        if query_res is not None:
+            report._meta_data["level"] = query_res.level.name
+            report._meta_data["uids"] = [u for u in query_res.uids()]
 
         # Determine the query model
         query_model = self._choose_qr_model(remote, "find", level)
@@ -1149,7 +1178,6 @@ class LocalEntity(metaclass=_SingletonEntity):
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
-        # TODO: We should be making the association in a seperate thread too, right?
         # Create association with the remote node
         log.debug("Making association with %s for query" % (remote,))
         assoc = await self._associate(remote, QueryRetrievePresentationContexts)
@@ -1284,6 +1312,8 @@ class LocalEntity(metaclass=_SingletonEntity):
             report.description = "move"
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
+        report._meta_data["level"] = query_res.level.name
+        report._meta_data["uids"] = [u for u in query_res.uids()]
 
         # Setup the association
         query_model = self._choose_qr_model(source, "move", query_res.level)
@@ -1352,6 +1382,8 @@ class LocalEntity(metaclass=_SingletonEntity):
             extern_report = True
         report.requested = query_res
         report._meta_data["remote"] = remote
+        report._meta_data["level"] = query_res.level.name
+        report._meta_data["uids"] = [u for u in query_res.uids()]
 
         # TODO: Stop ignoring type errors here once mypy fixes issue #3004
         if keep_errors is not None:

@@ -222,7 +222,12 @@ class BaseReport:
     def __str__(self) -> str:
         lines = [f"{self.description}:"]
         for k, v in self._meta_data.items():
-            lines.append(f"  * {k}: {v}")
+            if not isinstance(v, list):
+                lines.append(f"  * {k}: {v}")
+            else:
+                lines.append(f"  * {k}:")
+                for sub_v in v:
+                    lines.append(f"    {sub_v}")
         done_stat = "COMPLETED" if self._done else "PENDING"
         lines.append(f"  * status: {done_stat}")
         lines.append(f"  * start time: {self._start_time}")
@@ -436,7 +441,6 @@ class CountableReport(BaseReport):
             lines.append(f"  * n_warnings: {self.n_warnings}")
         if self.n_errors > 0:
             lines.append(f"  * n_errors: {self.n_errors}")
-        # TODO: Setup method for including warning/error details
         return "\n".join(lines)
 
     def _set_done(self, val: bool) -> None:
