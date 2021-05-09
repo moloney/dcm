@@ -26,6 +26,7 @@ from typing import (
 )
 from pathlib import Path
 from queue import Empty
+from textwrap import indent
 
 import janus
 from fifolock import FifoLock
@@ -711,7 +712,7 @@ class RetrieveReport(IncomingDataReport):
                 lines.append(f"      {uid}")
         if self.missing:
             lines.append(f"  * missing:")
-            lines.append(self.missing.to_tree().replace("\n", "\n      "))
+            lines.append(indent(self.missing.to_tree(), "      "))
         return "\n".join(lines)
 
     def _set_done(self, val: bool) -> None:
