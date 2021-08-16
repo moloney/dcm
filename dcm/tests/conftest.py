@@ -193,13 +193,13 @@ has_dcmtk = mark.skipif(
 
 
 dcmtk_priv_sop_retr_xfail = mark.xfail(
-    DCMTK_VERSION < DCMTK_PRIV_RETR_VERS,
+    DCMTK_VERSION is None or DCMTK_VERSION < DCMTK_PRIV_RETR_VERS,
     reason="dcmqrscp version doesn't support retrieving private " "SOPClasses",
 )
 
 
 dcmtk_priv_sop_send_xfail = mark.xfail(
-    DCMTK_VERSION < DCMTK_PRIV_SEND_VERS,
+    DCMTK_VERSION is None or DCMTK_VERSION < DCMTK_PRIV_SEND_VERS,
     reason="dcmqrscp version doesn't support sending private " "SOPClasses",
 )
 
