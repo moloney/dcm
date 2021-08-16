@@ -331,7 +331,7 @@ def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
 
 @fixture
 def make_dcm_config_file():
-    with NamedTemporaryFile("wt") as conf_f:
+    with NamedTemporaryFile("wt", delete=False) as conf_f:
 
         def _make_dcm_config_file(config_str=_default_conf):
             conf_f.write(config_str)
@@ -339,6 +339,11 @@ def make_dcm_config_file():
             return conf_f.name
 
         yield _make_dcm_config_file
+    try:
+        conf_f.close()
+        os.unlink(conf_f.name)
+    except:
+        pass
 
 
 @fixture
