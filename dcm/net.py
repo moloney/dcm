@@ -970,6 +970,8 @@ class _SingletonEntity(type):
     def __call__(cls, *args, **kwargs):  # type: ignore
         init = cls._init[cls]
         local_node = inspect.getcallargs(init, None, *args, **kwargs)["local"]
+        if local_node is None:
+            raise ValueError("The 'local' arg can't be None")
         key = (cls, local_node.ae_title, local_node.port)
         if key not in cls._instances:
             cls._instances[key] = super(_SingletonEntity, cls).__call__(*args, **kwargs)
