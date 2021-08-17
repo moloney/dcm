@@ -28,7 +28,7 @@ from typing import (
 from typing_extensions import Protocol
 
 from pydicom import Dataset
-from pydicom.tag import Tag
+from pydicom.tag import BaseTag, Tag, TagType
 from pydicom.datadict import tag_for_keyword
 from rich.progress import Progress, Task
 
@@ -44,13 +44,16 @@ def dict_to_ds(data_dict: Dict[str, Any]) -> Dataset:
     return ds
 
 
-def str_to_tag(in_str: str) -> Tag:
+def str_to_tag(in_str: str) -> BaseTag:
     """Convert string representation to pydicom Tag
 
     The string can be a keyword, or two numbers separated by a comma
     """
     if in_str[0].isupper():
-        return tag_for_keyword(in_str)
+        res = tag_for_keyword(in_str)
+        if res is None:
+            raise ValueError("Invalid element ID: %s" % in_str)
+        return Tag(res)
     try:
         group_num, elem_num = [int(x.strip(), 0) for x in in_str.split(",")]
     except Exception:
@@ -162,14 +165,10 @@ class InlineConfigurable(Generic[TC_Type], TomlConfigurable[TC_Type], Protocol):
 PathInputType = Union[str, "os.PathLike"]
 
 
-# Generic element type
-T = TypeVar("T")
-
-
 @asynccontextmanager
 async def aclosing(
-    thing: AsyncGenerator[T, None]
-) -> AsyncIterator[AsyncGenerator[T, None]]:
+    thing: AsyncGenerator[Any, None]
+) -> AsyncIterator[AsyncGenerator[Any, None]]:
     """Context manager that ensures that an async iterator is closed
 
     See PEP 533 for an explanation on why this is (unfortunately) needed.

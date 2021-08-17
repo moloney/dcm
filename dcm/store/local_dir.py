@@ -279,7 +279,7 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         else:
             extern_report = True
         report._meta_data["root_path"] = self._root_path
-        send_q: janus.Queue[Dataset] = janus.Queue(10)
+        send_q: janus.Queue[Optional[Dataset]] = janus.Queue(10)
         send_fut = create_thread_task(
             _disk_write_worker,
             (
@@ -291,7 +291,7 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
             ),
         )
         try:
-            yield send_q.async_q
+            yield send_q.async_q  # type: ignore
         finally:
             if not send_fut.done():
                 await send_q.async_q.put(None)

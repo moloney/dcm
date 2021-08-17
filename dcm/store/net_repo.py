@@ -71,7 +71,7 @@ class NetRepo(DcmRepo, TomlConfigurable["NetRepo"]):
         return self._remote
 
     @property
-    def base_query(self) -> Dataset:
+    def base_query(self) -> Optional[Dataset]:
         return deepcopy(self._base_query)
 
     async def query(

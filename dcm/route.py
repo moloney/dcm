@@ -741,7 +741,7 @@ class Router:
     async def pre_route(
         self,
         src: DataRepo[Any, Any, Any, Any],
-        query: Union[Dict[str, Any], Dataset] = None,
+        query: Optional[Dataset] = None,
         query_res: QueryResult = None,
     ) -> Dict[Tuple[StaticRoute, ...], QueryResult]:
         """Pre-calculate any dynamic routing for data on `src`
@@ -846,7 +846,7 @@ class Router:
         self,
         keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
         report: Optional[DynamicTransferReport] = None,
-    ) -> AsyncIterator["asyncio.Queue[Optional[Dataset]]"]:
+    ) -> AsyncIterator["asyncio.Queue[Dataset]"]:
         """Produces queue where datasets can be put for dynamic routing
 
         Parameters
@@ -864,7 +864,7 @@ class Router:
         data_q: "asyncio.Queue[Optional[Dataset]]" = asyncio.Queue()
         route_task = asyncio.create_task(self._route(data_q, keep_errors, report))
         try:
-            yield data_q
+            yield data_q  # type: ignore
         finally:
             if not route_task.done():
                 await data_q.put(None)

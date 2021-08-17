@@ -49,7 +49,7 @@ class _BaseFilter:
     value.
     """
 
-    def __call__(self, data_set: Dataset) -> Dataset:
+    def __call__(self, data_set: Dataset) -> Optional[Dataset]:
         raise NotImplementedError
 
     @property
@@ -89,7 +89,7 @@ class Filter(_BaseFilter, _SingleFilter):
             if not isinstance(val, FrozenLazySet):
                 object.__setattr__(self, attr, FrozenLazySet(val))
 
-    def __call__(self, data_set: Dataset) -> Dataset:
+    def __call__(self, data_set: Dataset) -> Optional[Dataset]:
         return self.func(data_set)
 
     def get_dependencies(
@@ -132,12 +132,14 @@ class MultiFilter(_BaseFilter, _MultiFilter):
                 dep_elems |= filt.read_elems
         return (funcs, FrozenLazySet(dep_elems))
 
-    def __call__(self, data_set: Dataset) -> Dataset:
+    def __call__(self, data_set: Dataset) -> Optional[Dataset]:
+        ds: Optional[Dataset] = data_set
         for filt in self.filters:
-            data_set = filt(data_set)
-            if data_set is None:
+            if ds is None:
                 break
-        return data_set
+            ds = filt(ds)
+
+        return ds
 
 
 @dataclass

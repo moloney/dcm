@@ -31,7 +31,7 @@ from textwrap import indent
 import janus
 from fifolock import FifoLock
 import pydicom
-from pydicom.dataset import Dataset
+from pydicom.dataset import Dataset, FileMetaDataset
 from pydicom.datadict import keyword_for_tag
 
 from pynetdicom import (
@@ -251,7 +251,7 @@ sub_op_attrs = {
 class BatchDicomOperationError(Exception):
     """Base class for errors from DICOM batch network operations"""
 
-    def __init__(self, op_errors: List[Dataset]):
+    def __init__(self, op_errors: List[Tuple[Dataset, Dataset]]):
         self.op_errors = op_errors
 
 
@@ -819,7 +819,7 @@ def _move_worker(
 
 def _send_worker(
     send_q: janus._SyncQueueProxy[Optional[Dataset]],
-    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+    rep_q: janus._SyncQueueProxy[Optional[Tuple[Union[Exception, Dataset], Dataset]]],
     assoc: Association,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
@@ -843,6 +843,7 @@ def _send_worker(
         if no_input:
             continue
         log.debug("Send worker got a data set")
+        assert ds is not None
         try:
             status = assoc.send_c_store(ds)
         except Exception as e:
@@ -936,7 +937,7 @@ def make_sync_to_async_cb(
 
 
 def make_queue_data_cb(
-    res_q: asyncio.Queue[Tuple[Dataset, Dataset]]
+    res_q: asyncio.Queue[Tuple[Dataset, FileMetaDataset]]
 ) -> Callable[[evt.Event], Awaitable[int]]:
     """Return callback that queues dataset/metadata from incoming events"""
 
@@ -1398,7 +1399,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             event_types=frozenset((evt.EVT_C_STORE,)),
             ae_titles=frozenset((remote.ae_title,)),
         )
-        res_q: asyncio.Queue[Tuple[Dataset, Dataset]] = asyncio.Queue(10)
+        res_q: asyncio.Queue[Tuple[Dataset, FileMetaDataset]] = asyncio.Queue(10)
         retrieve_cb = make_queue_data_cb(res_q)
         log.debug("The 'retrieve' method is about to start listening")
         async with self.listen(retrieve_cb, event_filter):
@@ -1477,7 +1478,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report.dicom_op.provider = remote
         report.dicom_op.user = self._local
         report.dicom_op.op_type = "c-store"
-        send_q: janus.Queue[Dataset] = janus.Queue(10)
+        send_q: janus.Queue[Optional[Dataset]] = janus.Queue(10)
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
 
         log.debug(f"About to associate with {remote} to send data")
@@ -1492,7 +1493,9 @@ class LocalEntity(metaclass=_SingletonEntity):
                 (send_q.sync_q, rep_q.sync_q, assoc),
                 thread_pool=self._thread_pool,
             )
-            yield send_q.async_q
+            # Want it to be an error if external user sends None, so we have type
+            # mis-match here
+            yield send_q.async_q  # type: ignore
         finally:
             try:
                 # Signal send worker to shutdown, then wait for it

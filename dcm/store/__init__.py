@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from functools import partial
 from pathlib import Path
 from typing import (
+    AsyncGenerator,
     Optional,
     AsyncIterator,
     Tuple,
@@ -21,6 +22,7 @@ from typing import (
     Generic,
     Any,
     Type,
+    cast,
 )
 from typing_extensions import Protocol, runtime_checkable
 
@@ -111,7 +113,11 @@ class RepoChunk(DataChunk, Protocol):
 
     async def gen_data(self) -> AsyncIterator[Dataset]:
         self.report.keep_errors = self.keep_errors
-        async with aclosing(self.repo.retrieve(self.qr, report=self.report)) as rgen:
+        oiter = cast(
+            AsyncGenerator[Dataset, None],
+            self.repo.retrieve(self.qr, report=self.report),
+        )
+        async with aclosing(oiter) as rgen:
             async for data_set in rgen:
                 yield data_set
 

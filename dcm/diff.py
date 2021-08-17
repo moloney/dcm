@@ -5,7 +5,7 @@ from hashlib import sha256
 from typing import Optional, List
 
 from pydicom import Dataset, DataElement
-from pydicom.tag import Tag
+from pydicom.tag import BaseTag
 
 
 def _shorten_bytes(val: bytes) -> bytes:
@@ -20,7 +20,7 @@ class DataDiff(object):
 
     def __init__(
         self,
-        tag: Tag,
+        tag: BaseTag,
         l_elem: Optional[DataElement],
         r_elem: Optional[DataElement],
         elem_fmt: str = default_elem_fmt,
