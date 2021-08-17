@@ -767,7 +767,7 @@ def make_print_cb(fmt, elem_filter=None):
     return print_cb
 
 
-def _make_elem_filter(include, exclude, exclude_private):
+def _make_elem_filter(include, exclude, include_groups, exclude_private):
     if len(include) == 0:
         include_tags = LazySet(AllElems)
     else:
@@ -780,10 +780,16 @@ def _make_elem_filter(include, exclude, exclude_private):
         exclude_tags.add(str_to_tag(in_str))
     exclude_tags = LazySet(exclude_tags)
     include_tags -= exclude_tags
+    if len(include_groups) == 0:
+        include_groups = LazySet(AllElems)
+    else:
+        include_groups = LazySet([int(x) for x in include_groups])
 
     def elem_filter(elem):
         tag = elem.tag
         if exclude_private and elem.tag.group % 2 == 1:
+            return None
+        if tag.group not in include_groups:
             return None
         if tag in include_tags:
             return elem
@@ -808,6 +814,7 @@ def _make_elem_filter(include, exclude, exclude_private):
     multiple=True,
     help="Include elements by keyword or tag. Default is to include everything",
 )
+@click.option("--include-group", multiple=True, help="Include elements by group number")
 @click.option(
     "--exclude", "-e", multiple=True, help="exclude elements by keyword or tag"
 )
@@ -817,9 +824,18 @@ def _make_elem_filter(include, exclude, exclude_private):
     default=False,
     help="exclude all private elements",
 )
-def dump(params, dcm_files, out_format, plain_fmt, include, exclude, exclude_private):
+def dump(
+    params,
+    dcm_files,
+    out_format,
+    plain_fmt,
+    include,
+    include_group,
+    exclude,
+    exclude_private,
+):
     """Dump contents of DICOM files"""
-    elem_filter = _make_elem_filter(include, exclude, exclude_private)
+    elem_filter = _make_elem_filter(include, exclude, include_group, exclude_private)
     if out_format == "plain":
         print_cb = make_print_cb(plain_fmt, elem_filter)
         for pth in dcm_files:

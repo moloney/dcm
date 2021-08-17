@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from pytest import fixture, mark
 from click.testing import CliRunner
+import pydicom
 
 from ..cli import cli
 from ..util import json_serializer
@@ -131,3 +132,25 @@ def test_forward(
     assert sync_result.exit_code == 0
     assert fwd_res.exit_code == 0
     # TODO: Make sure the data made it
+
+
+def test_dump(dicom_files, make_dcm_config_file):
+    runner = CliRunner()
+    config_path = make_dcm_config_file()
+    args = [
+        "--config",
+        config_path,
+        "dump",
+        "-i",
+        "SOPInstanceUID",
+        "--plain-fmt",
+        "{elem.value}",
+        "--include-group",
+        "8",
+    ]
+    for dcm_path in dicom_files:
+        ds = pydicom.dcmread(dcm_path)
+        dump_res = runner.invoke(cli, args + [str(dcm_path)])
+        print(dump_res.stdout)
+        assert dump_res.exit_code == 0
+        assert dump_res.stdout.strip() == ds.SOPInstanceUID
