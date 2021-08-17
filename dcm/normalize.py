@@ -45,6 +45,9 @@ def make_elem_filter(include_elems):
     return filt
 
 
+# TODO: While this "elem_filter" is quite generic, it is pretty inefficient when we
+#       just want a handful of elements from a large data set. Should consider an
+#       alternative approach.
 def normalize(data_set, elem_filter=None):
     """Convert a DICOM data set into basic python types that can be serialized"""
     res = OrderedDict()

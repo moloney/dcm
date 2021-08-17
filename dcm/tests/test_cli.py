@@ -1,4 +1,4 @@
-import os, time, signal
+import os, time, signal, json
 from threading import Thread
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
@@ -166,12 +166,29 @@ def test_dump(dicom_files, make_dcm_config_file):
         "SOPInstanceUID",
         "--plain-fmt",
         "{elem.value}",
-        "--include-group",
+        "--group",
         "8",
+    ]
+    for dcm_path in dicom_files:
+        ds = pydicom.dcmread(dcm_path)
+        dump_res = runner.invoke(cli, args + [str(dcm_path)])
+        # print(dump_res.stdout)
+        assert dump_res.exit_code == 0
+        assert dump_res.stdout.strip() == ds.SOPInstanceUID
+    args = [
+        "--config",
+        config_path,
+        "dump",
+        "--kw-regex",
+        "InstanceUID",
+        "--out-format",
+        "json",
     ]
     for dcm_path in dicom_files:
         ds = pydicom.dcmread(dcm_path)
         dump_res = runner.invoke(cli, args + [str(dcm_path)])
         print(dump_res.stdout)
         assert dump_res.exit_code == 0
-        assert dump_res.stdout.strip() == ds.SOPInstanceUID
+        res_dict = json.loads(dump_res.stdout)
+        for kw in ("StudyInstanceUID", "SeriesInstanceUID", "SOPInstanceUID"):
+            assert res_dict[kw] == getattr(ds, kw)

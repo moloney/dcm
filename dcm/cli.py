@@ -1,6 +1,6 @@
 """Command line interface"""
 from __future__ import annotations
-import sys, os, logging, json
+import sys, os, logging, json, re
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
@@ -9,6 +9,7 @@ from typing import Optional, Callable, Awaitable
 
 import pydicom
 from pydicom.dataset import Dataset
+from pydicom.datadict import keyword_for_tag
 from pynetdicom import evt
 import click
 import toml
@@ -761,8 +762,9 @@ def forward(
 def make_print_cb(fmt, elem_filter=None):
     def print_cb(ds, elem):
         if elem_filter:
-            elem = elem_filter(elem)
-            if elem is None:
+            tag = elem.tag
+            keyword = keyword_for_tag(tag)
+            if not elem_filter(tag, keyword):
                 return
         try:
             print(fmt.format(elem=elem, ds=ds))
@@ -772,7 +774,7 @@ def make_print_cb(fmt, elem_filter=None):
     return print_cb
 
 
-def _make_elem_filter(include, exclude, include_groups, exclude_private):
+def _make_elem_filter(include, exclude, groups, kw_regex, exclude_private):
     if len(include) == 0:
         include_tags = LazySet(AllElems)
     else:
@@ -784,20 +786,30 @@ def _make_elem_filter(include, exclude, include_groups, exclude_private):
     for in_str in exclude:
         exclude_tags.add(str_to_tag(in_str))
     exclude_tags = LazySet(exclude_tags)
-    include_tags -= exclude_tags
-    if len(include_groups) == 0:
-        include_groups = LazySet(AllElems)
+    if len(groups) == 0:
+        groups = LazySet(AllElems)
     else:
-        include_groups = LazySet([int(x) for x in include_groups])
+        groups = LazySet([int(x) for x in groups])
+    kw_regex = [re.compile(x) for x in kw_regex]
 
-    def elem_filter(elem):
-        tag = elem.tag
-        if exclude_private and elem.tag.group % 2 == 1:
-            return None
-        if tag.group not in include_groups:
-            return None
+    def elem_filter(tag, keyword):
+        if exclude_private and tag.group % 2 == 1:
+            return False
+        if tag in exclude_tags:
+            return False
+        if tag.group not in groups:
+            if include and tag in include_tags:
+                return True
+            return False
+        if kw_regex:
+            keyword = keyword_for_tag(tag)
+            if not any(r.search(keyword) for r in kw_regex):
+                if include and tag in include_tags:
+                    return True
+                return False
         if tag in include_tags:
-            return elem
+            return True
+        return False
 
     return elem_filter
 
@@ -817,17 +829,22 @@ def _make_elem_filter(include, exclude, include_groups, exclude_private):
     "--include",
     "-i",
     multiple=True,
-    help="Include elements by keyword or tag. Default is to include everything",
+    help="Include specific elements by keyword or tag",
 )
-@click.option("--include-group", multiple=True, help="Include elements by group number")
+@click.option("--group", "-g", multiple=True, help="Include elements by group number")
 @click.option(
-    "--exclude", "-e", multiple=True, help="exclude elements by keyword or tag"
+    "--kw-regex",
+    multiple=True,
+    help="Include elements where the keyword matches a regex",
+)
+@click.option(
+    "--exclude", "-e", multiple=True, help="Exclude elements by keyword or tag"
 )
 @click.option(
     "--exclude-private",
     is_flag=True,
     default=False,
-    help="exclude all private elements",
+    help="Exclude all private elements",
 )
 def dump(
     params,
@@ -835,12 +852,19 @@ def dump(
     out_format,
     plain_fmt,
     include,
-    include_group,
+    group,
+    kw_regex,
     exclude,
     exclude_private,
 ):
-    """Dump contents of DICOM files"""
-    elem_filter = _make_elem_filter(include, exclude, include_group, exclude_private)
+    """Dump contents of DICOM files to stdout
+
+    Default is to include all elements, but this can be overridden by various options.
+
+    The `--out-format` can be `plain` or `json`. If it is `plain` each included element
+    is used to format a string which can be overridden with `--plain-fmt`.
+    """
+    elem_filter = _make_elem_filter(include, exclude, group, kw_regex, exclude_private)
     if out_format == "plain":
         print_cb = make_print_cb(plain_fmt, elem_filter)
         for pth in dcm_files:
