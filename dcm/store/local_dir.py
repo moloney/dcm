@@ -220,6 +220,14 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         Both the second components are optional
         """
         toks = in_str.split(":")
+        # Handle the fact that the path might have a colon in it already in windows
+        if (
+            len(toks) > 1
+            and os.name == "nt"
+            and len(toks[0]) == 1
+            and toks[1][0] == os.sep
+        ):
+            toks = [":".join(toks[:2])] + toks[2:]
         res = {"path": toks[0]}
         if len(toks) == 2:
             res["out_fmt"] = toks[1]
