@@ -493,7 +493,7 @@ def sync(
         local = None
 
     # Pass source options that override config through to the config parser
-    local_dir_kwargs = {}
+    local_dir_kwargs = {"make_missing": False}
     if recurse is not None:
         local_dir_kwargs["recurse"] = recurse
     if in_file_ext is not None:
@@ -509,7 +509,12 @@ def sync(
             raise NoLocalNodeError("No local DICOM node configured")
         sources = [NetRepo(local, query_res.prov.source)]
     else:
-        sources = [params["config"].get_bucket(s) for s in source]
+        sources = []
+        for s in source:
+            try:
+                sources.append(params["config"].get_bucket(s))
+            except Exception as e:
+                cli_error(f"Error processing source '{s}': {e}")
 
     # Pass dest options that override config through to the config parser
     local_dir_kwargs = {}

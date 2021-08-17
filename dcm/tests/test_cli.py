@@ -2,6 +2,8 @@ import os, time, signal
 from threading import Thread
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 from pytest import fixture, mark
@@ -73,6 +75,25 @@ def test_sync(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
     # TODO: Test data made it to dest
+
+
+def test_sync_missing_source(make_dcm_config_file):
+    runner = CliRunner()
+    config_path = make_dcm_config_file()
+    args = [
+        "--config",
+        config_path,
+        "sync",
+    ]
+    with TemporaryDirectory(prefix="dcm-test") as temp_dir:
+        temp_dir = Path(temp_dir)
+        na_src = temp_dir / "non-existant"
+        dest = temp_dir / "dest"
+        dest.mkdir()
+        result = runner.invoke(cli, args + ["--source", str(na_src), str(dest)])
+        print(result.stdout)
+        assert not na_src.exists()
+        assert result.exit_code != 0
 
 
 def _run_forward(config_path, local_node, dest_dir):
