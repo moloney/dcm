@@ -350,7 +350,8 @@ def query(
             )
             report = MultiListReport(description="query", prog_hook=prog)
         else:
-            report = None
+            report = MultiListReport(description="query")
+
         qr = asyncio.run(
             net_ent.query(remote_node, level, qdat, query_res, report=report)
         )
@@ -359,6 +360,7 @@ def query(
     elif out_format == "json":
         out = json_serializer.dumps(qr, indent=4)
     click.echo(out)
+    report.log_issues()
 
 
 @click.command()
