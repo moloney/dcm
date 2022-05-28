@@ -153,15 +153,17 @@ class LocalIncomingDataError(IncomingDataError):
         self,
         inconsistent: List[Tuple[str, ...]],
         duplicate: List[Tuple[str, ...]],
-        invalid: List[PathInputType],
+        invalid: Optional[List[Tuple[str, ...]]],
+        invalid_paths: List[PathInputType],
     ):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
         self.invalid = invalid
+        self.invalid_paths = invalid_paths
 
     def __str__(self) -> str:
         res = ["LocalIncomingDataError:"]
-        for err_type in ("inconsistent", "duplicate", "invalid"):
+        for err_type in ("inconsistent", "duplicate", "invalid", "invalid_paths"):
             errors = getattr(self, err_type)
             if errors is None:
                 continue
@@ -183,39 +185,39 @@ class LocalIncomingReport(IncomingDataReport):
         n_expected: Optional[int] = None,
         keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
     ):
-        self.invalid: List[PathInputType] = []
+        self.invalid_paths: List[PathInputType] = []
         super().__init__(
             description, meta_data, depth, prog_hook, n_expected, keep_errors
         )
 
     @property
     def n_input(self) -> int:
-        return super().n_input + len(self.invalid)
+        return super().n_input + len(self.invalid_paths)
 
     @property
     def n_errors(self) -> int:
-        return super().n_errors + len(self.invalid)
+        return super().n_errors + len(self.invalid_paths)
 
     def add_invalid(self, path: PathInputType) -> None:
         self.count_input()
-        self.invalid.append(path)
+        self.invalid_paths.append(path)
 
     def log_issues(self) -> None:
         """Log any warnings and errors"""
         super().log_issues()
-        n_invalid = len(self.invalid)
+        n_invalid = len(self.invalid_paths)
         if n_invalid:
             log.error("Incoming data issues: {n_invalid} invalid files")
 
     def check_errors(self) -> None:
         if self.n_errors:
             raise LocalIncomingDataError(
-                self.inconsistent, self.duplicate, self.invalid
+                self.inconsistent, self.duplicate, self.invalid, self.invalid_paths
             )
 
     def clear(self) -> None:
         super().clear()
-        self.invalid = []
+        self.invalid_paths = []
 
 
 _read_f = partial(pydicom.dcmread, force=True, defer_size=64)

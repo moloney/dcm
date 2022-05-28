@@ -1,7 +1,7 @@
 """High level async DICOM networking interface
 """
 from __future__ import annotations
-import asyncio, threading, time, logging, warnings, enum, inspect
+import asyncio, threading, time, logging, enum, inspect
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
@@ -55,6 +55,7 @@ from pynetdicom.presentation import PresentationContext
 
 from . import __version__
 from .query import (
+    InvalidDicomError,
     QueryLevel,
     QueryResult,
     InconsistentDataError,
@@ -415,6 +416,7 @@ class IncomingErrorType(enum.Enum):
     INCONSISTENT = enum.auto()
     DUPLICATE = enum.auto()
     UNEXPECTED = enum.auto()
+    INVALID = enum.auto()
 
 
 class IncomingDataError(Exception):
@@ -424,13 +426,15 @@ class IncomingDataError(Exception):
         self,
         inconsistent: Optional[List[Tuple[str, ...]]],
         duplicate: Optional[List[Tuple[str, ...]]],
+        invalid: Optional[List[Tuple[str, ...]]],
     ):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
+        self.invalid = invalid
 
     def __str__(self) -> str:
         res = ["IncomingDataError:"]
-        for err_type in ("inconsistent", "duplicate"):
+        for err_type in ("inconsistent", "duplicate", "invalid"):
             errors = getattr(self, err_type)
             if errors is None:
                 continue
@@ -456,6 +460,7 @@ class IncomingDataReport(CountableReport):
         self.retrieved = QueryResult(level=QueryLevel.IMAGE)
         self.inconsistent: List[Tuple[str, ...]] = []
         self.duplicate: List[Tuple[str, ...]] = []
+        self.invalid: List[Tuple[str, ...]] = []
         super().__init__(description, meta_data, depth, prog_hook, n_expected)
 
     @property
@@ -481,19 +486,23 @@ class IncomingDataReport(CountableReport):
     @property
     def n_errors(self) -> int:
         res = 0
-        if IncomingErrorType.INCONSISTENT not in self.keep_errors:
-            res += len(self.inconsistent)
-        if IncomingErrorType.DUPLICATE not in self.keep_errors:
-            res += len(self.duplicate)
+        for err_type in IncomingErrorType:
+            err_attr = err_type.name.lower()
+            if not hasattr(self, err_attr):
+                continue
+            if err_type not in self._keep_errors:
+                res += len(getattr(self, err_attr))
         return res
 
     @property
     def n_warnings(self) -> int:
         res = 0
-        if IncomingErrorType.INCONSISTENT in self.keep_errors:
-            res += len(self.inconsistent)
-        if IncomingErrorType.DUPLICATE in self.keep_errors:
-            res += len(self.duplicate)
+        for err_type in IncomingErrorType:
+            err_attr = err_type.name.lower()
+            if not hasattr(self, err_attr):
+                continue
+            if err_type in self._keep_errors:
+                res += len(getattr(self, err_attr))
         return res
 
     def add(self, data_set: Dataset) -> bool:
@@ -504,12 +513,16 @@ class IncomingDataReport(CountableReport):
             dupe = data_set in self.retrieved
         except InconsistentDataError:
             self.inconsistent.append(get_all_uids(data_set))
-            return IncomingErrorType.INCONSISTENT in self.keep_errors
+            return IncomingErrorType.INCONSISTENT in self._keep_errors
         else:
             if dupe:
                 self.duplicate.append(get_all_uids(data_set))
-                return IncomingErrorType.DUPLICATE in self.keep_errors
-        self.retrieved.add(minimal_copy(data_set))
+                return IncomingErrorType.DUPLICATE in self._keep_errors
+        try:
+            self.retrieved.add(minimal_copy(data_set))
+        except InvalidDicomError:
+            self.invalid.append(get_all_uids(data_set))
+            return IncomingErrorType.INVALID in self._keep_errors
         return True
 
     def log_issues(self) -> None:
@@ -540,22 +553,27 @@ class IncomingDataReport(CountableReport):
                 kwargs["inconsistent"] = self.inconsistent
             if IncomingErrorType.DUPLICATE not in self.keep_errors:
                 kwargs["duplicate"] = self.duplicate
+            if IncomingErrorType.INVALID not in self.keep_errors:
+                kwargs["invalid"] = self.invalid
             raise IncomingDataError(**kwargs)
 
     def clear(self) -> None:
         self.inconsistent = []
         self.duplicate = []
+        self.invalid = []
 
     def __str__(self) -> str:
         lines = [super().__str__()]
-        if self.inconsistent:
-            lines.append(f"  * inconsistent:")
-            for uid in self.inconsistent:
-                lines.append(f"      {uid}")
-        if self.duplicate:
-            lines.append(f"  * duplicate:")
-            for uid in self.duplicate:
-                lines.append(f"      {uid}")
+        res = 0
+        for err_type in IncomingErrorType:
+            err_attr = err_type.name.lower()
+            if not hasattr(self, err_attr):
+                continue
+            errors = getattr(self, err_attr)
+            if errors:
+                lines.append(f"  * {err_type}:")
+                for uid in errors:
+                    lines.append(f"      {uid}")
         return "\n".join(lines)
 
 
@@ -566,12 +584,14 @@ class RetrieveError(IncomingDataError):
         self,
         inconsistent: Optional[List[Tuple[str, ...]]],
         duplicate: Optional[List[Tuple[str, ...]]],
+        invalid: Optional[List[Tuple[str, ...]]],
         unexpected: Optional[List[Tuple[str, ...]]],
         missing: Optional[QueryResult],
         move_errors: Optional[MultiError],
     ):
         self.inconsistent = inconsistent
         self.duplicate = duplicate
+        self.invalid = invalid
         self.unexpected = unexpected
         self.missing = missing
         self.move_errors = move_errors
@@ -581,7 +601,7 @@ class RetrieveError(IncomingDataError):
         for err_type in (
             "inconsistent",
             "unexpected",
-            "duplicate",
+            "invalid" "duplicate",
             "missing",
             "move_errors",
         ):
@@ -664,7 +684,11 @@ class RetrieveReport(IncomingDataReport):
             self.duplicate.append(get_all_uids(data_set))
             return IncomingErrorType.DUPLICATE in self._keep_errors
         # TODO: Can we avoid duplicate work making min copies here and in the store report?
-        self.retrieved.add(minimal_copy(data_set))
+        try:
+            self.retrieved.add(minimal_copy(data_set))
+        except InvalidDicomError:
+            self.invalid.append(get_all_uids(data_set))
+            return IncomingErrorType.INVALID in self._keep_errors
         return True
 
     def log_issues(self) -> None:
@@ -692,6 +716,7 @@ class RetrieveReport(IncomingDataReport):
                 self.duplicate
                 if IncomingErrorType.DUPLICATE in self._keep_errors
                 else [],
+                self.invalid if IncomingErrorType.INVALID in self._keep_errors else [],
                 self.unexpected
                 if IncomingErrorType.UNEXPECTED in self._keep_errors
                 else [],

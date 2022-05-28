@@ -58,9 +58,8 @@ def get_all_uids(data_set: Dataset) -> Tuple[str, ...]:
     uids = []
     for lvl in QueryLevel:
         lvl_uid = getattr(data_set, uid_elems[lvl], None)
-        if lvl_uid is None:
-            break
-        uids.append(lvl_uid)
+        if lvl_uid is not None:
+            uids.append(lvl_uid)
     return tuple(uids)
 
 
@@ -253,6 +252,10 @@ class InconsistentDataError(DicomDataError):
     """The data set violates the established patient/study/series heirarchy"""
 
 
+class InvalidDicomError(DicomDataError):
+    """A DICOM dataset is invalid"""
+
+
 @json_serializer
 @dataclass
 class QueryProv:
@@ -437,7 +440,12 @@ class QueryResult:
                 lvl_info = OrderedDict()
                 normed_data = normalize(data_set, level_filters[lvl])
                 for attr in req_elems[lvl]:
-                    lvl_info[attr] = normed_data[attr]
+                    val = normed_data.get(attr, None)
+                    if val is None:
+                        raise InvalidDicomError(
+                            f"Dataset is missing required elem: {attr}"
+                        )
+                    lvl_info[attr] = val
                 for attr in opt_elems[lvl]:
                     val = normed_data.get(attr)
                     if val is not None:
