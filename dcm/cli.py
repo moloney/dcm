@@ -234,8 +234,8 @@ def echo(params, remote, local):
 def _hr_to_dcm_date(in_str):
     try:
         dt = dateparser.parse(in_str)
-    except Exception:
-        cli_error(f"Unable to parse date: 'in_str'")
+    except Exception as e:
+        cli_error(f"Unable to parse date '{in_str}': {e}")
     return dt.strftime("%Y%m%d")
 
 
