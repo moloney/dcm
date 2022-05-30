@@ -457,9 +457,14 @@ class QueryResult:
                 for attr in req_elems[lvl]:
                     val = normed_data.get(attr, None)
                     if val is None:
-                        raise InvalidDicomError(
-                            f"Dataset is missing required elem: {attr}"
+                        if attr not in blankable_req_elems:
+                            raise InvalidDicomError(
+                                f"Dataset is missing required elem: {attr}"
+                            )
+                        log.warning(
+                            "Dataset missing required (but blankable) elem: %s", attr
                         )
+                        val = ""
                     lvl_info[attr] = val
                 for attr in opt_elems[lvl]:
                     val = normed_data.get(attr)
@@ -517,10 +522,11 @@ class QueryResult:
             try:
                 lvl_uid = getattr(data_set, uid_elems[lvl])
             except AttributeError:
+                # The PatientID can be blank, though many systems won't support it...
                 if lvl == QueryLevel.PATIENT:
-                    # If the dataset doesn't even have patient info, reraise
-                    raise
-                break
+                    lvl_uid = ""
+                else:
+                    break
             lvl_info = self._levels[lvl].get(lvl_uid)
             if lvl_info is None:
                 res = False

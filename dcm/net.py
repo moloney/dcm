@@ -802,7 +802,19 @@ def _query_worker(
                 if tag not in rdat_keys:
                     keyword = keyword_for_tag(tag)
                     missing_attrs.add(keyword)
-            res.add(rdat)
+            is_consistent = True
+            try:
+                dupe = rdat in res
+            except InconsistentDataError:
+                log.error("Got inconsistent data in query reponse from %s", assoc.ae)
+                is_consistent = False
+            if dupe:
+                log.warning("Got duplicate data in query response from %s", assoc.ae)
+            elif is_consistent:
+                try:
+                    res.add(rdat)
+                except InvalidDicomError:
+                    log.error("Got invalid data in query reponse from %s", assoc.ae)
         if len(res) != 0:
             res_q.put((res, missing_attrs))
     res_q.put(None)
