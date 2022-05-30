@@ -15,7 +15,6 @@ from typing import (
     Any,
     Optional,
     Iterator,
-    AsyncIterator,
     Callable,
     Union,
     Set,
@@ -24,7 +23,7 @@ from typing import (
 from pydicom.dataset import Dataset
 from tree_format import format_tree
 
-from .util import DicomDataError, JsonSerializable, json_serializer
+from .util import DicomDataError, JsonSerializable, json_serializer, fallback_fmt
 from .normalize import normalize, make_elem_filter
 
 
@@ -104,6 +103,7 @@ req_elems = {
         "StudyInstanceUID",
         "StudyDate",
         "StudyTime",
+        "AccessionNumber",
     ],
     QueryLevel.SERIES: [
         "SeriesInstanceUID",
@@ -116,6 +116,19 @@ req_elems = {
     ],
 }
 """Required attributes for each query level (accumulates at each level)"""
+
+
+blankable_req_elems = [
+    "PatientID",
+    "PatientName",
+    "StudyDate",
+    "StudyTime",
+    "AccessionNumber",
+    "SeriesNumber",
+    "InstanceNumber",
+]
+"""Some 'required' attributes can be blank, treat missing values as blank in this case
+"""
 
 
 opt_elems: Dict[QueryLevel, List[str]] = {
@@ -182,6 +195,8 @@ def minimal_copy(ds: Dataset) -> Dataset:
         val = getattr(ds, attr, None)
         if val is not None:
             setattr(res, attr, val)
+        elif val in blankable_req_elems:
+            setattr(res, attr, "")
     return res
 
 
@@ -1087,7 +1102,7 @@ class QueryResult:
             fmt_toks = self._def_level_fmts[level]
         line_fmt = sep.join(fmt_toks)
         node_info = defaultdict(lambda: missing, self.node_info(node))
-        return line_fmt.format_map(node_info)
+        return fallback_fmt.vformat(line_fmt, args=[], kwargs=node_info)
 
     def _make_sorted_child_getter(
         self, sort_elems: Dict[QueryLevel, str], max_level: QueryLevel
@@ -1141,7 +1156,9 @@ class QueryResult:
                     ]
                     line_fmt = sep.join(fmt_toks)
                     node_info = defaultdict(lambda: missing, self.node_info(pth.end))
-                    descr_comps.append(line_fmt.format_map(node_info))
+                    descr_comps.append(
+                        fallback_fmt.vformat(line_fmt, args=[], kwargs=node_info)
+                    )
             descr = sep.join(descr_comps)
         else:
             descr = self.to_line(None)

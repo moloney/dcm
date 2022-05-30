@@ -1,12 +1,11 @@
 """Various utility functions"""
 from __future__ import annotations
-import os, sys, json, time, logging
+import os, sys, json, time, logging, string
 import asyncio, threading
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field, fields, is_dataclass, asdict
+from dataclasses import is_dataclass, asdict
 from contextlib import asynccontextmanager
-from datetime import datetime
 from typing import (
     AsyncGenerator,
     Any,
@@ -220,6 +219,19 @@ def fstr_eval(
 
     prefix = "rf" if raw_string else "f"
     return eval(prefix + ta + f_str + ta, context) + ra
+
+
+class FallbackFormatter(string.Formatter):
+    """String formatter that uses plain str conversion when formatting fails"""
+
+    def format_field(self, value: Any, spec: str) -> str:
+        try:
+            return super().format_field(value, spec)
+        except ValueError:
+            return str(value)
+
+
+fallback_fmt = FallbackFormatter()
 
 
 _thread_shutdown = threading.Event()
