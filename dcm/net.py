@@ -328,16 +328,19 @@ class DicomOpReport(CountableReport):
                 if self.n_expected is None:
                     self.n_expected = remaining + 1
                 if n_success != self._n_success:
-                    assert self._n_success is None or self._n_success <= n_success
+                    if not (self._n_success is None or self._n_success <= n_success):
+                        log.warning("DicomOpReport success count mismatch")
                     self._n_success = n_success
                 else:
                     if self.dicom_op.op_type == "c-store":
                         data_set = minimal_copy(data_set)
                     if n_warn != self.n_warnings:
-                        assert self.n_warnings < n_warn
+                        if not self.n_warnings < n_warn:
+                            log.warning("DicomOpReport warning count mismatch")
                         self.warnings.append((status, data_set))
                     elif n_error != self.n_errors:
-                        assert self.n_errors < n_error
+                        if not self.n_errors < n_error:
+                            log.warning("DicomOpReport error count mismatch")
                         self.errors.append((status, data_set))
         else:
             if self._has_sub_ops or data_set is None:
@@ -349,12 +352,15 @@ class DicomOpReport(CountableReport):
                     if self._n_success is None:
                         self._n_success = n_success
                     else:
-                        assert self._n_success <= n_success
+                        if not self._n_success <= n_success:
+                            log.warning("DicomOpReport success count mismatch")
                         self._n_success = n_success
                     # TODO: This might be incorrect, not clear if errors/warnings
                     #       are always reported before this final status response
-                    assert n_warn == self.n_warnings
-                    assert n_error == self.n_errors
+                    if not n_warn == self.n_warnings:
+                        log.warning("DicomOpReport warning count mismatch")
+                    if not n_error == self.n_errors:
+                        log.warning("DicomOpReport error count mismatch")
                 elif status_category != "Success":
                     # If we don't have operation sub-counts, need to make
                     # sure any final error/warning status doesn't get lost
