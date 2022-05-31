@@ -103,7 +103,6 @@ req_elems = {
         "StudyInstanceUID",
         "StudyDate",
         "StudyTime",
-        "AccessionNumber",
     ],
     QueryLevel.SERIES: [
         "SeriesInstanceUID",
@@ -123,7 +122,6 @@ blankable_req_elems = [
     "PatientName",
     "StudyDate",
     "StudyTime",
-    "AccessionNumber",
     "SeriesNumber",
     "InstanceNumber",
 ]
@@ -139,6 +137,7 @@ opt_elems: Dict[QueryLevel, List[str]] = {
     ],
     QueryLevel.STUDY: [
         "StudyDescription",
+        "AccessionNumber",
         "ModalitiesInStudy",
         "NumberOfStudyRelatedSeries",
         "NumberOfStudyRelatedInstances",
