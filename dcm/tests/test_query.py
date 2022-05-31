@@ -2,7 +2,7 @@ import random, itertools
 from pytest import fixture, mark
 from pydicom.dataset import Dataset
 
-from ..query import QueryLevel, QueryResult, uid_elems, req_elems
+from ..query import QueryLevel, QueryProv, QueryResult, req_elems
 
 
 def make_dataset(attrs=None, level=QueryLevel.IMAGE):
@@ -168,6 +168,14 @@ def test_equality(hierarchy_data):
     qr2.remove(data_sets[-1])
     assert qr1 != qr2
     # TODO: Include tests with sub-counts
+
+
+def test_empty_prov_json():
+    for level in QueryLevel:
+        prov1 = QueryProv()
+        json_dict = prov1.to_json_dict()
+        prov2 = QueryProv.from_json_dict(json_dict)
+        assert prov1 == prov2
 
 
 @mark.parametrize("hierarchy_data", walk_data_params, indirect=["hierarchy_data"])

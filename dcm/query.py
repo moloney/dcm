@@ -320,9 +320,12 @@ class QueryProv:
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryProv:
+        queried = json_dict["queried_elems"]
+        if queried:
+            queried = set(queried)
         return cls(
             json_dict["source"],
-            set(json_dict["queried_elems"]),
+            queried,
             json_dict["removed_existing_on"],
         )
 
