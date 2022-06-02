@@ -252,8 +252,13 @@ sub_op_attrs = {
 class BatchDicomOperationError(Exception):
     """Base class for errors from DICOM batch network operations"""
 
-    def __init__(self, op_errors: List[Tuple[Dataset, Dataset]]):
+    def __init__(
+        self,
+        op_errors: List[Tuple[Union[Dataset, Exception], Optional[Dataset]]],
+        n_remote_errors: int,
+    ):
         self.op_errors = op_errors
+        self.n_remote_errors = n_remote_errors
 
 
 @dataclass
@@ -285,9 +290,11 @@ class DicomOpReport(CountableReport):
         dicom_op: Optional[DicomOp] = None,
     ):
         self.dicom_op = DicomOp() if dicom_op is None else dicom_op
-        self.warnings: List[Tuple[Dataset, Dataset]] = []
-        self.errors: List[Tuple[Dataset, Dataset]] = []
+        self.warnings: List[Tuple[Dataset, Optional[Dataset]]] = []
+        self.errors: List[Tuple[Union[Dataset, Exception], Optional[Dataset]]] = []
         self._n_success = 0
+        self._remote_warnings = 0
+        self._remote_errors = 0
         self._has_sub_ops = False
         self._final_status: Optional[Dataset] = None
         super().__init__(
@@ -300,15 +307,18 @@ class DicomOpReport(CountableReport):
 
     @property
     def n_errors(self) -> int:
-        return len(self.errors)
+        return len(self.errors) + self._remote_errors
 
     @property
     def n_warnings(self) -> int:
-        return len(self.warnings)
+        return len(self.warnings) + self._remote_warnings
 
-    def add(self, status: Dataset, data_set: Dataset) -> None:
+    def add(
+        self, status: Union[Dataset, Exception], data_set: Optional[Dataset]
+    ) -> None:
         if isinstance(status, Exception) or not hasattr(status, "Status"):
             if self.dicom_op.op_type == "c-store":
+                assert data_set is not None
                 data_set = minimal_copy(data_set)
             self.errors.append((status, data_set))
             self.count_input()
@@ -333,6 +343,7 @@ class DicomOpReport(CountableReport):
                     self._n_success = n_success
                 else:
                     if self.dicom_op.op_type == "c-store":
+                        assert data_set is not None
                         data_set = minimal_copy(data_set)
                     if n_warn != self.n_warnings:
                         if not self.n_warnings < n_warn:
@@ -355,12 +366,16 @@ class DicomOpReport(CountableReport):
                         if not self._n_success <= n_success:
                             log.warning("DicomOpReport success count mismatch")
                         self._n_success = n_success
-                    # TODO: This might be incorrect, not clear if errors/warnings
-                    #       are always reported before this final status response
-                    if not n_warn == self.n_warnings:
+                    # Some errors/warnings are only reported at the end which we need
+                    # to catch here
+                    if n_warn < len(self.warnings):
                         log.warning("DicomOpReport warning count mismatch")
-                    if not n_error == self.n_errors:
+                    elif n_warn > len(self.warnings):
+                        self._remote_warnings = n_warn - len(self.warnings)
+                    if n_error < len(self.errors):
                         log.warning("DicomOpReport error count mismatch")
+                    elif n_error > len(self.errors):
+                        self._remote_errors = n_error - len(self.errors)
                 elif status_category != "Success":
                     # If we don't have operation sub-counts, need to make
                     # sure any final error/warning status doesn't get lost
@@ -390,20 +405,35 @@ class DicomOpReport(CountableReport):
     def log_issues(self) -> None:
         """Log a summary of error/warning statuses"""
         if self.n_errors != 0:
-            log.error(
-                "Got %d error and %d warning statuses out of %d %s ops"
-                % (self.n_errors, self.n_warnings, len(self), self.dicom_op.op_type)
-            )
+            if self.errors:
+                log.error(
+                    "Got %d error and %d warning statuses out of %d %s ops"
+                    % (
+                        len(self.errors),
+                        len(self.warnings),
+                        len(self),
+                        self.dicom_op.op_type,
+                    )
+                )
+            if self._remote_errors:
+                log.error(
+                    "Got %d remote errors, and %d remote warnings",
+                    self._remote_errors,
+                    self._remote_warnings,
+                )
         elif self.n_warnings != 0:
-            log.warning(
-                "Got %d warning statuses out of %d %s ops"
-                % (self.n_warnings, len(self), self.dicom_op.op_type)
-            )
+            if self.warnings:
+                log.warning(
+                    "Got %d warning statuses out of %d %s ops"
+                    % (len(self.warnings), len(self), self.dicom_op.op_type)
+                )
+            if self._remote_warnings:
+                log.warning("Got %d remote warnings", self._remote_warnings)
 
     def check_errors(self) -> None:
         """Raise an exception if any errors occured"""
         if self.n_errors != 0:
-            raise BatchDicomOperationError(self.errors)
+            raise BatchDicomOperationError(self.errors, self._remote_errors)
 
     def clear(self) -> None:
         """Clear out all current operation results"""
@@ -411,6 +441,8 @@ class DicomOpReport(CountableReport):
             self._n_expected -= self._n_input
         self._n_input = 0
         self._n_success = 0
+        self._remote_warnings = 0
+        self._remote_errors = 0
         self.warnings = []
         self.errors = []
 
