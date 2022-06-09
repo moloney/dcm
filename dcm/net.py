@@ -1265,7 +1265,9 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         # Create association with the remote node
         log.debug("Making association with %s for query" % (remote,))
-        async with self._associate(remote, QueryRetrievePresentationContexts, query_model) as assoc:
+        async with self._associate(
+            remote, QueryRetrievePresentationContexts, query_model
+        ) as assoc:
             # Fire up a thread to perform the query and produce QueryResult chunks
             rep_builder_task = asyncio.create_task(
                 self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
@@ -1395,7 +1397,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         }
         # Setup the association
         log.debug(f"About to associate with {source} to move data")
-        async with self._associate(source, QueryRetrievePresentationContexts, query_model) as assoc:
+        async with self._associate(
+            source, QueryRetrievePresentationContexts, query_model
+        ) as assoc:
             rep_builder_task = asyncio.create_task(
                 self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
             )
@@ -1629,7 +1633,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             # If it appears we
             if query_model is not None and assoc.is_established:
                 try:
-                    await loop.run_in_executor(self._thread_pool, assoc.send_c_cancel, 1, None, query_model)
+                    await loop.run_in_executor(
+                        self._thread_pool, assoc.send_c_cancel, 1, None, query_model
+                    )
                 except Exception as e:
                     log.info("Exception occured when seding c-cancel: %s", e)
             raise
