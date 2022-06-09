@@ -639,7 +639,8 @@ class RetrieveError(IncomingDataError):
         for err_type in (
             "inconsistent",
             "unexpected",
-            "invalid" "duplicate",
+            "invalid",
+            "duplicate",
             "missing",
             "move_errors",
         ):

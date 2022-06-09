@@ -1,24 +1,21 @@
-import asyncio
 from pathlib import Path
 from copy import deepcopy
 
 import pytest
-from pytest import fixture, mark
+from pytest import mark
 
 from ..query import QueryResult, QueryLevel
-from ..net import LocalEntity
-from ..route import StaticRoute, DynamicRoute, Router
+from ..route import StaticRoute, DynamicRoute
 from ..sync import SyncManager
 from ..store import TransferMethod
-from ..store.net_repo import NetRepo
-from ..store.local_dir import LocalDir
 from ..util import json_serializer
 
 from .conftest import (
     has_dcmtk,
-    DCMTK_VERSION,
     dcmtk_priv_sop_retr_xfail,
     dcmtk_priv_sop_send_xfail,
+    pnd_priv_sop_xfail,
+    get_stored_files,
 )
 
 
@@ -35,57 +32,80 @@ def make_lookup(dest1, dest2):
     return lookup_func
 
 
-repo_to_repo_subsets = [
-    pytest.param([None] * 3, marks=priv_sop_marks),
+gen_transfer_sets = [
+    [None] * 3,
+    ["all"] * 3,
+    ["PATIENT-0"] * 3,
+    ["PATIENT-0/STUDY-0"] * 3,
+    ["PATIENT-0/STUDY-0/SERIES-0"] * 3,
+    ["PATIENT-0/STUDY-0/SERIES-0/IMAGE-0"] * 3,
+    ["PATIENT-1"] * 3,
+]
+
+
+def get_gen_transfer_sets():
+    res = []
+    for node_type in ("dcmtk", "pnd"):
+        if node_type == "dcmtk":
+            for sub in gen_transfer_sets:
+                res.append(pytest.param(node_type, sub, marks=has_dcmtk))
+        else:
+            assert node_type == "pnd"
+            for sub in gen_transfer_sets:
+                res.append((node_type, sub))
+    return res
+
+
+sync_subsets = [
+    [None] * 3,
     ["all"] * 3,
     ["PATIENT-0"] * 3,
     ["PATIENT-0/STUDY-1"] * 3,
-    pytest.param(["PATIENT-0/STUDY-0"] * 3, marks=priv_sop_marks),
-    pytest.param(["PATIENT-0/STUDY-0/SERIES-0"] * 3, marks=priv_sop_marks),
-    pytest.param(["PATIENT-0/STUDY-0/SERIES-0/IMAGE-0"] * 3, marks=priv_sop_marks),
-    pytest.param(["PATIENT-1"] * 3, marks=priv_sop_marks),
-]
-
-bucket_to_repo_subsets = [
-    pytest.param([None] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(["all"] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(["PATIENT-0"] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(["PATIENT-0/STUDY-1"] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(["PATIENT-0/STUDY-0"] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(["PATIENT-0/STUDY-0/SERIES-0"] * 3, marks=dcmtk_priv_sop_send_xfail),
-    pytest.param(
-        ["PATIENT-0/STUDY-0/SERIES-0/IMAGE-0"] * 3, marks=dcmtk_priv_sop_send_xfail
-    ),
-    pytest.param(["PATIENT-1"] * 3, marks=dcmtk_priv_sop_send_xfail),
+    ["PATIENT-0/STUDY-0"] * 3,
+    ["PATIENT-0/STUDY-0/SERIES-0"] * 3,
+    ["PATIENT-0/STUDY-0/SERIES-0/IMAGE-0"] * 3,
+    ["PATIENT-1"] * 3,
 ]
 
 
-@mark.parametrize(
-    "subset_specs",
-    [
-        [None] * 3,
-        ["all"] * 3,
-        ["PATIENT-0"] * 3,
-        ["PATIENT-0/STUDY-0"] * 3,
-        ["PATIENT-0/STUDY-0/SERIES-0"] * 3,
-        ["PATIENT-0/STUDY-0/SERIES-0/IMAGE-0"] * 3,
-        ["PATIENT-1"] * 3,
-    ],
-)
+def get_repo_to_repo_subsets():
+    res = []
+    for node_type in ("dcmtk", "pnd"):
+        if node_type == "dcmtk":
+            for sub in sync_subsets:
+                marks = [has_dcmtk]
+                if sub[0] not in ("all", "PATIENT-0", "PATIENT-0/STUDY-1"):
+                    marks += priv_sop_marks
+                res.append(pytest.param(node_type, sub, marks=marks))
+        else:
+            assert node_type == "pnd"
+            for sub in sync_subsets:
+                res.append((node_type, sub))
+    return res
+
+
+def get_bucket_to_repo_subsets():
+    res = []
+    for node_type in ("dcmtk", "pnd"):
+        if node_type == "dcmtk":
+            for sub in sync_subsets:
+                marks = [has_dcmtk] + priv_sop_marks
+                res.append(pytest.param(node_type, sub, marks=marks))
+        else:
+            assert node_type == "pnd"
+            for sub in sync_subsets:
+                res.append(pytest.param(node_type, sub, marks=pnd_priv_sop_xfail))
+    return res
+
+
+@mark.parametrize("node_type, subset_specs", get_gen_transfer_sets())
 @mark.asyncio
-@has_dcmtk
-async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs):
+async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_dcmtk_net_repo(local_node, subset="all")
-    dest1_repo, dest1_init_qr, _ = make_dcmtk_net_repo(
-        local_node, subset=subset_specs[0]
-    )
-    dest2_repo, dest2_init_qr, _ = make_dcmtk_net_repo(
-        local_node, subset=subset_specs[1]
-    )
-    dest3_repo, dest3_init_qr, _ = make_dcmtk_net_repo(
-        local_node, subset=subset_specs[2]
-    )
+    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
+    dest1_repo, dest1_init_qr, _ = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, dest2_init_qr, _ = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, dest3_init_qr, _ = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_lookup = make_lookup(dest2_repo, dest3_repo)
     dyn_route = DynamicRoute(dyn_lookup, required_elems=["PatientID"])
@@ -122,15 +142,12 @@ async def test_gen_transfers(make_local_node, make_dcmtk_net_repo, subset_specs)
                             trans_qrs[dest][trans_level].add(ds)
 
 
-@mark.parametrize("subset_specs", repo_to_repo_subsets)
+@mark.parametrize("node_type, subset_specs", get_repo_to_repo_subsets())
 @mark.asyncio
-@has_dcmtk
-async def test_repo_sync_single_static(
-    make_local_node, make_dcmtk_net_repo, subset_specs
-):
+async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_dcmtk_net_repo(local_node, subset="all")
-    dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
+    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
+    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
     static_route = StaticRoute([dest1_repo])
     dests = [static_route]
     async with SyncManager(src_repo, dests) as sm:
@@ -140,21 +157,19 @@ async def test_repo_sync_single_static(
                     print(f"{dest} : {json_serializer.dumps(transfer.chunk.qr)}")
             await sm.exec_transfer(transfer)
         print(sm.report)
-    dest1_dir = Path(dest1_dir)
-    found_files = [x for x in dest1_dir.glob("**/*.dcm")]
+    found_files = get_stored_files(dest1_dir)
     print(found_files)
     assert len(found_files) == len(full_qr)
 
 
-@mark.parametrize("subset_specs", repo_to_repo_subsets)
+@mark.parametrize("node_type, subset_specs", get_repo_to_repo_subsets())
 @mark.asyncio
-@has_dcmtk
-async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_specs):
+async def test_repo_sync_multi(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_dcmtk_net_repo(local_node, subset="all")
-    dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[2])
+    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
+    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _, _ = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _, _ = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -167,24 +182,22 @@ async def test_repo_sync_multi(make_local_node, make_dcmtk_net_repo, subset_spec
                     print(f"{dest} : {transfer.chunk.qr}")
             await sm.exec_transfer(transfer)
         print(sm.report)
-    dest1_dir = Path(dest1_dir)
-    found_files = [x for x in dest1_dir.glob("**/*.dcm")]
+    found_files = get_stored_files(dest1_dir)
     print(found_files)
     assert len(found_files) == len(full_qr)
     # TODO: Check that dynamic routing worked correctly
 
 
-@mark.parametrize("subset_specs", bucket_to_repo_subsets)
+@mark.parametrize("node_type, subset_specs", get_bucket_to_repo_subsets())
 @mark.asyncio
-@has_dcmtk
 async def test_bucket_sync(
-    make_local_dir, make_local_node, make_dcmtk_net_repo, subset_specs
+    make_local_dir, make_local_node, make_net_repo, subset_specs
 ):
     src_bucket, init_qr, _ = make_local_dir("all", max_chunk=2)
     local_node = make_local_node()
-    dest1_repo, _, dest1_dir = make_dcmtk_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=subset_specs[2])
+    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _, _ = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _, _ = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -193,7 +206,6 @@ async def test_bucket_sync(
     async with SyncManager(src_bucket, dests) as sm:
         async for transfer in sm.gen_transfers():
             await sm.exec_transfer(transfer)
-    dest1_dir = Path(dest1_dir)
-    found_files = [x for x in dest1_dir.glob("**/*.dcm")]
+    found_files = get_stored_files(dest1_dir)
     print(found_files)
     assert len(found_files) == len(init_qr)

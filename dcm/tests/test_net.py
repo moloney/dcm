@@ -1,19 +1,19 @@
 import asyncio
 from pathlib import Path
-from contextlib import AsyncExitStack
 from tempfile import TemporaryDirectory
 
 import pytest
-from pytest import fixture, mark
+from pytest import mark
 
 from ..query import QueryLevel
-from ..net import DcmNode, LocalEntity, RetrieveReport
+from ..net import LocalEntity
 
 from .conftest import (
     has_dcmtk,
-    DCMTK_VERSION,
     dcmtk_priv_sop_retr_xfail,
     dcmtk_priv_sop_send_xfail,
+    pnd_priv_sop_xfail,
+    get_stored_files,
 )
 
 
@@ -30,54 +30,105 @@ test_query_subsets = [
 
 
 test_retr_subsets = [
-    pytest.param("all", marks=dcmtk_priv_sop_retr_xfail),
+    "all",
     "PATIENT-1",
     "PATIENT-0/STUDY-0",
     "PATIENT-0/STUDY-0/SERIES-0",
     "PATIENT-0/STUDY-0/SERIES-0/IMAGE-0",
     "PATIENT-0/STUDY-0;PATIENT-0/STUDY-1/SERIES-0;PATIENT-0/STUDY-1/SERIES-1;PATIENT-1",
-    pytest.param("PATIENT-0/STUDY-1/SERIES-2", marks=dcmtk_priv_sop_retr_xfail),
+    "PATIENT-0/STUDY-1/SERIES-2",
     None,
 ]
+
+
+def get_retr_subsets():
+    res = []
+    for node_type in ("dcmtk", "pnd"):
+        if node_type == "dcmtk":
+            for sub in test_retr_subsets:
+                marks = [has_dcmtk]
+                if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
+                    marks.append(dcmtk_priv_sop_retr_xfail)
+                res.append(pytest.param(node_type, sub, marks=marks))
+        else:
+            assert node_type == "pnd"
+            for sub in test_retr_subsets:
+                if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
+                    res.append(
+                        pytest.param(
+                            node_type,
+                            sub,
+                            marks=pnd_priv_sop_xfail,
+                        )
+                    )
+                else:
+                    res.append((node_type, sub))
+    return res
 
 
 test_send_subsets = [
-    pytest.param("all", marks=dcmtk_priv_sop_send_xfail),
+    "all",
     "PATIENT-1",
     "PATIENT-0/STUDY-0",
     "PATIENT-0/STUDY-0/SERIES-0",
     "PATIENT-0/STUDY-0/SERIES-0/IMAGE-0",
     "PATIENT-0/STUDY-0;PATIENT-0/STUDY-1/SERIES-0;PATIENT-0/STUDY-1/SERIES-1;PATIENT-1",
-    pytest.param("PATIENT-0/STUDY-1/SERIES-2", marks=dcmtk_priv_sop_send_xfail),
+    "PATIENT-0/STUDY-1/SERIES-2",
     None,
 ]
 
 
-@has_dcmtk
-def test_echo(make_local_node, make_dcmtk_nodes):
+def get_send_subsets():
+    res = []
+    for node_type in ("dcmtk", "pnd"):
+        if node_type == "dcmtk":
+            for sub in test_retr_subsets:
+                marks = [has_dcmtk]
+                if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
+                    marks.append(dcmtk_priv_sop_send_xfail)
+                res.append(pytest.param(node_type, sub, marks=marks))
+        else:
+            assert node_type == "pnd"
+            for sub in test_retr_subsets:
+                if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
+                    res.append(
+                        pytest.param(
+                            node_type,
+                            sub,
+                            marks=pnd_priv_sop_xfail,
+                        )
+                    )
+                else:
+                    res.append((node_type, sub))
+    return res
+
+
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_echo(make_local_node, make_remote_nodes):
     local_node = make_local_node()
-    remote, _, _ = make_dcmtk_nodes([local_node], None)
+    remote, _, _ = make_remote_nodes([local_node], None)
     local = LocalEntity(local_node)
     result = asyncio.run(local.echo(remote))
     assert result
 
 
 @mark.parametrize("subset", test_query_subsets)
-@has_dcmtk
-def test_query_all(make_local_node, make_dcmtk_nodes, subset):
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_query_all(make_local_node, make_remote_nodes, subset):
     local_node = make_local_node()
-    remote, full_qr, _ = make_dcmtk_nodes([local_node], subset)
+    remote, full_qr, _ = make_remote_nodes([local_node], subset)
     local = LocalEntity(local_node)
     result_qr = asyncio.run(local.query(remote, level=QueryLevel.IMAGE))
     assert result_qr == full_qr
 
 
 @mark.parametrize("subset", test_query_subsets)
-@has_dcmtk
-def test_query_subset(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_query_subset(make_local_node, make_remote_nodes, get_dicom_subset, subset):
     local_node = make_local_node()
-    remote, full_qr, _ = make_dcmtk_nodes([local_node], "all")
-    req_qr, req_data = get_dicom_subset(subset)
+    remote, full_qr, _ = make_remote_nodes([local_node], "all")
+    req_qr, _ = get_dicom_subset(subset)
+    req_qr = req_qr & full_qr
     local = LocalEntity(local_node)
     result_qr = asyncio.run(
         local.query(remote, query_res=req_qr, level=QueryLevel.IMAGE)
@@ -85,11 +136,10 @@ def test_query_subset(make_local_node, make_dcmtk_nodes, get_dicom_subset, subse
     assert result_qr == req_qr
 
 
-@mark.parametrize("subset", test_retr_subsets)
-@has_dcmtk
-def test_download(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
+@mark.parametrize("node_type, subset", get_retr_subsets())
+def test_download(make_local_node, make_remote_nodes, get_dicom_subset, subset):
     local_node = make_local_node()
-    remote, init_qr, _ = make_dcmtk_nodes([local_node], "all")
+    remote, init_qr, _ = make_remote_nodes([local_node], "all")
     local = LocalEntity(local_node)
     ret_qr, ret_data = get_dicom_subset(subset)
     with TemporaryDirectory() as dest_dir:
@@ -100,27 +150,24 @@ def test_download(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
         assert len(dl_files) == ret_qr.n_instances()
 
 
-@mark.parametrize("subset", test_send_subsets)
-@has_dcmtk
-def test_upload(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
+@mark.parametrize("node_type, subset", get_send_subsets())
+def test_upload(make_local_node, make_remote_nodes, get_dicom_subset, subset):
     local_node = make_local_node()
-    remote, _, store_dir = make_dcmtk_nodes([local_node], None)
+    remote, _, store_dir = make_remote_nodes([local_node], None)
     local = LocalEntity(local_node)
     send_qr, send_data = get_dicom_subset(subset)
     dcm_files = [d[0] for d in send_data]
     asyncio.run(local.upload(remote, dcm_files))
-    store_dir = Path(store_dir)
-    stored_files = [x for x in store_dir.glob("**/*.dcm")]
+    stored_files = get_stored_files(store_dir)
     assert len(stored_files) == len(send_data)
 
 
-@mark.parametrize("subset", test_retr_subsets)
-@has_dcmtk
+@mark.parametrize("node_type, subset", get_retr_subsets())
 @mark.asyncio
-async def test_retrieve(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
+async def test_retrieve(make_local_node, make_remote_nodes, get_dicom_subset, subset):
     local_node = make_local_node()
     local = LocalEntity(local_node)
-    remote, init_qr, _ = make_dcmtk_nodes([local_node], "all")
+    remote, _, _ = make_remote_nodes([local_node], "all")
     ret_qr, ret_data = get_dicom_subset(subset)
     res = []
     async for ds in local.retrieve(remote, ret_qr):
@@ -128,16 +175,15 @@ async def test_retrieve(make_local_node, make_dcmtk_nodes, get_dicom_subset, sub
     assert len(res) == len(ret_data)
 
 
-@mark.parametrize("subset", test_retr_subsets)
-@has_dcmtk
+@mark.parametrize("node_type, subset", get_retr_subsets())
 @mark.asyncio
 async def test_interleaved_retrieve(
-    make_local_node, make_dcmtk_nodes, get_dicom_subset, subset
+    make_local_node, make_remote_nodes, get_dicom_subset, subset
 ):
     local_node = make_local_node()
     local = LocalEntity(local_node)
-    remote1, init_qr1, _ = make_dcmtk_nodes([local_node], "all")
-    remote2, init_qr2, _ = make_dcmtk_nodes([local_node], "all")
+    remote1, init_qr1, _ = make_remote_nodes([local_node], "all")
+    remote2, init_qr2, _ = make_remote_nodes([local_node], "all")
     ret_qr, ret_data = get_dicom_subset(subset)
     r_gen1 = local.retrieve(remote1, ret_qr)
     r_gen2 = local.retrieve(remote2, ret_qr)
@@ -177,17 +223,16 @@ async def test_interleaved_retrieve(
     # TODO: Compare UIDs to make sure we got the right files
 
 
-@mark.parametrize("subset", test_send_subsets)
-@has_dcmtk
+@mark.parametrize("node_type, subset", get_send_subsets())
 @mark.asyncio
-async def test_send(make_local_node, make_dcmtk_nodes, get_dicom_subset, subset):
+async def test_send(make_local_node, make_remote_nodes, get_dicom_subset, subset):
     local_node = make_local_node()
     local = LocalEntity(local_node)
-    remote, _, store_dir = make_dcmtk_nodes([local_node], None)
+    remote, _, store_dir = make_remote_nodes([local_node], None)
     send_qr, send_data = get_dicom_subset(subset)
     async with local.send(remote) as send_q:
         for send_path, send_ds in send_data:
             await send_q.put(send_ds)
     store_dir = Path(store_dir)
-    stored_files = [x for x in store_dir.glob("**/*.dcm")]
+    stored_files = get_stored_files(store_dir)
     assert len(stored_files) == len(send_data)

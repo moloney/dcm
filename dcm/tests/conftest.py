@@ -5,12 +5,13 @@ from tempfile import TemporaryDirectory, NamedTemporaryFile
 from pathlib import Path
 
 import pydicom
+from pynetdicom import AE, Association
 import psutil
 from pytest import fixture, mark
 
 from ..conf import _default_conf, DcmConfig
 from ..query import QueryLevel, QueryResult
-from ..net import DcmNode
+from ..net import DcmNode, _make_default_store_scu_pcs
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
 
@@ -148,10 +149,10 @@ def make_local_node(base_port=63987, base_name="DCMTESTAE"):
     return _make_local_node
 
 
-dcmqrscp_path = shutil.which("dcmqrscp")
+DCMQRSCP_PATH = shutil.which("dcmqrscp")
 
 
-dcmqridx_path = shutil.which("dcmqridx")
+DCMQRIDX_PATH = shutil.which("dcmqridx")
 
 
 DCMTK_VER_RE = r".+\s+v([0-9]+).([0-9])+.([0-9])\+?\s+.*"
@@ -168,10 +169,10 @@ DCMTK_PRIV_SEND_VERS = (1000, 0, 0)
 
 
 def get_dcmtk_version():
-    if dcmqrscp_path is None:
+    if DCMQRSCP_PATH is None:
         return None
     try:
-        sp_out = sp.check_output([dcmqrscp_path, "--version"]).decode("latin-1")
+        sp_out = sp.check_output([DCMQRSCP_PATH, "--version"]).decode("latin-1")
     except (FileNotFoundError, sp.CalledProcessError):
         return None
     first = sp_out.split("\n")[0]
@@ -181,10 +182,10 @@ def get_dcmtk_version():
 DCMTK_VERSION = get_dcmtk_version()
 
 
-dcmtk_base_port = 62760
+DCMTK_BASE_PORT = 62760
 
 
-dcmtk_base_name = "DCMTKAE"
+DCMTK_BASE_NAME = "DCMTKAE"
 
 
 has_dcmtk = mark.skipif(
@@ -204,7 +205,7 @@ dcmtk_priv_sop_send_xfail = mark.xfail(
 )
 
 
-dcmtk_config_tmpl = """\
+DCMTK_CONFIG_TMPL = """\
 NetworkTCPPort  = {dcmtk_node.port}
 MaxPDUSize      = 16384
 MaxAssociations = 16
@@ -219,7 +220,7 @@ AETable END
 """
 
 
-client_line_tmpl = "{name} = ({node.ae_title}, {node.host}, {node.port})"
+CLIENT_LINE_TMPL = "{name} = ({node.ae_title}, {node.host}, {node.port})"
 
 
 def mk_dcmtk_config(dcmtk_node, store_dir, clients):
@@ -228,13 +229,13 @@ def mk_dcmtk_config(dcmtk_node, store_dir, clients):
     client_lines = []
     for node_idx, node in enumerate(clients):
         name = "test_client%d" % node_idx
-        line = client_line_tmpl.format(name=name, node=node)
+        line = CLIENT_LINE_TMPL.format(name=name, node=node)
         client_names.append(name)
         client_lines.append(line)
     client_names = " ".join(client_names)
     client_lines = "\n".join(client_lines)
 
-    return dcmtk_config_tmpl.format(
+    return DCMTK_CONFIG_TMPL.format(
         dcmtk_node=dcmtk_node,
         store_dir=store_dir,
         client_lines=client_lines,
@@ -260,11 +261,11 @@ def make_dcmtk_nodes(get_dicom_subset):
             #       ideally we would put this whole thing in a loop and detect
             #       the server process failing with log message about the port
             #       being in use
-            port = dcmtk_base_port + node_idx
+            port = DCMTK_BASE_PORT + node_idx
             while port in used_ports:
                 port += 1
             used_ports.add(port)
-            ae_title = dcmtk_base_name + str(node_idx)
+            ae_title = DCMTK_BASE_NAME + str(node_idx)
             dcmtk_node = DcmNode("localhost", ae_title, port)
             print(f"Building dcmtk node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
@@ -284,9 +285,9 @@ def make_dcmtk_nodes(get_dicom_subset):
                 init_files.append(out_path)
             # Index any initial files into the dcmtk db
             if init_files:
-                sp.run([dcmqridx_path, str(test_store_dir)] + init_files)
+                sp.run([DCMQRIDX_PATH, str(test_store_dir)] + init_files)
             # Fire up a dcmqrscp process
-            dcmqrscp_args = [dcmqrscp_path, "-c", str(conf_file)]
+            dcmqrscp_args = [DCMQRSCP_PATH, "-c", str(conf_file)]
             if "dcmtk_level" in logging_opts:
                 dcmqrscp_args += ["-ll", logging_opts["dcmtk_level"]]
             if DCMTK_VERSION >= (3, 6, 2):
@@ -313,6 +314,156 @@ def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
         return (NetRepo(local_node, dcmtk_node), init_qr, store_dir)
 
     return _make_net_repo
+
+
+pnd_priv_sop_xfail = mark.xfail(reason="Private SOPClassUID not supported by PND nodes")
+
+
+PND_BASE_NAME = "PNDAE"
+
+
+PND_BASE_PORT = 62560
+
+
+PND_CONF_TEMPLATE = """\
+[DEFAULT]
+# Our AE Title
+ae_title: {pnd_node.ae_title}
+# Our listen port
+port: {pnd_node.port}
+# Our maximum PDU size; 0 for unlimited
+max_pdu: 16382
+# The ACSE, DIMSE and network timeouts (in seconds)
+acse_timeout: 30
+dimse_timeout: 30
+network_timeout: 30
+# The address of the network interface to listen on
+# If unset, listen on all interfaces
+bind_address: 127.0.0.1
+# Directory where SOP Instances received from Storage SCUs will be stored
+#   This directory contains the QR service's managed SOP Instances
+instance_location: {data_dir}
+# Location of sqlite3 database for the QR service's managed SOP Instances
+database_location: {db_path}
+
+"""
+
+
+PND_PYTHON_PATH = os.getenv("DCM_PND_FIXTURE_PYTHON", shutil.which("python"))
+
+
+@fixture
+def make_pnd_nodes(get_dicom_subset):
+    """Factory fixture for making pynetdicom qrscp nodes"""
+    procs = []
+    used_ports = _get_used_ports()
+    with TemporaryDirectory() as tmp_dir:
+        tmp_dir = Path(tmp_dir)
+
+        def _make_pnd_node(clients, subset="all"):
+            node_idx = len(procs)
+            # TODO: We still have a race condition with port selection here,
+            #       ideally we would put this whole thing in a loop and detect
+            #       the server process failing with log message about the port
+            #       being in use
+            port = PND_BASE_PORT + node_idx
+            while port in used_ports:
+                port += 1
+            used_ports.add(port)
+            ae_title = PND_BASE_NAME + str(node_idx)
+            pnd_node = DcmNode("localhost", ae_title, port)
+            print(f"Building pynetdicom node: {ae_title}:{port}")
+            node_dir = tmp_dir / ae_title
+            db_path = node_dir / "pnd.db"
+            data_dir = node_dir / "data"
+            os.makedirs(data_dir)
+            # Make the config file
+            conf_path = node_dir / "qrscp.conf"
+            conf_parts = [
+                PND_CONF_TEMPLATE.format(
+                    pnd_node=pnd_node, data_dir=data_dir, db_path=db_path
+                )
+            ]
+            for client in clients:
+                conf_parts.append(f"[{client.ae_title}]")
+                conf_parts.append(f"    address: {client.host}")
+                conf_parts.append(f"    port: {client.port}")
+                conf_parts.append("")
+            conf = "\n".join(conf_parts)
+            print(conf)
+            conf_path.write_text(conf)
+            # Fire up a qrscp process
+            procs.append(
+                sp.Popen(
+                    [PND_PYTHON_PATH, "-m", "pynetdicom", "qrscp", "-c", str(conf_path)]
+                )
+            )
+            time.sleep(1)
+            # We have to send any initial data as there is no index functionality
+            init_qr, init_data = get_dicom_subset(subset)
+            init_files = []
+            init_ae = AE()
+            init_assoc = init_ae.associate(
+                "127.0.0.1",
+                pnd_node.port,
+                _make_default_store_scu_pcs(),
+                ae_title=pnd_node.ae_title,
+            )
+            if not init_assoc.is_established:
+                raise ValueError(
+                    "Failed to associate with PND test node to populate it"
+                )
+            for in_path, ds in init_data:
+                # Currently, can't store these files in the pynetdicom 'qrscp' app
+                if ds.SOPClassUID == "1.3.12.2.1107.5.9.1":
+                    init_qr.remove(ds)
+                    continue
+                init_assoc.send_c_store(ds)
+            init_assoc.release()
+            return (pnd_node, init_qr, data_dir)
+
+        try:
+            yield _make_pnd_node
+        finally:
+            for proc in procs:
+                proc.terminate()
+
+
+@fixture
+def make_pnd_net_repo(make_local_node, make_pnd_nodes):
+    def _make_net_repo(local_node=None, clients=[], subset="all"):
+        if local_node is None:
+            local_node = make_local_node()
+        pnd_node, init_qr, store_dir = make_pnd_nodes([local_node] + clients, subset)
+        return (NetRepo(local_node, pnd_node), init_qr, store_dir)
+
+    return _make_net_repo
+
+
+@fixture
+def make_remote_nodes(node_type, make_dcmtk_nodes, make_pnd_nodes):
+    if node_type == "dcmtk":
+        return make_dcmtk_nodes
+    else:
+        assert node_type == "pnd"
+        return make_pnd_nodes
+
+
+@fixture
+def make_net_repo(node_type, make_dcmtk_net_repo, make_pnd_net_repo):
+    if node_type == "dcmtk":
+        return make_dcmtk_net_repo
+    else:
+        assert node_type == "pnd"
+        return make_pnd_net_repo
+
+
+def get_stored_files(store_dir):
+    return [
+        x
+        for x in Path(store_dir).glob("**/*")
+        if not x.is_dir() and x.name != "index.dat"
+    ]
 
 
 # @fixture

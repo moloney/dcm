@@ -52,6 +52,7 @@ tox-poetry-dev-dependencies = "^0.0.9"
 pytest-cov = "^2.11.1"
 types-toml = "^0.1.5"
 types-dateparser = "^1.0.1"
+SQLAlchemy = "^1.4.37"
 
 [tool.poetry.extras]
 ipython = ["ipython"]

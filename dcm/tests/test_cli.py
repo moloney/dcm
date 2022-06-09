@@ -1,25 +1,23 @@
-import os, time, signal, json
-from threading import Thread
-from queue import Queue
+import time, json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from pytest import fixture, mark
+from pytest import mark
 from click.testing import CliRunner
 import pydicom
 
 from ..cli import cli
 from ..util import json_serializer
 
-from .conftest import has_dcmtk, DCMTK_VERSION
+from .conftest import has_dcmtk
 
 
-@has_dcmtk
-def test_echo(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_echo(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    remote, _, _ = make_dcmtk_nodes([local_node], None)
+    remote, _, _ = make_remote_nodes([local_node], None)
     runner = CliRunner()
     config_path = make_dcm_config_file()
     args = ["--config", config_path, "echo", "--local", str(local_node), str(remote)]
@@ -29,12 +27,12 @@ def test_echo(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
     assert result.output == "Success\n"
 
 
-@has_dcmtk
-def test_query(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    remote, init_qr, store_dir = make_dcmtk_nodes([local_node], "all")
+    remote, init_qr, store_dir = make_remote_nodes([local_node], "all")
     time.sleep(2)
-    runner = CliRunner()
+    runner = CliRunner(mix_stderr=False)
     config_path = make_dcm_config_file()
     args = [
         "--config",
@@ -54,11 +52,11 @@ def test_query(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
     assert init_qr.equivalent(res_qr)
 
 
-@has_dcmtk
-def test_sync(make_local_node, make_dcmtk_nodes, make_dcm_config_file):
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
+def test_sync(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    src_remote, init_qr, src_dir = make_dcmtk_nodes([local_node], "all")
-    dest_remote, _, dest_dir = make_dcmtk_nodes([local_node], None)
+    src_remote, init_qr, src_dir = make_remote_nodes([local_node], "all")
+    dest_remote, _, dest_dir = make_remote_nodes([local_node], None)
     runner = CliRunner()
     config_path = make_dcm_config_file()
     args = [
@@ -111,12 +109,12 @@ def _run_forward(config_path, local_node, dest_dir):
     return runner.invoke(cli, fwd_args)
 
 
-@has_dcmtk
+@mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
 def test_forward(
-    make_local_node, make_dcmtk_nodes, make_dcm_config_file, make_local_dir
+    make_local_node, make_remote_nodes, make_dcm_config_file, make_local_dir
 ):
     local_node = make_local_node()
-    src_remote, init_qr, src_dir = make_dcmtk_nodes([local_node], "PATIENT-1")
+    src_remote, init_qr, src_dir = make_remote_nodes([local_node], "PATIENT-1")
     dest_bucket, _, dest_dir = make_local_dir(None)
     runner = CliRunner()
     config_path = make_dcm_config_file()

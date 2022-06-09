@@ -1,12 +1,11 @@
 import asyncio
 
 import pydicom
-from pytest import fixture, mark
+import pytest
+from pytest import mark
 
 from ..query import QueryLevel
-from ..net import LocalEntity
 from ..route import StaticRoute, DynamicRoute, Router
-from ..store.net_repo import NetRepo
 
 from .conftest import has_dcmtk
 
@@ -21,14 +20,19 @@ def make_id_lookup(dest1, dest2):
     return lookup_func
 
 
-@has_dcmtk
-@mark.parametrize("node_subsets", [["all", None, None, None]])
-def test_pre_route(make_local_node, make_dcmtk_net_repo, node_subsets):
+@mark.parametrize(
+    "node_type, node_subsets",
+    (
+        pytest.param("dcmtk", ["all", None, None, None], marks=has_dcmtk),
+        ("pnd", ["all", None, None, None]),
+    ),
+)
+def test_pre_route(make_local_node, make_net_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
+    src_repo, _, _ = make_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _, _ = make_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_id_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -65,14 +69,19 @@ def make_echo_lookup(dest1, dest2):
     return lookup_func
 
 
-@has_dcmtk
-@mark.parametrize("node_subsets", [["all", None, None, None]])
-def test_pre_route_with_dl(make_local_node, make_dcmtk_net_repo, node_subsets):
+@mark.parametrize(
+    "node_type, node_subsets",
+    (
+        pytest.param("dcmtk", ["all", None, None, None], marks=has_dcmtk),
+        ("pnd", ["all", None, None, None]),
+    ),
+)
+def test_pre_route_with_dl(make_local_node, make_net_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, src_qr, src_dir = make_dcmtk_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _, _ = make_dcmtk_net_repo(local_node, subset=node_subsets[3])
+    src_repo, src_qr, src_dir = make_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _, _ = make_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _, _ = make_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _, _ = make_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     # Setup a dynamic route where we route on an element that can't be queried for
     # thus forcing the router to download example data sets
@@ -98,7 +107,7 @@ def test_pre_route_with_dl(make_local_node, make_dcmtk_net_repo, node_subsets):
                 series = list(qr.series(study_uid))
                 for series_uid in series:
                     instances = list(src_qr.instances(series_uid))
-                    example_path = src_dir / f"{instances[0]}.dcm"
+                    example_path = list(src_dir.glob(f"{instances[0]}*"))[0]
                     assert example_path.exists()
                     with open(example_path, "rb") as f:
                         ds = pydicom.dcmread(f)
