@@ -1110,7 +1110,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         try:
             assoc = await self._associate(remote, VerificationPresentationContexts)
         except FailedAssociationError:
-            log.warn("Failed to associae for 'echo'")
+            log.warn("Failed to associate for 'echo'")
             return False
         try:
             status = await loop.run_in_executor(self._thread_pool, assoc.send_c_echo)
