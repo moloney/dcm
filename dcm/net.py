@@ -1104,19 +1104,12 @@ class LocalEntity(metaclass=_SingletonEntity):
     async def echo(self, remote: DcmNode) -> bool:
         """Perfrom an "echo" against `remote` to test connectivity
 
-        Returns True if successful, else False.
+        Returns True if successful, else False. Throws FailedAssociationError if the
+        initial association with the `remote` fails.
         """
         loop = asyncio.get_event_loop()
-        try:
-            assoc = await self._associate(remote, VerificationPresentationContexts)
-        except FailedAssociationError:
-            log.warn("Failed to associate for 'echo'")
-            return False
-        try:
+        async with self._associate(remote, VerificationPresentationContexts) as assoc:
             status = await loop.run_in_executor(self._thread_pool, assoc.send_c_echo)
-        finally:
-            assoc.release()
-
         if status and status.Status == 0x0:
             return True
         return False
@@ -1263,10 +1256,6 @@ class LocalEntity(metaclass=_SingletonEntity):
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
-        # Create association with the remote node
-        log.debug("Making association with %s for query" % (remote,))
-        assoc = await self._associate(remote, QueryRetrievePresentationContexts)
-
         # Setup args for building reports
         dicom_op = DicomOp(provider=remote, user=self._local, op_type="c-find")
         op_report_attrs = {
@@ -1274,8 +1263,10 @@ class LocalEntity(metaclass=_SingletonEntity):
             "prog_hook": report._prog_hook,
         }
 
-        # Fire up a thread to perform the query and produce QueryResult chunks
-        try:
+        # Create association with the remote node
+        log.debug("Making association with %s for query" % (remote,))
+        async with self._associate(remote, QueryRetrievePresentationContexts, query_model) as assoc:
+            # Fire up a thread to perform the query and produce QueryResult chunks
             rep_builder_task = asyncio.create_task(
                 self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
             )
@@ -1286,7 +1277,6 @@ class LocalEntity(metaclass=_SingletonEntity):
             )
             qr_fut_done = False
             qr_fut_exception = None
-            assoc_released = False
             while True:
                 try:
                     res = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
@@ -1298,8 +1288,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     if query_fut.done():
                         qr_fut_done = True
                         qr_fut_exception = query_fut.exception()
-                        assoc.release()
-                        assoc_released = True
                 else:
                     if res is None:
                         break
@@ -1317,9 +1305,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     yield qr
             await query_fut
             await rep_builder_task
-        finally:
-            if not assoc_released:
-                assoc.release()
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1398,14 +1383,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
         self._add_qr_meta(report, query_res)
-
-        # Setup the association
         query_model = self._choose_qr_model(source, "move", query_res.level)
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        log.debug(f"About to associate with {source} to move data")
-        assoc = await self._associate(source, QueryRetrievePresentationContexts)
-
         # Setup queue args for building reports
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         dicom_op = DicomOp(provider=source, user=self._local, op_type="c-move")
@@ -1413,12 +1393,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             "dicom_op": dicom_op,
             "prog_hook": report._prog_hook,
         }
-
-        if not assoc.is_established:
-            raise FailedAssociationError(
-                "Failed to associate with " "remote: %s" % str(source)
-            )
-        try:
+        # Setup the association
+        log.debug(f"About to associate with {source} to move data")
+        async with self._associate(source, QueryRetrievePresentationContexts, query_model) as assoc:
             rep_builder_task = asyncio.create_task(
                 self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
             )
@@ -1428,8 +1405,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                 thread_pool=self._thread_pool,
             )
             await rep_builder_task
-        finally:
-            assoc.release()
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1483,32 +1458,37 @@ class LocalEntity(metaclass=_SingletonEntity):
             move_task = asyncio.create_task(
                 self.move(remote, self._local, query_res, report=report.move_report)
             )
-            while True:
-                try:
-                    ds, file_meta = await asyncio.wait_for(res_q.get(), timeout=0.5)
-                except asyncio.TimeoutError:
-                    # Check if the move task is done
-                    if move_task.done():
-                        break
-                    else:
+            try:
+                while True:
+                    try:
+                        ds, file_meta = await asyncio.wait_for(res_q.get(), timeout=0.5)
+                    except asyncio.TimeoutError:
+                        # Check if the move task is done
+                        if move_task.done():
+                            break
+                        else:
+                            continue
+                    # Add the data set to our report and handle errors
+                    success = report.add(ds)
+                    if not success:
+                        log.debug("Retrieved data set filtered due to error")
                         continue
-                # Add the data set to our report and handle errors
-                success = report.add(ds)
-                if not success:
-                    log.debug("Retrieved data set filtered due to error")
-                    continue
-                # Remove any Group 0x0002 elements that may have been included
-                ds = ds[0x00030000:]
-                # Add the file_meta to the data set and yield it
-                # TODO: Get implementation UID and set it here
-                # file_meta.ImplementationUID = ...
-                # file_meta.ImplementationVersionName = __version__
-                ds.file_meta = file_meta
-                ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
-                ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR
-                yield ds
-            log.debug("About to await move task")
-            await move_task
+                    # Remove any Group 0x0002 elements that may have been included
+                    ds = ds[0x00030000:]
+                    # Add the file_meta to the data set and yield it
+                    # TODO: Get implementation UID and set it here
+                    # file_meta.ImplementationUID = ...
+                    # file_meta.ImplementationVersionName = __version__
+                    ds.file_meta = file_meta
+                    ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
+                    ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR
+                    yield ds
+            except GeneratorExit:
+                log.info("Retrieve generator closed early, cancelling move")
+                await move_task.cancel()
+            else:
+                log.debug("Retrieve generator exhausted, about to await move task")
+                await move_task
         report.done = True
         if not extern_report:
             report.log_issues()
@@ -1558,33 +1538,29 @@ class LocalEntity(metaclass=_SingletonEntity):
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
 
         log.debug(f"About to associate with {remote} to send data")
-        assoc = await self._associate(remote, default_store_scu_pcs)
-
-        try:
-            rep_builder_task = asyncio.create_task(
-                self._single_report_builder(rep_q.async_q, report)
-            )
-            send_fut = create_thread_task(
-                _send_worker,
-                (send_q.sync_q, rep_q.sync_q, assoc),
-                thread_pool=self._thread_pool,
-            )
-            # Want it to be an error if external user sends None, so we have type
-            # mis-match here
-            yield send_q.async_q  # type: ignore
-        finally:
+        async with self._associate(remote, default_store_scu_pcs) as assoc:
             try:
-                # Signal send worker to shutdown, then wait for it
-                log.debug("Shutting down send worker")
-                await send_q.async_q.put(None)
-                await send_fut
-                log.debug("Send worker has shutdown, waiting for report builder")
-                await rep_builder_task
+                rep_builder_task = asyncio.create_task(
+                    self._single_report_builder(rep_q.async_q, report)
+                )
+                send_fut = create_thread_task(
+                    _send_worker,
+                    (send_q.sync_q, rep_q.sync_q, assoc),
+                    thread_pool=self._thread_pool,
+                )
+                # Want it to be an error if external user sends None, so we have type
+                # mis-match here
+                yield send_q.async_q  # type: ignore
             finally:
-                log.debug("Releasing send association")
-                report.done = True
-                assoc.release()
-
+                try:
+                    # Signal send worker to shutdown, then wait for it
+                    log.debug("Shutting down send worker")
+                    await send_q.async_q.put(None)
+                    await send_fut
+                    log.debug("Send worker has shutdown, waiting for report builder")
+                    await rep_builder_task
+                finally:
+                    report.done = True
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1626,9 +1602,13 @@ class LocalEntity(metaclass=_SingletonEntity):
                 )
                 await send_q.put(ds)
 
+    @asynccontextmanager
     async def _associate(
-        self, remote: DcmNode, pres_contexts: List[PresentationContext]
-    ) -> Association:
+        self,
+        remote: DcmNode,
+        pres_contexts: List[PresentationContext],
+        query_model: Optional[SOPClass] = None,
+    ) -> AsyncIterator[Association]:
         loop = asyncio.get_event_loop()
         assoc = await loop.run_in_executor(
             self._thread_pool,
@@ -1643,7 +1623,18 @@ class LocalEntity(metaclass=_SingletonEntity):
                 "Failed to associate with remote: %s", str(remote)
             )
         log.debug("Successfully associated with remote: %s", remote)
-        return assoc
+        try:
+            yield assoc
+        except (GeneratorExit, asyncio.CancelledError):
+            # If it appears we
+            if query_model is not None and assoc.is_established:
+                try:
+                    await loop.run_in_executor(self._thread_pool, assoc.send_c_cancel, 1, None, query_model)
+                except Exception as e:
+                    log.info("Exception occured when seding c-cancel: %s", e)
+            raise
+        finally:
+            await loop.run_in_executor(self._thread_pool, assoc.release)
 
     def _prep_query(
         self,

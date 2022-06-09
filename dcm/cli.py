@@ -24,7 +24,7 @@ from .util import str_to_tag, aclosing, json_serializer
 from .lazyset import AllElems, LazySet
 from .report import MultiListReport, RichProgressHook
 from .query import QueryResult
-from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
+from .net import DcmNode, FailedAssociationError, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
 from .filt import make_edit_filter, MultiFilter
 from .route import StaticRoute, DynamicTransferReport, Router
 from .store import TransferMethod
@@ -224,7 +224,10 @@ def echo(params, remote, local):
     local = params["config"].get_local_node(local)
     remote_node = params["config"].get_remote_node(remote)
     net_ent = LocalEntity(local)
-    res = asyncio.run(net_ent.echo(remote_node))
+    try:
+        res = asyncio.run(net_ent.echo(remote_node))
+    except FailedAssociationError:
+        res = False
     if res:
         click.echo("Success")
     else:
