@@ -1,6 +1,6 @@
 """Command line interface"""
 from __future__ import annotations
-import sys, os, logging, json, re
+import sys, os, logging, json, re, signal
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
@@ -23,8 +23,14 @@ from .conf import DcmConfig, _default_conf, NoLocalNodeError
 from .util import str_to_tag, aclosing, json_serializer
 from .lazyset import AllElems, LazySet
 from .report import MultiListReport, RichProgressHook
-from .query import QueryResult
-from .net import DcmNode, FailedAssociationError, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
+from .net import (
+    DcmNode,
+    FailedAssociationError,
+    LocalEntity,
+    QueryLevel,
+    EventFilter,
+    make_queue_data_cb,
+)
 from .filt import make_edit_filter, MultiFilter
 from .route import StaticRoute, DynamicTransferReport, Router
 from .store import TransferMethod
@@ -36,6 +42,10 @@ from .diff import diff_data_sets
 
 
 log = logging.getLogger("dcm.cli")
+
+
+# Make sure we get SIGINT regardless of parent process mask
+signal.signal(signal.SIGINT, signal.default_int_handler)
 
 
 def cli_error(msg, exit_code=1):

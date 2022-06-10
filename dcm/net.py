@@ -1629,17 +1629,18 @@ class LocalEntity(metaclass=_SingletonEntity):
         log.debug("Successfully associated with remote: %s", remote)
         try:
             yield assoc
-        except (GeneratorExit, asyncio.CancelledError):
-            # If it appears we
+        except (KeyboardInterrupt, GeneratorExit, asyncio.CancelledError):
             if query_model is not None and assoc.is_established:
+                log.debug("Sending c-cancel to remote: %s", remote)
                 try:
                     await loop.run_in_executor(
                         self._thread_pool, assoc.send_c_cancel, 1, None, query_model
                     )
                 except Exception as e:
-                    log.info("Exception occured when seding c-cancel: %s", e)
+                    log.info("Exception occured when sending c-cancel: %s", e)
             raise
         finally:
+            log.debug("Releasing association")
             await loop.run_in_executor(self._thread_pool, assoc.release)
 
     def _prep_query(
