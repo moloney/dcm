@@ -237,7 +237,9 @@ fallback_fmt = FallbackFormatter()
 _default_thread_shutdown = threading.Event()
 
 
-def make_done_callback(shutdown: threading.Event):
+def make_done_callback(
+    shutdown: threading.Event,
+) -> Callable[[asyncio.Future[Any]], None]:
     def done_callback(task: asyncio.Future[Any]) -> None:
         try:
             ex = task.exception()
@@ -267,7 +269,7 @@ def create_thread_task(
     kwargs: Optional[Dict[str, Any]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
     thread_pool: Optional[ThreadPoolExecutor] = None,
-    shutdown_event: Optional[threading.Event] = None,
+    shutdown: Optional[threading.Event] = None,
 ) -> asyncio.Future[Any]:
     """Helper to turn threads into tasks with clean shutdown option
 
@@ -285,10 +287,10 @@ def create_thread_task(
         kwargs = {}
     if loop is None:
         loop = asyncio.get_running_loop()
-    if shutdown_event is None:
-        shutdown_event = _default_thread_shutdown
-    kwargs["shutdown"] = shutdown_event
+    if shutdown is None:
+        shutdown = _default_thread_shutdown
+    kwargs["shutdown"] = shutdown
     pfunc = partial(func, *args, **kwargs)
     task = asyncio.ensure_future(loop.run_in_executor(thread_pool, pfunc))
-    task.add_done_callback(make_done_callback(shutdown_event))
+    task.add_done_callback(make_done_callback(shutdown))
     return task

@@ -46,7 +46,7 @@ from pynetdicom import (
 )
 from pynetdicom._globals import ALL_TRANSFER_SYNTAXES
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import StorageServiceClass, SOPClass
+from pynetdicom.sop_class import StorageServiceClass, SOPClass, uid_to_sop_class
 
 # from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
 from pynetdicom.transport import ThreadedAssociationServer
@@ -185,19 +185,37 @@ default_store_scp_pcs = _make_default_store_scp_pcs()
 
 QR_MODELS = {
     "PatientRoot": {
-        "find": sop_class.PatientRootQueryRetrieveInformationModelFind,
-        "move": sop_class.PatientRootQueryRetrieveInformationModelMove,
-        "get": sop_class.PatientRootQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelGet"]
+        ),
     },
     "StudyRoot": {
-        "find": sop_class.StudyRootQueryRetrieveInformationModelFind,
-        "move": sop_class.StudyRootQueryRetrieveInformationModelMove,
-        "get": sop_class.StudyRootQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelGet"]
+        ),
     },
     "PatientStudyOnly": {
-        "find": sop_class.PatientStudyOnlyQueryRetrieveInformationModelFind,
-        "move": sop_class.PatientStudyOnlyQueryRetrieveInformationModelMove,
-        "get": sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelGet"]
+        ),
     },
 }
 
@@ -795,7 +813,7 @@ class FailedAssociationError(Exception):
 
 def _query_worker(
     res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[str]]]],
-    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Optional[Dataset]]]],
     assoc: Association,
     level: QueryLevel,
     queries: Iterator[Dataset],
@@ -883,7 +901,7 @@ def _make_move_request(ds: Dataset) -> Dataset:
 
 
 def _move_worker(
-    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Optional[Dataset]]]],
     assoc: Association,
     dest: DcmNode,
     query_res: QueryResult,
@@ -961,7 +979,7 @@ class EventFilter:
         if self.event_types is not None and event._event not in self.event_types:
             return False
         if self.ae_titles is not None:
-            norm_ae = event.assoc.requestor.ae_title.decode("ascii").strip()
+            norm_ae = event.assoc.requestor.ae_title.strip()
             if norm_ae not in self.ae_titles:
                 return False
         return True
@@ -1094,7 +1112,7 @@ class LocalEntity(metaclass=_SingletonEntity):
     ):
         self._local = local
         if transfer_syntaxes is None:
-            self._default_ts = ALL_TRANSFER_SYNTAXES[:]
+            self._default_ts = [uid_to_sop_class(x) for x in ALL_TRANSFER_SYNTAXES]
         else:
             self._default_ts = transfer_syntaxes
         self._ae = AE(ae_title=self._local.ae_title)
@@ -1294,7 +1312,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                 (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
                 loop=loop,
                 thread_pool=self._thread_pool,
-                shutdown_event=query_shutdown,
+                shutdown=query_shutdown,
             )
             qr_fut_done = False
             qr_fut_exception = None
@@ -1342,7 +1360,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         self,
         handler: Callable[[evt.Event], Awaitable[int]],
         event_filter: Optional[EventFilter] = None,
-        presentation_contexts: Optional[SOPList] = None,
+        presentation_contexts: Optional[List[PresentationContext]] = None,
     ) -> AsyncIterator[None]:
         """Listen for incoming DICOM network events
 
@@ -1515,7 +1533,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                     yield ds
             except GeneratorExit:
                 log.info("Retrieve generator closed early, cancelling move")
-                await move_task.cancel()
+                move_task.cancel()
             else:
                 log.debug("Retrieve generator exhausted, about to await move task")
                 await move_task
@@ -1704,17 +1722,19 @@ class LocalEntity(metaclass=_SingletonEntity):
     def _setup_listen_mgr(
         self,
         sync_cb: Callable[[evt.Event], Any],
-        presentation_contexts: SOPList,
+        presentation_contexts: List[PresentationContext],
     ) -> None:
         log.debug("Starting a threaded listener")
         # TODO: How to handle presentation contexts in generic way?
         ae = AE(ae_title=self._local.ae_title)
         ae.dimse_timeout = 180
         for context in presentation_contexts:
+            assert context.abstract_syntax is not None
             ae.add_supported_context(context.abstract_syntax, self._default_ts)
         self._listen_mgr = ae.start_server(
             (self._local.host, self._local.port), block=False
         )
+        assert self._listen_mgr is not None
         for evt_type in default_evt_pc_map.keys():
             log.debug(f"Binding to event {evt_type}")
             self._listen_mgr.bind(evt_type, sync_cb)
