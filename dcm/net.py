@@ -815,49 +815,62 @@ def _query_worker(
     last_split_val = None
 
     resp_count = 0
-    for query in queries:
-        log.debug("Sending query:\n%s", query)
-        res = QueryResult(level)
-        missing_attrs: Set[str] = set()
-        for status, rdat in assoc.send_c_find(query, query_model=query_model):
-            rep_q.put((status, rdat))
-            if rdat is None:
-                break
-            if resp_count + 1 % 20 == 0:
-                if shutdown is not None and shutdown.is_set():
-                    return
-            resp_count += 1
-            log.debug("Got query response:\n%s", rdat)
-            split_val = getattr(rdat, split_attr)
-            if last_split_val != split_val:
-                if len(res) != 0:
-                    res_q.put((res, missing_attrs))
-                    res = QueryResult(level)
-                    missing_attrs = set()
-            last_split_val = split_val
-            rdat_keys = rdat.keys()
-            # TODO: Can't we just examine the qr at a higher level to determine this?
-            for tag in query.keys():
-                if tag not in rdat_keys:
-                    keyword = keyword_for_tag(tag)
-                    missing_attrs.add(keyword)
-            is_consistent = True
-            try:
-                dupe = rdat in res
-            except InconsistentDataError:
-                log.error("Got inconsistent data in query reponse from %s", assoc.ae)
-                is_consistent = False
-            if dupe:
-                log.warning("Got duplicate data in query response from %s", assoc.ae)
-            elif is_consistent:
+    try:
+        for q_idx, query in enumerate(queries):
+            # Before sending another c-find, check if we were asked to shutdown
+            if q_idx == 1 and shutdown is not None and shutdown.is_set():
+                log.debug("Query worker got shutdown event")
+                return
+            log.debug("Sending query:\n%s", query)
+            res = QueryResult(level)
+            missing_attrs: Set[str] = set()
+            for status, rdat in assoc.send_c_find(query, query_model=query_model):
+                rep_q.put((status, rdat))
+                if rdat is None:
+                    break
+                # Check periodically if we should shutdown prematurely
+                if resp_count + 1 % 20 == 0:
+                    if shutdown is not None and shutdown.is_set():
+                        log.debug("Query worker got shutdown event")
+                        return
+                resp_count += 1
+                log.debug("Got query response:\n%s", rdat)
+                split_val = getattr(rdat, split_attr)
+                if last_split_val != split_val:
+                    if len(res) != 0:
+                        res_q.put((res, missing_attrs))
+                        res = QueryResult(level)
+                        missing_attrs = set()
+                last_split_val = split_val
+                rdat_keys = rdat.keys()
+                # TODO: Can't we just examine the qr at a higher level to determine this?
+                for tag in query.keys():
+                    if tag not in rdat_keys:
+                        keyword = keyword_for_tag(tag)
+                        missing_attrs.add(keyword)
+                is_consistent = True
                 try:
-                    res.add(rdat)
-                except InvalidDicomError:
-                    log.error("Got invalid data in query reponse from %s", assoc.ae)
-        if len(res) != 0:
-            res_q.put((res, missing_attrs))
-    res_q.put(None)
-    rep_q.put(None)
+                    dupe = rdat in res
+                except InconsistentDataError:
+                    log.error(
+                        "Got inconsistent data in query reponse from %s", assoc.ae
+                    )
+                    is_consistent = False
+                if dupe:
+                    log.warning(
+                        "Got duplicate data in query response from %s", assoc.ae
+                    )
+                elif is_consistent:
+                    try:
+                        res.add(rdat)
+                    except InvalidDicomError:
+                        log.error("Got invalid data in query reponse from %s", assoc.ae)
+            if len(res) != 0:
+                res_q.put((res, missing_attrs))
+    finally:
+        # Signal consumers on other end of queues that we are done
+        res_q.put(None)
+        rep_q.put(None)
 
 
 def _make_move_request(ds: Dataset) -> Dataset:
@@ -1256,6 +1269,10 @@ class LocalEntity(metaclass=_SingletonEntity):
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
+        # Make shutdown event for query worker
+        query_shutdown = threading.Event()
+        loop = asyncio.get_running_loop()
+
         # Setup args for building reports
         dicom_op = DicomOp(provider=remote, user=self._local, op_type="c-find")
         op_report_attrs = {
@@ -1275,38 +1292,47 @@ class LocalEntity(metaclass=_SingletonEntity):
             query_fut = create_thread_task(
                 _query_worker,
                 (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
+                loop=loop,
                 thread_pool=self._thread_pool,
+                shutdown_event=query_shutdown,
             )
             qr_fut_done = False
             qr_fut_exception = None
-            while True:
-                try:
-                    res = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
-                except asyncio.TimeoutError:
-                    if qr_fut_exception:
-                        raise qr_fut_exception
-                    assert qr_fut_done == False
-                    # Check if the worker thread is done
-                    if query_fut.done():
-                        qr_fut_done = True
-                        qr_fut_exception = query_fut.exception()
-                else:
-                    if res is None:
-                        break
-                    qr, missing_attrs = res
-                    for missing_attr in missing_attrs:
-                        if missing_attr not in auto_attrs:
-                            # TODO: Still getting some false positives with this
-                            #       warning, presumably from pre-queries. Disable
-                            #       it until it is more reliable.
-                            pass
-                            # warnings.warn(f"Remote node {remote} doesn't "
-                            #              f"support querying on {missing_attr}")
-                    qr.prov.source = remote
-                    qr.prov.queried_elems = queried_elems.copy()
-                    yield qr
-            await query_fut
-            await rep_builder_task
+            try:
+                while True:
+                    try:
+                        res = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
+                    except asyncio.TimeoutError:
+                        if qr_fut_exception:
+                            raise qr_fut_exception
+                        assert qr_fut_done == False
+                        # Check if the worker thread is done
+                        if query_fut.done():
+                            qr_fut_done = True
+                            qr_fut_exception = query_fut.exception()
+                    else:
+                        if res is None:
+                            break
+                        qr, missing_attrs = res
+                        for missing_attr in missing_attrs:
+                            if missing_attr not in auto_attrs:
+                                # TODO: Still getting some false positives with this
+                                #       warning, presumably from pre-queries. Disable
+                                #       it until it is more reliable.
+                                pass
+                                # warnings.warn(f"Remote node {remote} doesn't "
+                                #              f"support querying on {missing_attr}")
+                        qr.prov.source = remote
+                        qr.prov.queried_elems = queried_elems.copy()
+                        yield qr
+            finally:
+                log.debug("Signaling query worker to shutdown")
+                await loop.run_in_executor(self._thread_pool, query_shutdown.set)
+                log.debug("Waiting for query report buider task to finish")
+                await rep_builder_task
+                log.debug("Waiting for query worker task to finish")
+                await query_fut
+
         if not extern_report:
             report.log_issues()
             report.check_errors()

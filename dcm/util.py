@@ -234,28 +234,31 @@ class FallbackFormatter(string.Formatter):
 fallback_fmt = FallbackFormatter()
 
 
-_thread_shutdown = threading.Event()
+_default_thread_shutdown = threading.Event()
 
 
-def _default_done_callback(task: asyncio.Future[Any]) -> None:
-    try:
-        ex = task.exception()
-        if ex is not None:
-            loop = task.get_loop()
-            loop.call_exception_handler(
-                {
-                    "message": "unhandled exception from task",
-                    "exception": ex,
-                    "task": task,
-                }
-            )
-            _thread_shutdown.set()
-            time.sleep(2.0)
-            sys.exit()
-            # os.kill(os.getpid(), signal.SIGINT)
+def make_done_callback(shutdown: threading.Event):
+    def done_callback(task: asyncio.Future[Any]) -> None:
+        try:
+            ex = task.exception()
+            if ex is not None:
+                loop = task.get_loop()
+                loop.call_exception_handler(
+                    {
+                        "message": "unhandled exception from task",
+                        "exception": ex,
+                        "task": task,
+                    }
+                )
+                shutdown.set()
+                time.sleep(2.0)
+                sys.exit()
+                # os.kill(os.getpid(), signal.SIGINT)
 
-    except asyncio.CancelledError:
-        pass
+        except asyncio.CancelledError:
+            pass
+
+    return done_callback
 
 
 def create_thread_task(
@@ -264,7 +267,7 @@ def create_thread_task(
     kwargs: Optional[Dict[str, Any]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
     thread_pool: Optional[ThreadPoolExecutor] = None,
-    done_cb: Optional[Callable[[asyncio.Future[Any]], None]] = _default_done_callback,
+    shutdown_event: Optional[threading.Event] = None,
 ) -> asyncio.Future[Any]:
     """Helper to turn threads into tasks with clean shutdown option
 
@@ -282,10 +285,10 @@ def create_thread_task(
         kwargs = {}
     if loop is None:
         loop = asyncio.get_running_loop()
-
-    kwargs["shutdown"] = _thread_shutdown
+    if shutdown_event is None:
+        shutdown_event = _default_thread_shutdown
+    kwargs["shutdown"] = shutdown_event
     pfunc = partial(func, *args, **kwargs)
     task = asyncio.ensure_future(loop.run_in_executor(thread_pool, pfunc))
-    if done_cb is not None:
-        task.add_done_callback(done_cb)
+    task.add_done_callback(make_done_callback(shutdown_event))
     return task
