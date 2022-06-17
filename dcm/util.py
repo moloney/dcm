@@ -253,9 +253,6 @@ def make_done_callback(
                     }
                 )
                 shutdown.set()
-                time.sleep(2.0)
-                sys.exit()
-                # os.kill(os.getpid(), signal.SIGINT)
 
         except asyncio.CancelledError:
             pass
@@ -278,8 +275,8 @@ def create_thread_task(
     monitored periodically for shutdown events.
 
     Worker threads are also prone to hiding exceptions, so we automatically
-    add a callback to report exceptions in a timely manner and initiate a
-    shutdown of all worker threads and exit the application.
+    add a callback to report exceptions in a timely manner and make sure the shutdown
+    event is set, so any other threads sharing that event will also shutdown.
     """
     if args is None:
         args = tuple()

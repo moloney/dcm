@@ -922,7 +922,7 @@ class Router:
                         continue
                     # Initiate the transfers
                     coros = [assoc_cache.send(filt_ds, dest) for dest in dests]
-                    log.debug("Router forwarding data set to %d dests" % len(dests))
+                    log.debug("Router forwarding data set to %d dests", len(dests))
                     op_reports = await asyncio.gather(*coros)
                     for op_report, dest in zip(op_reports, dests):
                         if op_report is not None:
@@ -935,8 +935,10 @@ class Router:
                     await assoc_cache.update_cache()
 
         finally:
+            log.debug("Emptying the association cache")
             await assoc_cache.empty_cache()
             report.done = True
+            log.debug("Done with routing")
         if not extern_report:
             report.log_issues()
             report.check_errors()

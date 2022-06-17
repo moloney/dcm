@@ -175,12 +175,7 @@ default_store_scp_pcs = _make_default_store_scp_pcs()
 # c_store_ext_sop_negs = [siemens_mr_sop_neg]
 
 
-# TODO: Everytime we establish/close an association, it should be done in a
-#       separate thread, since this is a blocking operation (though usually
-#       quite fast). Probably makes sense to wait until we refactor associations
-#       into some sort of AssociationManager object that can also manage
-#       caching of associations and limits on number of simultaneous
-#       associations with any given remote.
+# TODO: Need to cosider external limits
 
 
 QR_MODELS = {
@@ -836,7 +831,7 @@ def _query_worker(
     try:
         for q_idx, query in enumerate(queries):
             # Before sending another c-find, check if we were asked to shutdown
-            if q_idx == 1 and shutdown is not None and shutdown.is_set():
+            if q_idx > 0 and shutdown is not None and shutdown.is_set():
                 log.debug("Query worker got shutdown event")
                 return
             log.debug("Sending query:\n%s", query)
@@ -909,7 +904,10 @@ def _move_worker(
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Worker function for perfoming move operations in another thread"""
-    for d in query_res:
+    for d_idx, d in enumerate(query_res):
+        if d_idx != 0 and shutdown is not None and shutdown.is_set():
+            log.debug("Move worker exiting from shutdown event")
+            return
         move_req = _make_move_request(d)
         move_req.QueryRetrieveLevel = query_res.level.name
         responses = assoc.send_c_move(move_req, dest.ae_title, query_model=query_model)
@@ -1181,9 +1179,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         level
             The level of detail we want to query
 
-            If not provided, we try to automatically determine the most
-            appropriate level based on the `query`, then the `query_res`,
-            and finally fall back to using `QueryLevel.STUDY`.
+            If not provided, we try to automatically determine the most appropriate
+            level based on the `query`, then the `query_res`, and finally fall back to
+            using `QueryLevel.STUDY`.
 
         query
             Specifies the DICOM attributes we want to query with/for
@@ -1218,7 +1216,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         # a recursive pre-query to get those first
         if (
             level == QueryLevel.STUDY
-            and query_model == "PatientRoot"
+            and query_model == QR_MODELS["PatientRoot"]["find"]
             and not is_specified(query, "PatientID")
         ):
             if query_res is None:
@@ -1289,7 +1287,6 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         # Make shutdown event for query worker
         query_shutdown = threading.Event()
-        loop = asyncio.get_running_loop()
 
         # Setup args for building reports
         dicom_op = DicomOp(provider=remote, user=self._local, op_type="c-find")
@@ -1300,57 +1297,73 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         # Create association with the remote node
         log.debug("Making association with %s for query" % (remote,))
-        async with self._associate(
-            remote, QueryRetrievePresentationContexts, query_model
-        ) as assoc:
-            # Fire up a thread to perform the query and produce QueryResult chunks
-            rep_builder_task = asyncio.create_task(
-                self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
-            )
-            query_fut = create_thread_task(
-                _query_worker,
-                (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
-                loop=loop,
-                thread_pool=self._thread_pool,
-                shutdown=query_shutdown,
-            )
-            qr_fut_done = False
-            qr_fut_exception = None
-            try:
-                while True:
-                    try:
-                        res = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
-                    except asyncio.TimeoutError:
-                        if qr_fut_exception:
-                            raise qr_fut_exception
-                        assert qr_fut_done == False
-                        # Check if the worker thread is done
-                        if query_fut.done():
-                            qr_fut_done = True
-                            qr_fut_exception = query_fut.exception()
-                    else:
-                        if res is None:
-                            break
-                        qr, missing_attrs = res
-                        for missing_attr in missing_attrs:
-                            if missing_attr not in auto_attrs:
-                                # TODO: Still getting some false positives with this
-                                #       warning, presumably from pre-queries. Disable
-                                #       it until it is more reliable.
-                                pass
-                                # warnings.warn(f"Remote node {remote} doesn't "
-                                #              f"support querying on {missing_attr}")
-                        qr.prov.source = remote
-                        qr.prov.queried_elems = queried_elems.copy()
-                        yield qr
-            finally:
-                log.debug("Signaling query worker to shutdown")
-                await loop.run_in_executor(self._thread_pool, query_shutdown.set)
-                log.debug("Waiting for query report buider task to finish")
-                await rep_builder_task
-                log.debug("Waiting for query worker task to finish")
-                await query_fut
+        # While we will signal the worker thread to shutdown before sending any C-CANCEL
+        # there is no gaurantee the worker will see it, so we send the C-CANCEL and
+        # close the association before waiting for the thread to finish
+        query_fut = None
+        rep_builder_task = None
+        loop = asyncio.get_running_loop()
+        try:
+            async with self._associate(
+                remote, QueryRetrievePresentationContexts, query_model
+            ) as assoc:
+                # Fire up a thread to perform the query and produce QueryResult chunks
+                rep_builder_task = asyncio.create_task(
+                    self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
+                )
+                query_fut = create_thread_task(
+                    _query_worker,
+                    (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
+                    loop=loop,
+                    thread_pool=self._thread_pool,
+                    shutdown=query_shutdown,
+                )
+                qr_fut_done = False
+                qr_fut_exception = None
+                try:
+                    while True:
+                        try:
+                            res = await asyncio.wait_for(
+                                res_q.async_q.get(), timeout=1.0
+                            )
+                        except asyncio.TimeoutError:
+                            if qr_fut_exception:
+                                raise qr_fut_exception
+                            assert qr_fut_done == False
+                            # Check if the worker thread is done
+                            if query_fut.done():
+                                qr_fut_done = True
+                                qr_fut_exception = query_fut.exception()
+                        else:
+                            if res is None:
+                                break
+                            qr, missing_attrs = res
+                            for missing_attr in missing_attrs:
+                                if missing_attr not in auto_attrs:
+                                    # TODO: Still getting some false positives with this
+                                    #       warning, presumably from pre-queries. Disable
+                                    #       it until it is more reliable.
+                                    pass
+                                    # warnings.warn(f"Remote node {remote} doesn't "
+                                    #              f"support querying on {missing_attr}")
+                            qr.prov.source = remote
+                            qr.prov.queried_elems = queried_elems.copy()
+                            yield qr
+                finally:
+                    log.debug("Setting shutdown event for query worker")
+                    await loop.run_in_executor(self._thread_pool, query_shutdown.set)
 
+        finally:
+            if query_fut is not None:
+                log.debug("Waiting for query worker thread to finish")
+                await query_fut
+                log.debug("The query worker thread has closed")
+            log.debug("Waiting for query report builder task to finish")
+            if rep_builder_task is not None:
+                try:
+                    await rep_builder_task
+                except BaseException as e:
+                    log.exception("Exception from report builder task")
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1439,20 +1452,42 @@ class LocalEntity(metaclass=_SingletonEntity):
             "dicom_op": dicom_op,
             "prog_hook": report._prog_hook,
         }
+
+        # Make shutdown event for worker
+        move_shutdown = threading.Event()
+
         # Setup the association
         log.debug(f"About to associate with {source} to move data")
-        async with self._associate(
-            source, QueryRetrievePresentationContexts, query_model
-        ) as assoc:
-            rep_builder_task = asyncio.create_task(
-                self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
-            )
-            await create_thread_task(
-                _move_worker,
-                (rep_q.sync_q, assoc, dest, query_res, query_model),
-                thread_pool=self._thread_pool,
-            )
-            await rep_builder_task
+        worker_task = None
+        rep_builder_task = None
+        loop = asyncio.get_running_loop()
+        try:
+            async with self._associate(
+                source, QueryRetrievePresentationContexts, query_model
+            ) as assoc:
+                rep_builder_task = asyncio.create_task(
+                    self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
+                )
+                try:
+                    worker_task = create_thread_task(
+                        _move_worker,
+                        (rep_q.sync_q, assoc, dest, query_res, query_model),
+                        thread_pool=self._thread_pool,
+                        loop=loop,
+                        shutdown=move_shutdown,
+                    )
+                    while not worker_task.done():
+                        await asyncio.sleep(1.0)
+                finally:
+                    log.debug("Setting shutdown event for move worker")
+                    await loop.run_in_executor(self._thread_pool, move_shutdown.set)
+        finally:
+            log.debug("Waiting for move worker task thread to finish")
+            if worker_task is not None:
+                await worker_task
+            log.debug("Move worker task has finished")
+            if rep_builder_task is not None:
+                await rep_builder_task
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1534,8 +1569,8 @@ class LocalEntity(metaclass=_SingletonEntity):
             except GeneratorExit:
                 log.info("Retrieve generator closed early, cancelling move")
                 move_task.cancel()
-            else:
-                log.debug("Retrieve generator exhausted, about to await move task")
+            finally:
+                log.debug("Waiting for move task to finish")
                 await move_task
         report.done = True
         if not extern_report:
