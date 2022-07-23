@@ -111,5 +111,5 @@ poetry_add_dev_dependencies = True
 # TODO: Can't enable this until markers are supported: https://github.com/sinoroc/tox-poetry-dev-dependencies/issues/48
 #poetry_experimental_add_locked_dependencies = True
 commands =
-    pytest
+    pytest --slow
 """

@@ -102,10 +102,10 @@ def get_bucket_to_repo_subsets():
 @mark.asyncio
 async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
-    dest1_repo, dest1_init_qr, _ = make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, dest2_init_qr, _ = make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, dest3_init_qr, _ = make_net_repo(local_node, subset=subset_specs[2])
+    src_repo, src_node = make_net_repo(local_node, subset="all")
+    dest1_repo, dest1_node = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, dest2_node = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, dest3_node = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_lookup = make_lookup(dest2_repo, dest3_repo)
     dyn_route = DynamicRoute(dyn_lookup, required_elems=["PatientID"])
@@ -113,11 +113,11 @@ async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
 
     # Build QRs of what we expect to be transfered to each dest
     expect_qrs = {
-        dest1_repo: full_qr - dest1_init_qr,
+        dest1_repo: src_node.init_qr - dest1_node.init_qr,
         dest2_repo: QueryResult(QueryLevel.IMAGE),
         dest3_repo: QueryResult(QueryLevel.IMAGE),
     }
-    for ds in full_qr:
+    for ds in src_node.init_qr:
         dyn_dests = dyn_lookup(ds)
         for dest in dyn_dests:
             expect_qrs[dest].add(ds)
@@ -146,8 +146,8 @@ async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
 @mark.asyncio
 async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
-    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
+    src_repo, src_node = make_net_repo(local_node, subset="all")
+    dest1_repo, dest1_node = make_net_repo(local_node, subset=subset_specs[0])
     static_route = StaticRoute([dest1_repo])
     dests = [static_route]
     async with SyncManager(src_repo, dests) as sm:
@@ -157,19 +157,19 @@ async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_sp
                     print(f"{dest} : {json_serializer.dumps(transfer.chunk.qr)}")
             await sm.exec_transfer(transfer)
         print(sm.report)
-    found_files = get_stored_files(dest1_dir)
+    found_files = get_stored_files(dest1_node.store_dir)
     print(found_files)
-    assert len(found_files) == len(full_qr)
+    assert len(found_files) == len(src_node.init_qr)
 
 
 @mark.parametrize("node_type, subset_specs", get_repo_to_repo_subsets())
 @mark.asyncio
 async def test_repo_sync_multi(make_local_node, make_net_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, full_qr, _ = make_net_repo(local_node, subset="all")
-    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _, _ = make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _, _ = make_net_repo(local_node, subset=subset_specs[2])
+    src_repo, src_node = make_net_repo(local_node, subset="all")
+    dest1_repo, dest1_node = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _ = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _ = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -182,9 +182,9 @@ async def test_repo_sync_multi(make_local_node, make_net_repo, subset_specs):
                     print(f"{dest} : {transfer.chunk.qr}")
             await sm.exec_transfer(transfer)
         print(sm.report)
-    found_files = get_stored_files(dest1_dir)
+    found_files = get_stored_files(dest1_node.store_dir)
     print(found_files)
-    assert len(found_files) == len(full_qr)
+    assert len(found_files) == len(src_node.init_qr)
     # TODO: Check that dynamic routing worked correctly
 
 
@@ -195,9 +195,9 @@ async def test_bucket_sync(
 ):
     src_bucket, init_qr, _ = make_local_dir("all", max_chunk=2)
     local_node = make_local_node()
-    dest1_repo, _, dest1_dir = make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _, _ = make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _, _ = make_net_repo(local_node, subset=subset_specs[2])
+    dest1_repo, dest1_node = make_net_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _ = make_net_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _ = make_net_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -206,6 +206,6 @@ async def test_bucket_sync(
     async with SyncManager(src_bucket, dests) as sm:
         async for transfer in sm.gen_transfers():
             await sm.exec_transfer(transfer)
-    found_files = get_stored_files(dest1_dir)
+    found_files = get_stored_files(dest1_node.store_dir)
     print(found_files)
     assert len(found_files) == len(init_qr)

@@ -904,22 +904,32 @@ def _move_worker(
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Worker function for perfoming move operations in another thread"""
+    in_shutdown = False
     for d_idx, d in enumerate(query_res):
         if d_idx != 0 and shutdown is not None and shutdown.is_set():
             log.debug("Move worker exiting from shutdown event")
-            return
+            break
         move_req = _make_move_request(d)
         move_req.QueryRetrieveLevel = query_res.level.name
+        log.debug("Worker thread is calling send_c_move")
         responses = assoc.send_c_move(move_req, dest.ae_title, query_model=query_model)
-        time.sleep(0.01)
+        time.sleep(0.05)
+        log.debug("Worker is about to iterate responses")
         for r_idx, (status, rdat) in enumerate(responses):
+            log.debug("Got c-move response")
             rep_q.put((status, rdat))
+            log.debug("Queued c-move reponse for report")
             if r_idx % 20 == 0:
                 if shutdown is not None and shutdown.is_set():
                     log.debug("Move worker exiting from shutdown event")
-                    return
+                    in_shutdown = True
+                    break
+        log.debug("All responses from c-move have been recieved")
+        if in_shutdown:
+            break
+    else:
+        log.debug("Move worker exiting normally")
     rep_q.put(None)
-    log.debug("Move worker exiting normally")
 
 
 def _send_worker(
@@ -1477,10 +1487,14 @@ class LocalEntity(metaclass=_SingletonEntity):
                         shutdown=move_shutdown,
                     )
                     while not worker_task.done():
-                        await asyncio.sleep(1.0)
+                        await asyncio.sleep(0.1)
                 finally:
                     log.debug("Setting shutdown event for move worker")
                     await loop.run_in_executor(self._thread_pool, move_shutdown.set)
+        except asyncio.CancelledError:
+            # No matter what we set the shutdown event for the worker thread above,
+            # so nothing to do here but prevent any CancelledError from propogating
+            pass
         finally:
             log.debug("Waiting for move worker task thread to finish")
             if worker_task is not None:
@@ -1488,9 +1502,11 @@ class LocalEntity(metaclass=_SingletonEntity):
             log.debug("Move worker task has finished")
             if rep_builder_task is not None:
                 await rep_builder_task
+            log.debug("Report builder task is done")
         if not extern_report:
             report.log_issues()
             report.check_errors()
+        log.debug("Call to LocalEntity.move has completed")
 
     async def retrieve(
         self,
@@ -1577,6 +1593,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             report.log_issues()
             log.debug("About to check errors")
             report.check_errors()
+        log.debug("The LocalEntity.retrieve method has completed")
 
     @asynccontextmanager
     async def send(
@@ -1821,7 +1838,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         report.append(curr_op_report)
         while True:
             res = await res_q.get()
+            log.debug("_multi_report_builder got an input")
             if res is None:
+                log.debug("_multi_report_builder got None and is shutting down")
                 if not curr_op_report.done:
                     if len(curr_op_report) != 0:
                         pass

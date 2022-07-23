@@ -29,10 +29,10 @@ def make_id_lookup(dest1, dest2):
 )
 def test_pre_route(make_local_node, make_net_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, _, _ = make_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _, _ = make_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _, _ = make_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _, _ = make_net_repo(local_node, subset=node_subsets[3])
+    src_repo, _ = make_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _ = make_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _ = make_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _ = make_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_id_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -78,10 +78,10 @@ def make_echo_lookup(dest1, dest2):
 )
 def test_pre_route_with_dl(make_local_node, make_net_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, src_qr, src_dir = make_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _, _ = make_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _, _ = make_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _, _ = make_net_repo(local_node, subset=node_subsets[3])
+    src_repo, src_node = make_net_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _ = make_net_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _ = make_net_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _ = make_net_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     # Setup a dynamic route where we route on an element that can't be queried for
     # thus forcing the router to download example data sets
@@ -106,8 +106,8 @@ def test_pre_route_with_dl(make_local_node, make_net_repo, node_subsets):
             for study_uid in studies:
                 series = list(qr.series(study_uid))
                 for series_uid in series:
-                    instances = list(src_qr.instances(series_uid))
-                    example_path = list(src_dir.glob(f"{instances[0]}*"))[0]
+                    instances = list(src_node.init_qr.instances(series_uid))
+                    example_path = list(src_node.store_dir.glob(f"{instances[0]}*"))[0]
                     assert example_path.exists()
                     with open(example_path, "rb") as f:
                         ds = pydicom.dcmread(f)

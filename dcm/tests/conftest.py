@@ -1,11 +1,13 @@
-import os, time, shutil, random, tarfile, logging, re
+from dataclasses import dataclass
+import os, time, shutil, tarfile, logging, re
 from copy import deepcopy
 import subprocess as sp
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from pathlib import Path
+from typing import BinaryIO
 
 import pydicom
-from pynetdicom import AE, Association
+from pynetdicom import AE
 import psutil
 from pytest import fixture, mark
 
@@ -19,24 +21,46 @@ from ..store.local_dir import LocalDir
 logging_opts = {}
 
 
+optional_markers = {
+    "slow": {
+        "help": "Run slow tests",
+        "marker-descr": "Mark a test as being slow",
+        "skip-reason": "Test only runs with the --{} option.",
+    },
+}
+
+
 def pytest_addoption(parser):
+    for marker, info in optional_markers.items():
+        parser.addoption(
+            "--{}".format(marker), action="store_true", default=False, help=info["help"]
+        )
     parser.addoption(
         "--show-pynetdicom-logs",
         default=False,
         action="store_true",
         help="show pynetdicom logs",
     )
-    parser.addoption("--dcmtk-log-level", default=None, help="adjust dcmtk log level")
 
 
 def pytest_configure(config):
-    dcmtk_log_level = config.getoption("--dcmtk-log-level")
-    if dcmtk_log_level:
-        logging_opts["dcmtk_level"] = dcmtk_log_level
+    for marker, info in optional_markers.items():
+        config.addinivalue_line(
+            "markers", "{}: {}".format(marker, info["marker-descr"])
+        )
     if not config.getoption("--show-pynetdicom-logs"):
         for pnd_mod in ("events", "assoc", "dsutils", "acse"):
             lgr = logging.getLogger("pynetdicom.%s" % pnd_mod)
             lgr.setLevel(logging.WARN)
+
+
+def pytest_collection_modifyitems(config, items):
+    for marker, info in optional_markers.items():
+        if not config.getoption("--{}".format(marker)):
+            skip_test = mark.skip(reason=info["skip-reason"].format(marker))
+            for item in items:
+                if marker in item.keywords:
+                    item.add_marker(skip_test)
 
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -149,6 +173,41 @@ def make_local_node(base_port=63987, base_name="DCMTESTAE"):
     return _make_local_node
 
 
+@dataclass
+class TestNode:
+    """Capture all relevant components of a test DICOM node"""
+
+    node_type: str
+
+    dcm_node: DcmNode
+
+    init_qr: QueryResult
+
+    store_dir: Path
+
+    proc: sp.Popen
+
+    stdout: BinaryIO
+
+    stderr: BinaryIO
+
+    _is_finalized: bool = False
+
+    @property
+    def is_finalized(self) -> bool:
+        return self._is_finalized
+
+    def finalize(self):
+        if not self._is_finalized:
+            self.proc.terminate()
+            self._is_finalized = True
+            self.stdout.flush()
+            self.stderr.flush()
+            self.stdout.seek(0)
+            self.stderr.seek(0)
+            return self.stdout.read(), self.stderr.read()
+
+
 DCMQRSCP_PATH = shutil.which("dcmqrscp")
 
 
@@ -250,13 +309,13 @@ def _get_used_ports():
 @fixture
 def make_dcmtk_nodes(get_dicom_subset):
     """Factory fixture for building dcmtk nodes"""
-    procs = []
     used_ports = _get_used_ports()
+    nodes = []
     with TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
 
         def _make_dcmtk_node(clients, subset="all"):
-            node_idx = len(procs)
+            node_idx = len(nodes)
             # TODO: We still have a race condition with port selection here,
             #       ideally we would put this whole thing in a loop and detect
             #       the server process failing with log message about the port
@@ -270,6 +329,8 @@ def make_dcmtk_nodes(get_dicom_subset):
             print(f"Building dcmtk node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
             db_dir = node_dir / "db"
+            stdout_path = node_dir / "stdout.log"
+            stderr_path = node_dir / "stderr.log"
             conf_file = db_dir / "dcmqrscp.cfg"
             test_store_dir = db_dir / "TEST_STORE"
             os.makedirs(test_store_dir)
@@ -285,22 +346,32 @@ def make_dcmtk_nodes(get_dicom_subset):
                 init_files.append(out_path)
             # Index any initial files into the dcmtk db
             if init_files:
+                print("Indexing initial files into dcmtk node...")
                 sp.run([DCMQRIDX_PATH, str(test_store_dir)] + init_files)
+                print("Done")
             # Fire up a dcmqrscp process
             dcmqrscp_args = [DCMQRSCP_PATH, "-c", str(conf_file)]
-            if "dcmtk_level" in logging_opts:
-                dcmqrscp_args += ["-ll", logging_opts["dcmtk_level"]]
+            dcmqrscp_args += ["-ll", "debug"]
             if DCMTK_VERSION >= (3, 6, 2):
                 dcmqrscp_args += ["-xf", str(PC_CONF_PATH), "Default", "Default"]
-            procs.append(sp.Popen(dcmqrscp_args))
-            time.sleep(1)
-            return (dcmtk_node, init_qr, test_store_dir)
+            print("Starting dcmtk qrscp process...")
+            sout_f = stdout_path.open("w+b")
+            serr_f = stderr_path.open("w+b")
+            proc = sp.Popen(dcmqrscp_args, stdout=sout_f, stderr=serr_f)
+            print("Done")
+            res = TestNode(
+                "dcmtk", dcmtk_node, init_qr, test_store_dir, proc, sout_f, serr_f
+            )
+            nodes.append(res)
+            time.sleep(2)
+            return res
 
         try:
             yield _make_dcmtk_node
         finally:
-            for proc in procs:
-                proc.terminate()
+            for node in nodes:
+                if not node.is_finalized:
+                    node.finalize()
 
 
 @fixture
@@ -308,10 +379,8 @@ def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
     def _make_net_repo(local_node=None, clients=[], subset="all"):
         if local_node is None:
             local_node = make_local_node()
-        dcmtk_node, init_qr, store_dir = make_dcmtk_nodes(
-            [local_node] + clients, subset
-        )
-        return (NetRepo(local_node, dcmtk_node), init_qr, store_dir)
+        dcmtk_node = make_dcmtk_nodes([local_node] + clients, subset)
+        return (NetRepo(local_node, dcmtk_node.dcm_node), dcmtk_node)
 
     return _make_net_repo
 
@@ -355,13 +424,14 @@ PND_PYTHON_PATH = os.getenv("DCM_PND_FIXTURE_PYTHON", shutil.which("python"))
 @fixture
 def make_pnd_nodes(get_dicom_subset):
     """Factory fixture for making pynetdicom qrscp nodes"""
+    nodes = []
     procs = []
     used_ports = _get_used_ports()
     with TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
 
         def _make_pnd_node(clients, subset="all"):
-            node_idx = len(procs)
+            node_idx = len(nodes)
             # TODO: We still have a race condition with port selection here,
             #       ideally we would put this whole thing in a loop and detect
             #       the server process failing with log message about the port
@@ -374,6 +444,8 @@ def make_pnd_nodes(get_dicom_subset):
             pnd_node = DcmNode("localhost", ae_title, port)
             print(f"Building pynetdicom node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
+            stdout_path = node_dir / "stdout.log"
+            stderr_path = node_dir / "stderr.log"
             db_path = node_dir / "pnd.db"
             data_dir = node_dir / "data"
             os.makedirs(data_dir)
@@ -393,10 +465,21 @@ def make_pnd_nodes(get_dicom_subset):
             print(conf)
             conf_path.write_text(conf)
             # Fire up a qrscp process
-            procs.append(
-                sp.Popen(
-                    [PND_PYTHON_PATH, "-m", "pynetdicom", "qrscp", "-c", str(conf_path)]
-                )
+            sout_f = stdout_path.open("w+b")
+            serr_f = stderr_path.open("w+b")
+            proc = sp.Popen(
+                [
+                    PND_PYTHON_PATH,
+                    "-m",
+                    "pynetdicom",
+                    "qrscp",
+                    "-c",
+                    str(conf_path),
+                    "-ll",
+                    "debug",
+                ],
+                stdout=sout_f,
+                stderr=serr_f,
             )
             time.sleep(1)
             # We have to send any initial data as there is no index functionality
@@ -420,13 +503,16 @@ def make_pnd_nodes(get_dicom_subset):
                     continue
                 init_assoc.send_c_store(ds)
             init_assoc.release()
-            return (pnd_node, init_qr, data_dir)
+            res = TestNode("pnd", pnd_node, init_qr, data_dir, proc, sout_f, serr_f)
+            nodes.append(res)
+            return res
 
         try:
             yield _make_pnd_node
         finally:
-            for proc in procs:
-                proc.terminate()
+            for node in nodes:
+                if not node.is_finalized:
+                    node.finalize()
 
 
 @fixture
@@ -434,8 +520,8 @@ def make_pnd_net_repo(make_local_node, make_pnd_nodes):
     def _make_net_repo(local_node=None, clients=[], subset="all"):
         if local_node is None:
             local_node = make_local_node()
-        pnd_node, init_qr, store_dir = make_pnd_nodes([local_node] + clients, subset)
-        return (NetRepo(local_node, pnd_node), init_qr, store_dir)
+        pnd_node = make_pnd_nodes([local_node] + clients, subset)
+        return (NetRepo(local_node, pnd_node.dcm_node), pnd_node)
 
     return _make_net_repo
 
