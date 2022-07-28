@@ -7,7 +7,7 @@ from pytest import mark
 from ..query import QueryResult, QueryLevel
 from ..route import StaticRoute, DynamicRoute
 from ..sync import SyncManager
-from ..store import TransferMethod
+from ..store.base import TransferMethod
 from ..util import json_serializer
 
 from .conftest import (

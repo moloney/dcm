@@ -1,13 +1,14 @@
 """High level async DICOM networking interface
 """
 from __future__ import annotations
-import asyncio, threading, time, logging, enum, inspect
+import asyncio, threading, time, logging, enum, inspect, re
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
 from functools import partial
 from dataclasses import dataclass, field, asdict
 from typing import (
+    Iterable,
     List,
     Set,
     Dict,
@@ -53,7 +54,7 @@ from pynetdicom.transport import ThreadedAssociationServer
 from pynetdicom.presentation import PresentationContext
 
 
-from . import __version__
+from .info import VERSION
 from .query import (
     InvalidDicomError,
     QueryLevel,
@@ -100,64 +101,72 @@ IMPLEMENTATION_UID = "%s.84718903" % UID_PREFIX
 # I don't have objective data on which classes these are, so I have simply
 # choosen ones that seen to be unlikely to come up in my domain.
 
-dropped_storage_classes = set(
-    [
-        "LensometryMeasurementsStorage",
-        "AutorefractionMeasurementsStorage",
-        "KeratometryMeasurementsStorage",
-        "SubjectiveRefractionMeasurementsStorage",
-        "VisualAcuityMeasurementsStorage",
-        "OphthalmicVisualFieldStaticPerimetryMeasurementsStorage",
-        "SpectaclePrescriptionReportStorage",
-        "OphthalmicAxialMeasurementsStorage",
-        "IntraocularLensCalculationsStorage",
-        "MacularGridThicknessAndVolumeReport",
-        "OphthalmicVisualFieldStaticPerimetryMeasurementsStorage",
-        "OphthalmicThicknessMapStorage",
-        "CornealTopographyMapStorage",
-    ]
+DEFAULT_DROP_CLASS_REGEXES = (
+    "Lensometry",
+    "[Rr]efractionMeasurement",
+    "Keratometry",
+    "Ophthalmic",
+    "VisualAcuity",
+    "Spectacle",
+    "Intraocular",
+    "Macular",
+    "Corneal",
+    "Encapsulated.+Storage",
 )
 
 
-private_sop_classes = {"SiemensProprietaryMRStorage": "1.3.12.2.1107.5.9.1"}
-
+DEFAIULT_PRIVATE_SOP_CLASSES = (("SiemensProprietaryMRStorage", "1.3.12.2.1107.5.9.1"),)
 # This is needed so 'uid_to_service_class' will work when called for incoming
 # data sets
-sop_class._STORAGE_CLASSES.update(private_sop_classes)
+for cls_name, cls_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
+    sop_class._STORAGE_CLASSES[cls_name] = cls_uid
+
+
+def get_filt_sop_classes(
+    include_patterns: Iterable[str] = None,
+    exclude_patterns: Iterable[str] = None,
+    private_sop_classes: Optional[Tuple[Tuple[str, str], ...]] = None,
+    max_len=None,
+) -> List[SOPClass]:
+    res = []
+    priv_uids = set(x[1] for x in private_sop_classes)
+    if len(priv_uids) != len(private_sop_classes):
+        raise ValueError("Duplicate private SOPClass UIDs were passed in")
+    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
+        if sop_uid in priv_uids:
+            continue
+        if exclude_patterns and any(re.search(p, sop_name) for p in exclude_patterns):
+            log.debug("Dropping storage class %s", sop_name)
+            continue
+        if include_patterns and not any(
+            re.search(p, sop_name) for p in include_patterns
+        ):
+            continue
+        if max_len is not None and len(res) == max_len - len(priv_uids):
+            log.warning("Too many storage classes, dropping: %s", sop_name)
+            continue
+        res.append(SOPClass(sop_uid))
+    for sop_name, sop_uid in private_sop_classes:
+        res.append(SOPClass(sop_uid))
+    return res
 
 
 def _make_default_store_scu_pcs(
     transfer_syntaxes: Optional[List[str]] = None,
 ) -> List[PresentationContext]:
-    # TODO: Do we actally need the SOPClass objects for anything?
-    include_sops: List[SOPClass] = []
-    pres_contexts = []
-    max_len = 128 - len(private_sop_classes)
-    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
-        if sop_name not in dropped_storage_classes:
-            if len(include_sops) == max_len:
-                log.warn(
-                    "Too many storage SOPClasses, dropping more from end " "of the list"
-                )
-                break
-            sop = SOPClass(sop_uid)
-            sop._service_class = StorageServiceClass
-            include_sops.append(sop)
-            pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
-    for sop_name, sop_uid in private_sop_classes.items():
-        sop = SOPClass(sop_uid)
-        sop._service_class = StorageServiceClass
-        include_sops.append(sop)
-        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
-    assert len(pres_contexts) <= 128
-    return pres_contexts
+    include_sops = get_filt_sop_classes(
+        exclude_patterns=DEFAULT_DROP_CLASS_REGEXES,
+        private_sop_classes=DEFAIULT_PRIVATE_SOP_CLASSES,
+        max_len=128,
+    )
+    return [build_context(s, transfer_syntaxes) for s in include_sops]
 
 
 def _make_default_store_scp_pcs(
     transfer_syntaxes: Optional[List[str]] = None,
 ) -> List[PresentationContext]:
     pres_contexts = deepcopy(StoragePresentationContexts)
-    for sop_name, sop_uid in private_sop_classes.items():
+    for sop_name, sop_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
         pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
     return pres_contexts
 
@@ -276,7 +285,7 @@ class BatchDicomOperationError(Exception):
 
 @dataclass
 class DicomOp:
-    """Describes a DICOM network operatiom"""
+    """Describes a DICOM network operation"""
 
     provider: Optional[DcmNode] = None
     """The service provider"""
@@ -1577,7 +1586,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                     # Add the file_meta to the data set and yield it
                     # TODO: Get implementation UID and set it here
                     # file_meta.ImplementationUID = ...
-                    # file_meta.ImplementationVersionName = __version__
+                    # file_meta.ImplementationVersionName = VERSION
                     ds.file_meta = file_meta
                     ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
                     ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR

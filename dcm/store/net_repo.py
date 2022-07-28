@@ -8,7 +8,7 @@ from typing import Optional, AsyncIterator, Dict, Any
 from pydicom import Dataset
 import janus
 
-from . import TransferMethod, DcmNetChunk, DcmRepo
+from .base import TransferMethod, DcmNetChunk, DcmRepo
 from ..report import MultiListReport
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport

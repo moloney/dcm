@@ -33,7 +33,7 @@ from .net import (
 )
 from .filt import make_edit_filter, MultiFilter
 from .route import StaticRoute, DynamicTransferReport, Router
-from .store import TransferMethod
+from .store.base import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .sync import SyncReport, make_basic_validator, sync_data

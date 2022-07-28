@@ -35,7 +35,7 @@ from .query import (
     minimal_copy,
     uid_elems,
 )
-from .store import (
+from .store.base import (
     TransferMethod,
     DataChunk,
     DataBucket,

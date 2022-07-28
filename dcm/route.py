@@ -41,7 +41,7 @@ from .report import (
 )
 from .util import DuplicateDataError, TomlConfigurable
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
-from .store import DataBucket, DataRepo, TransferMethod, LocalWriteReport
+from .store.base import DataBucket, DataRepo, TransferMethod, LocalWriteReport
 
 
 log = logging.getLogger(__name__)

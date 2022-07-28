@@ -10,7 +10,7 @@ from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union, D
 from pydicom.dataset import Dataset
 import janus
 
-from . import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
+from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 

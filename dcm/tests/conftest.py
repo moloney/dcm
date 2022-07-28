@@ -41,6 +41,10 @@ def pytest_addoption(parser):
         action="store_true",
         help="show pynetdicom logs",
     )
+    parser.addoption(
+        "--disable-backend",
+        help="Disable testing against the specified backend ('dcmtk' or 'pnd')",
+    )
 
 
 def pytest_configure(config):
@@ -61,6 +65,12 @@ def pytest_collection_modifyitems(config, items):
             for item in items:
                 if marker in item.keywords:
                     item.add_marker(skip_test)
+    disabled_backend = config.getoption("--disable-backend")
+    if disabled_backend:
+        skip_test = mark.skip(reason=f"Disabled '{disabled_backend}' backend")
+        for item in items:
+            if disabled_backend in item.keywords:
+                item.add_marker(skip_test)
 
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -349,6 +359,7 @@ def make_dcmtk_nodes(get_dicom_subset):
                 print("Indexing initial files into dcmtk node...")
                 sp.run([DCMQRIDX_PATH, str(test_store_dir)] + init_files)
                 print("Done")
+                time.sleep(1)
             # Fire up a dcmqrscp process
             dcmqrscp_args = [DCMQRSCP_PATH, "-c", str(conf_file)]
             dcmqrscp_args += ["-ll", "debug"]
@@ -481,7 +492,7 @@ def make_pnd_nodes(get_dicom_subset):
                 stdout=sout_f,
                 stderr=serr_f,
             )
-            time.sleep(1)
+            time.sleep(2)
             # We have to send any initial data as there is no index functionality
             init_qr, init_data = get_dicom_subset(subset)
             init_files = []
