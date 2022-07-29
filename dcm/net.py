@@ -60,6 +60,8 @@ from .query import (
     QueryLevel,
     QueryResult,
     InconsistentDataError,
+    expand_queries,
+    get_level_and_query,
     uid_elems,
     req_elems,
     opt_elems,
@@ -1178,7 +1180,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         See documentation for the `queries` method for details
         """
-        level, query = self._prep_query(level, query, query_res)
+        level, query = get_level_and_query(level, query, query_res)
         res = QueryResult(level)
         async for sub_res in self.queries(remote, level, query, query_res, report):
             res |= sub_res
@@ -1224,7 +1226,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             report.description = "queries"
         report._meta_data["remote"] = remote
 
-        level, query = self._prep_query(level, query, query_res)
+        level, query = get_level_and_query(level, query, query_res)
 
         report._meta_data["level"] = level
         if query is not None:
@@ -1281,25 +1283,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         # Set the QueryRetrieveLevel
         query.QueryRetrieveLevel = level.name
 
-        # Pull out a list of the attributes we are querying on
-        queried_elems = set(e.keyword for e in query)
-
-        # If QueryResult was given we potentially generate multiple
-        # queries, one for each dataset referenced by the QueryResult
-        if query_res is None:
-            queries = [query]
-        else:
-            queries = []
-            for path, sub_uids in query_res.walk():
-                if path.level == min(level, query_res.level):
-                    q = deepcopy(query)
-                    for lvl in QueryLevel:
-                        if lvl > path.level:
-                            break
-                        setattr(q, uid_elems[lvl], path.uids[lvl])
-                        queried_elems.add(uid_elems[lvl])
-                    queries.append(q)
-                    sub_uids.clear()
+        # Potentially expand one query into multiple based on query_res
+        queries, queried_elems = expand_queries(level, query, query_res)
+        if query_res is not None:
             log.debug("QueryResult expansion results in %d sub-queries" % len(queries))
         if len(queries) > 1:
             report.n_expected = len(queries)
@@ -1751,30 +1737,6 @@ class LocalEntity(metaclass=_SingletonEntity):
         finally:
             log.debug("Releasing association")
             await loop.run_in_executor(self._thread_pool, assoc.release)
-
-    def _prep_query(
-        self,
-        level: Optional[QueryLevel],
-        query: Optional[Dataset],
-        query_res: Optional[QueryResult],
-    ) -> Tuple[QueryLevel, Dataset]:
-        """Resolve/check `level` and `query` args for query methods"""
-        # Build up our base query dataset
-        if query is None:
-            query = Dataset()
-        else:
-            query = deepcopy(query)
-
-        # Deterimine level if not specified, otherwise make sure it is valid
-        if level is None:
-            if query_res is None:
-                default_level = QueryLevel.STUDY
-            else:
-                default_level = query_res.level
-            level = choose_level(query, default_level)
-        elif level not in QueryLevel:
-            raise ValueError("Unknown 'level' for query: %s" % level)
-        return level, query
 
     async def _fwd_event(self, event: evt.Event) -> int:
         for filt, handler in self._event_handlers.items():

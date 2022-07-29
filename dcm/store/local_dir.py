@@ -11,6 +11,7 @@ from pydicom.dataset import Dataset
 import janus
 
 from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
+from ..query import InconsistentDataError, QueryResult
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 
@@ -72,6 +73,7 @@ def _disk_write_worker(
     out_fmt: str,
     force_overwrite: bool,
     report: LocalWriteReport,
+    dest_qr: Optional[QueryResult] = None,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Take data sets from a queue and write to disk"""
@@ -93,9 +95,24 @@ def _disk_write_worker(
         if no_input:
             continue
         log.debug("disk_writer thread got a data set")
+        dupe = False
+        if dest_qr is not None:
+            try:
+                dupe = ds in dest_qr
+            except InconsistentDataError:
+                pass  # TODO
+        if dupe:
+            continue
         out_path = root_path / make_out_path(out_fmt, ds)
 
         if os.path.exists(out_path):
+            if dest_qr is not None and not dupe:
+                log.warning(
+                    "Skipping existing file that is not in destinaion index: %s",
+                    out_path,
+                )
+                report.add_skipped(out_path)
+                continue
             if force_overwrite:
                 log.debug("File exists, overwriting: %s", out_path)
             else:
@@ -168,6 +185,18 @@ def _oob_transfer_worker(
                 os.remove(existing_backup)
 
 
+def get_root_dir(in_path: PathInputType, make_missing: bool = True) -> Path:
+    res = Path(in_path).expanduser()
+    if not res.exists():
+        if make_missing:
+            res.mkdir(parents=True)
+        else:
+            raise ValueError(f"Path doesn't exist: {res}")
+    elif not res.is_dir():
+        raise ValueError(f"Path is a file not a directory: {res}")
+    return res
+
+
 class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
     """Local directory of data without any additional meta data"""
 
@@ -193,14 +222,7 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         force_overwrite: bool = False,
         make_missing: bool = True,
     ):
-        self._root_path = Path(path).expanduser()
-        if not self._root_path.exists():
-            if make_missing:
-                self._root_path.mkdir(parents=True)
-            else:
-                raise ValueError(f"Path doesn't exist: {self._root_path}")
-        elif not self._root_path.is_dir():
-            raise ValueError(f"Path is a file not a directory: {self._root_path}")
+        self._root_path = get_root_dir(path, make_missing)
         self._recurse = recurse
         self._max_chunk = max_chunk
         self._force_overwrite = force_overwrite

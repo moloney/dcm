@@ -54,12 +54,15 @@ def get_uid(level: QueryLevel, data_set: Dataset) -> str:
 
 
 def get_all_uids(data_set: Dataset) -> Tuple[str, ...]:
+    """Get tuple of UIDs corresponding to levels, with trailing empty UIDs trimmed"""
     uids = []
+    last_found = -1
     for lvl in QueryLevel:
-        lvl_uid = getattr(data_set, uid_elems[lvl], None)
-        if lvl_uid is not None:
-            uids.append(lvl_uid)
-    return tuple(uids)
+        lvl_uid = getattr(data_set, uid_elems[lvl], "")
+        if lvl_uid != "":
+            last_found = lvl
+        uids.append(lvl_uid)
+    return tuple(uids[: last_found + 1])
 
 
 @dataclass(frozen=True)
@@ -77,6 +80,10 @@ class DataNode:
 class DataPath:
     """Identifies the path to a node in the DICOM data hierarchy"""
 
+    @classmethod
+    def from_uids(cls, uids: Tuple[str, ...]) -> "DataPath":
+        return cls(QueryLevel(len(uids)), uids)
+
     level: QueryLevel
     """The level of the node in the hierarchy"""
 
@@ -92,6 +99,23 @@ class DataPath:
                 "Expected %d UIDs, got %d" % (self.level + 1, len(self.uids))
             )
         object.__setattr__(self, "end", DataNode(self.level, self.uids[-1]))
+
+    def __add__(self, new_end: DataNode) -> DataPath:
+        if new_end.level != self.level + 1:
+            raise ValueError(
+                "Trying to add node at level %s to path with level %s",
+                new_end.level,
+                self.level,
+            )
+        return DataPath(new_end.level, self.uids + (new_end.uid,))
+
+    @property
+    def parent_uid(self) -> str:
+        return self.uids[-2]
+
+    @property
+    def parent(self) -> DataPath:
+        return self.from_uids(self.uids[:-1])
 
 
 req_elems = {
@@ -1171,6 +1195,51 @@ class QueryResult:
         else:
             descr = self.to_line(None)
         return "%s Level QR: %s" % (self.level.name, descr)
+
+
+def get_level_and_query(
+    level: Optional[QueryLevel],
+    query: Optional[Dataset],
+    query_res: Optional[QueryResult],
+) -> Tuple[QueryLevel, Dataset]:
+    """Resolve/check `level` and `query` args for query methods"""
+    # Build up our base query dataset
+    if query is None:
+        query = Dataset()
+    else:
+        query = deepcopy(query)
+
+    # Deterimine level if not specified, otherwise make sure it is valid
+    if level is None:
+        if query_res is None:
+            default_level = QueryLevel.STUDY
+        else:
+            default_level = query_res.level
+        level = choose_level(query, default_level)
+    elif level not in QueryLevel:
+        raise ValueError("Unknown 'level' for query: %s" % level)
+    return level, query
+
+
+def expand_queries(
+    level: QueryLevel, query: Dataset, query_res: Optional[QueryResult] = None
+) -> Tuple[List[Dataset], Set[str]]:
+    queried_elems = set(e.keyword for e in query)
+    if query_res is None:
+        queries = [query]
+    else:
+        queries = []
+        for path, sub_uids in query_res.walk():
+            if path.level == min(level, query_res.level):
+                q = deepcopy(query)
+                for lvl in QueryLevel:
+                    if lvl > path.level:
+                        break
+                    setattr(q, uid_elems[lvl], path.uids[lvl])
+                    queried_elems.add(uid_elems[lvl])
+                queries.append(q)
+                sub_uids.clear()
+    return queries, queried_elems
 
 
 # TODO: Fix this or remove it
