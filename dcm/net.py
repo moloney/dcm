@@ -126,12 +126,15 @@ def get_filt_sop_classes(
     include_patterns: Iterable[str] = None,
     exclude_patterns: Iterable[str] = None,
     private_sop_classes: Optional[Tuple[Tuple[str, str], ...]] = None,
-    max_len=None,
+    max_len: Optional[int] = None,
 ) -> List[SOPClass]:
-    res = []
-    priv_uids = set(x[1] for x in private_sop_classes)
-    if len(priv_uids) != len(private_sop_classes):
-        raise ValueError("Duplicate private SOPClass UIDs were passed in")
+    res: List[SOPClass] = []
+    if private_sop_classes is not None:
+        priv_uids = set(x[1] for x in private_sop_classes)
+        if len(priv_uids) != len(private_sop_classes):
+            raise ValueError("Duplicate private SOPClass UIDs were passed in")
+    else:
+        priv_uids = set()
     for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
         if sop_uid in priv_uids:
             continue
@@ -146,8 +149,9 @@ def get_filt_sop_classes(
             log.warning("Too many storage classes, dropping: %s", sop_name)
             continue
         res.append(SOPClass(sop_uid))
-    for sop_name, sop_uid in private_sop_classes:
-        res.append(SOPClass(sop_uid))
+    if private_sop_classes is not None:
+        for sop_name, sop_uid in private_sop_classes:
+            res.append(SOPClass(sop_uid))
     return res
 
 

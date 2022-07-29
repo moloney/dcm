@@ -9,6 +9,7 @@ from typing import BinaryIO
 import pydicom
 from pynetdicom import AE
 import psutil
+import pytest
 from pytest import fixture, mark
 
 from ..conf import _default_conf, DcmConfig
@@ -65,12 +66,6 @@ def pytest_collection_modifyitems(config, items):
             for item in items:
                 if marker in item.keywords:
                     item.add_marker(skip_test)
-    disabled_backend = config.getoption("--disable-backend")
-    if disabled_backend:
-        skip_test = mark.skip(reason=f"Disabled '{disabled_backend}' backend")
-        for item in items:
-            if disabled_backend in item.keywords:
-                item.add_marker(skip_test)
 
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -317,7 +312,7 @@ def _get_used_ports():
 
 
 @fixture
-def make_dcmtk_nodes(get_dicom_subset):
+def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
     """Factory fixture for building dcmtk nodes"""
     used_ports = _get_used_ports()
     nodes = []
@@ -325,6 +320,8 @@ def make_dcmtk_nodes(get_dicom_subset):
         tmp_dir = Path(tmp_dir)
 
         def _make_dcmtk_node(clients, subset="all"):
+            if pytestconfig.getoption("--disable-backend") == "dcmtk":
+                pytest.skip("The DCMTK test backend is disabled")
             node_idx = len(nodes)
             # TODO: We still have a race condition with port selection here,
             #       ideally we would put this whole thing in a loop and detect
@@ -433,7 +430,7 @@ PND_PYTHON_PATH = os.getenv("DCM_PND_FIXTURE_PYTHON", shutil.which("python"))
 
 
 @fixture
-def make_pnd_nodes(get_dicom_subset):
+def make_pnd_nodes(get_dicom_subset, pytestconfig):
     """Factory fixture for making pynetdicom qrscp nodes"""
     nodes = []
     procs = []
@@ -442,6 +439,8 @@ def make_pnd_nodes(get_dicom_subset):
         tmp_dir = Path(tmp_dir)
 
         def _make_pnd_node(clients, subset="all"):
+            if pytestconfig.getoption("--disable-backend") == "pnd":
+                pytest.skip("The PND test backend is disabled")
             node_idx = len(nodes)
             # TODO: We still have a race condition with port selection here,
             #       ideally we would put this whole thing in a loop and detect
