@@ -180,13 +180,13 @@ async def test_retrieve(make_local_node, make_remote_nodes, get_dicom_subset, su
     assert len(res) == len(ret_data)
 
 
-# Whether or not this test is slow is very timing dependent
 @mark.slow
 @mark.asyncio
-async def test_cancel_retrieve(make_local_node, make_dcmtk_nodes):
+async def test_cancel_retrieve(make_local_node, make_pnd_nodes):
+    """Make sure we send C-CANCEL when closing 'retrieve' generator"""
     local_node = make_local_node()
     local = LocalEntity(local_node)
-    remote = make_dcmtk_nodes([local_node], "all")
+    remote = make_pnd_nodes([local_node], "all")
     report = RetrieveReport()
     # Prematurely closing async generator should result in C-CANCEL being sent
     async with aclosing(
@@ -203,7 +203,7 @@ async def test_cancel_retrieve(make_local_node, make_dcmtk_nodes):
     print("****")
     print(stderr)
     assert re.search(
-        "(C-CANCEL-RQ|SubOperationsTerminatedDueToCancelIndication)",
+        "(C-CANCEL|SubOperationsTerminatedDueToCancelIndication)",
         stderr,
         re.MULTILINE,
     )
