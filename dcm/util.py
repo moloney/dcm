@@ -234,28 +234,30 @@ class FallbackFormatter(string.Formatter):
 fallback_fmt = FallbackFormatter()
 
 
-_thread_shutdown = threading.Event()
+_default_thread_shutdown = threading.Event()
 
 
-def _default_done_callback(task: asyncio.Future[Any]) -> None:
-    try:
-        ex = task.exception()
-        if ex is not None:
-            loop = task.get_loop()
-            loop.call_exception_handler(
-                {
-                    "message": "unhandled exception from task",
-                    "exception": ex,
-                    "task": task,
-                }
-            )
-            _thread_shutdown.set()
-            time.sleep(2.0)
-            sys.exit()
-            # os.kill(os.getpid(), signal.SIGINT)
+def make_done_callback(
+    shutdown: threading.Event,
+) -> Callable[[asyncio.Future[Any]], None]:
+    def done_callback(task: asyncio.Future[Any]) -> None:
+        try:
+            ex = task.exception()
+            if ex is not None:
+                loop = task.get_loop()
+                loop.call_exception_handler(
+                    {
+                        "message": "unhandled exception from task",
+                        "exception": ex,
+                        "task": task,
+                    }
+                )
+                shutdown.set()
 
-    except asyncio.CancelledError:
-        pass
+        except asyncio.CancelledError:
+            pass
+
+    return done_callback
 
 
 def create_thread_task(
@@ -264,7 +266,7 @@ def create_thread_task(
     kwargs: Optional[Dict[str, Any]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
     thread_pool: Optional[ThreadPoolExecutor] = None,
-    done_cb: Optional[Callable[[asyncio.Future[Any]], None]] = _default_done_callback,
+    shutdown: Optional[threading.Event] = None,
 ) -> asyncio.Future[Any]:
     """Helper to turn threads into tasks with clean shutdown option
 
@@ -273,8 +275,8 @@ def create_thread_task(
     monitored periodically for shutdown events.
 
     Worker threads are also prone to hiding exceptions, so we automatically
-    add a callback to report exceptions in a timely manner and initiate a
-    shutdown of all worker threads and exit the application.
+    add a callback to report exceptions in a timely manner and make sure the shutdown
+    event is set, so any other threads sharing that event will also shutdown.
     """
     if args is None:
         args = tuple()
@@ -282,10 +284,10 @@ def create_thread_task(
         kwargs = {}
     if loop is None:
         loop = asyncio.get_running_loop()
-
-    kwargs["shutdown"] = _thread_shutdown
+    if shutdown is None:
+        shutdown = _default_thread_shutdown
+    kwargs["shutdown"] = shutdown
     pfunc = partial(func, *args, **kwargs)
     task = asyncio.ensure_future(loop.run_in_executor(thread_pool, pfunc))
-    if done_cb is not None:
-        task.add_done_callback(done_cb)
+    task.add_done_callback(make_done_callback(shutdown))
     return task

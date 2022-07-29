@@ -22,7 +22,7 @@ dcm = 'dcm.cli:cli'
 
 [tool.poetry.dependencies]
 python = "^3.7"
-pynetdicom = "^1.5.6"
+pynetdicom = "^2.0.2"
 pydicom = "^2.1.2"
 toml = "^0.10.2"
 fifolock = "^0.0.20"
@@ -38,7 +38,7 @@ tzlocal = "<3.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.12.0"
-ipython = {version = "^7.22.0", optional = true}
+ipython = "^7.22.0"
 pytest = "^6.2.3"
 black = "^20.8b1"
 mypy = "^0.910"
@@ -53,9 +53,6 @@ pytest-cov = "^2.11.1"
 types-toml = "^0.1.5"
 types-dateparser = "^1.0.1"
 SQLAlchemy = "^1.4.37"
-
-[tool.poetry.extras]
-ipython = ["ipython"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -114,5 +111,5 @@ poetry_add_dev_dependencies = True
 # TODO: Can't enable this until markers are supported: https://github.com/sinoroc/tox-poetry-dev-dependencies/issues/48
 #poetry_experimental_add_locked_dependencies = True
 commands =
-    pytest
+    pytest dcm/ --slow --disable-backend dcmtk
 """

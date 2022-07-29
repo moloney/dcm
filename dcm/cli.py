@@ -1,6 +1,6 @@
 """Command line interface"""
 from __future__ import annotations
-import sys, os, logging, json, re
+import sys, os, logging, json, re, signal
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
@@ -23,11 +23,17 @@ from .conf import DcmConfig, _default_conf, NoLocalNodeError
 from .util import str_to_tag, aclosing, json_serializer
 from .lazyset import AllElems, LazySet
 from .report import MultiListReport, RichProgressHook
-from .query import QueryResult
-from .net import DcmNode, LocalEntity, QueryLevel, EventFilter, make_queue_data_cb
+from .net import (
+    DcmNode,
+    FailedAssociationError,
+    LocalEntity,
+    QueryLevel,
+    EventFilter,
+    make_queue_data_cb,
+)
 from .filt import make_edit_filter, MultiFilter
 from .route import StaticRoute, DynamicTransferReport, Router
-from .store import TransferMethod
+from .store.base import TransferMethod
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .sync import SyncReport, make_basic_validator, sync_data
@@ -36,6 +42,10 @@ from .diff import diff_data_sets
 
 
 log = logging.getLogger("dcm.cli")
+
+
+# Make sure we get SIGINT regardless of parent process mask
+signal.signal(signal.SIGINT, signal.default_int_handler)
 
 
 def cli_error(msg, exit_code=1):
@@ -224,7 +234,10 @@ def echo(params, remote, local):
     local = params["config"].get_local_node(local)
     remote_node = params["config"].get_remote_node(remote)
     net_ent = LocalEntity(local)
-    res = asyncio.run(net_ent.echo(remote_node))
+    try:
+        res = asyncio.run(net_ent.echo(remote_node))
+    except FailedAssociationError:
+        res = False
     if res:
         click.echo("Success")
     else:

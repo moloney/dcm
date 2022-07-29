@@ -17,10 +17,17 @@ from .conftest import has_dcmtk
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
 def test_echo(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    remote, _, _ = make_remote_nodes([local_node], None)
+    remote = make_remote_nodes([local_node], None)
     runner = CliRunner()
     config_path = make_dcm_config_file()
-    args = ["--config", config_path, "echo", "--local", str(local_node), str(remote)]
+    args = [
+        "--config",
+        config_path,
+        "echo",
+        "--local",
+        str(local_node),
+        str(remote.dcm_node),
+    ]
     print(args)
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
@@ -30,7 +37,7 @@ def test_echo(make_local_node, make_remote_nodes, make_dcm_config_file):
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
 def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    remote, init_qr, store_dir = make_remote_nodes([local_node], "all")
+    remote = make_remote_nodes([local_node], "all")
     time.sleep(2)
     runner = CliRunner(mix_stderr=False)
     config_path = make_dcm_config_file()
@@ -43,20 +50,20 @@ def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
         "image",
         "--local",
         str(local_node),
-        str(remote),
+        str(remote.dcm_node),
     ]
     print(args)
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
     res_qr = json_serializer.loads(result.output)
-    assert init_qr.equivalent(res_qr)
+    assert remote.init_qr.equivalent(res_qr)
 
 
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
 def test_sync(make_local_node, make_remote_nodes, make_dcm_config_file):
     local_node = make_local_node()
-    src_remote, init_qr, src_dir = make_remote_nodes([local_node], "all")
-    dest_remote, _, dest_dir = make_remote_nodes([local_node], None)
+    src_remote = make_remote_nodes([local_node], "all")
+    dest_remote = make_remote_nodes([local_node], None)
     runner = CliRunner()
     config_path = make_dcm_config_file()
     args = [
@@ -66,8 +73,8 @@ def test_sync(make_local_node, make_remote_nodes, make_dcm_config_file):
         "--local",
         str(local_node),
         "--source",
-        str(src_remote),
-        str(dest_remote),
+        str(src_remote.dcm_node),
+        str(dest_remote.dcm_node),
     ]
     print(args)
     result = runner.invoke(cli, args)
@@ -114,7 +121,7 @@ def test_forward(
     make_local_node, make_remote_nodes, make_dcm_config_file, make_local_dir
 ):
     local_node = make_local_node()
-    src_remote, init_qr, src_dir = make_remote_nodes([local_node], "PATIENT-1")
+    src_remote = make_remote_nodes([local_node], "PATIENT-1")
     dest_bucket, _, dest_dir = make_local_dir(None)
     runner = CliRunner()
     config_path = make_dcm_config_file()
@@ -140,7 +147,7 @@ def test_forward(
             "--method",
             "REMOTE_COPY",
             "--source",
-            str(src_remote),
+            str(src_remote.dcm_node),
             str(local_node),
         ]
         print(sync_args)

@@ -1,13 +1,14 @@
 """High level async DICOM networking interface
 """
 from __future__ import annotations
-import asyncio, threading, time, logging, enum, inspect
+import asyncio, threading, time, logging, enum, inspect, re
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from contextlib import asynccontextmanager
 from functools import partial
 from dataclasses import dataclass, field, asdict
 from typing import (
+    Iterable,
     List,
     Set,
     Dict,
@@ -46,14 +47,14 @@ from pynetdicom import (
 )
 from pynetdicom._globals import ALL_TRANSFER_SYNTAXES
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import StorageServiceClass, SOPClass
+from pynetdicom.sop_class import StorageServiceClass, SOPClass, uid_to_sop_class
 
 # from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
 from pynetdicom.transport import ThreadedAssociationServer
 from pynetdicom.presentation import PresentationContext
 
 
-from . import __version__
+from .info import VERSION
 from .query import (
     InvalidDicomError,
     QueryLevel,
@@ -100,64 +101,76 @@ IMPLEMENTATION_UID = "%s.84718903" % UID_PREFIX
 # I don't have objective data on which classes these are, so I have simply
 # choosen ones that seen to be unlikely to come up in my domain.
 
-dropped_storage_classes = set(
-    [
-        "LensometryMeasurementsStorage",
-        "AutorefractionMeasurementsStorage",
-        "KeratometryMeasurementsStorage",
-        "SubjectiveRefractionMeasurementsStorage",
-        "VisualAcuityMeasurementsStorage",
-        "OphthalmicVisualFieldStaticPerimetryMeasurementsStorage",
-        "SpectaclePrescriptionReportStorage",
-        "OphthalmicAxialMeasurementsStorage",
-        "IntraocularLensCalculationsStorage",
-        "MacularGridThicknessAndVolumeReport",
-        "OphthalmicVisualFieldStaticPerimetryMeasurementsStorage",
-        "OphthalmicThicknessMapStorage",
-        "CornealTopographyMapStorage",
-    ]
+DEFAULT_DROP_CLASS_REGEXES = (
+    "Lensometry",
+    "[Rr]efractionMeasurement",
+    "Keratometry",
+    "Ophthalmic",
+    "VisualAcuity",
+    "Spectacle",
+    "Intraocular",
+    "Macular",
+    "Corneal",
+    "Encapsulated.+Storage",
 )
 
 
-private_sop_classes = {"SiemensProprietaryMRStorage": "1.3.12.2.1107.5.9.1"}
-
+DEFAIULT_PRIVATE_SOP_CLASSES = (("SiemensProprietaryMRStorage", "1.3.12.2.1107.5.9.1"),)
 # This is needed so 'uid_to_service_class' will work when called for incoming
 # data sets
-sop_class._STORAGE_CLASSES.update(private_sop_classes)
+for cls_name, cls_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
+    sop_class._STORAGE_CLASSES[cls_name] = cls_uid
+
+
+def get_filt_sop_classes(
+    include_patterns: Iterable[str] = None,
+    exclude_patterns: Iterable[str] = None,
+    private_sop_classes: Optional[Tuple[Tuple[str, str], ...]] = None,
+    max_len: Optional[int] = None,
+) -> List[SOPClass]:
+    res: List[SOPClass] = []
+    if private_sop_classes is not None:
+        priv_uids = set(x[1] for x in private_sop_classes)
+        if len(priv_uids) != len(private_sop_classes):
+            raise ValueError("Duplicate private SOPClass UIDs were passed in")
+    else:
+        priv_uids = set()
+    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
+        if sop_uid in priv_uids:
+            continue
+        if exclude_patterns and any(re.search(p, sop_name) for p in exclude_patterns):
+            log.debug("Dropping storage class %s", sop_name)
+            continue
+        if include_patterns and not any(
+            re.search(p, sop_name) for p in include_patterns
+        ):
+            continue
+        if max_len is not None and len(res) == max_len - len(priv_uids):
+            log.warning("Too many storage classes, dropping: %s", sop_name)
+            continue
+        res.append(SOPClass(sop_uid))
+    if private_sop_classes is not None:
+        for sop_name, sop_uid in private_sop_classes:
+            res.append(SOPClass(sop_uid))
+    return res
 
 
 def _make_default_store_scu_pcs(
     transfer_syntaxes: Optional[List[str]] = None,
 ) -> List[PresentationContext]:
-    # TODO: Do we actally need the SOPClass objects for anything?
-    include_sops: List[SOPClass] = []
-    pres_contexts = []
-    max_len = 128 - len(private_sop_classes)
-    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
-        if sop_name not in dropped_storage_classes:
-            if len(include_sops) == max_len:
-                log.warn(
-                    "Too many storage SOPClasses, dropping more from end " "of the list"
-                )
-                break
-            sop = SOPClass(sop_uid)
-            sop._service_class = StorageServiceClass
-            include_sops.append(sop)
-            pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
-    for sop_name, sop_uid in private_sop_classes.items():
-        sop = SOPClass(sop_uid)
-        sop._service_class = StorageServiceClass
-        include_sops.append(sop)
-        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
-    assert len(pres_contexts) <= 128
-    return pres_contexts
+    include_sops = get_filt_sop_classes(
+        exclude_patterns=DEFAULT_DROP_CLASS_REGEXES,
+        private_sop_classes=DEFAIULT_PRIVATE_SOP_CLASSES,
+        max_len=128,
+    )
+    return [build_context(s, transfer_syntaxes) for s in include_sops]
 
 
 def _make_default_store_scp_pcs(
     transfer_syntaxes: Optional[List[str]] = None,
 ) -> List[PresentationContext]:
     pres_contexts = deepcopy(StoragePresentationContexts)
-    for sop_name, sop_uid in private_sop_classes.items():
+    for sop_name, sop_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
         pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
     return pres_contexts
 
@@ -175,29 +188,42 @@ default_store_scp_pcs = _make_default_store_scp_pcs()
 # c_store_ext_sop_negs = [siemens_mr_sop_neg]
 
 
-# TODO: Everytime we establish/close an association, it should be done in a
-#       separate thread, since this is a blocking operation (though usually
-#       quite fast). Probably makes sense to wait until we refactor associations
-#       into some sort of AssociationManager object that can also manage
-#       caching of associations and limits on number of simultaneous
-#       associations with any given remote.
+# TODO: Need to cosider external limits
 
 
 QR_MODELS = {
     "PatientRoot": {
-        "find": sop_class.PatientRootQueryRetrieveInformationModelFind,
-        "move": sop_class.PatientRootQueryRetrieveInformationModelMove,
-        "get": sop_class.PatientRootQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelGet"]
+        ),
     },
     "StudyRoot": {
-        "find": sop_class.StudyRootQueryRetrieveInformationModelFind,
-        "move": sop_class.StudyRootQueryRetrieveInformationModelMove,
-        "get": sop_class.StudyRootQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelGet"]
+        ),
     },
     "PatientStudyOnly": {
-        "find": sop_class.PatientStudyOnlyQueryRetrieveInformationModelFind,
-        "move": sop_class.PatientStudyOnlyQueryRetrieveInformationModelMove,
-        "get": sop_class.PatientStudyOnlyQueryRetrieveInformationModelGet,
+        "find": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelFind"]
+        ),
+        "move": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelMove"]
+        ),
+        "get": uid_to_sop_class(
+            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelGet"]
+        ),
     },
 }
 
@@ -263,7 +289,7 @@ class BatchDicomOperationError(Exception):
 
 @dataclass
 class DicomOp:
-    """Describes a DICOM network operatiom"""
+    """Describes a DICOM network operation"""
 
     provider: Optional[DcmNode] = None
     """The service provider"""
@@ -795,7 +821,7 @@ class FailedAssociationError(Exception):
 
 def _query_worker(
     res_q: janus._SyncQueueProxy[Optional[Tuple[QueryResult, Set[str]]]],
-    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Optional[Dataset]]]],
     assoc: Association,
     level: QueryLevel,
     queries: Iterator[Dataset],
@@ -815,49 +841,62 @@ def _query_worker(
     last_split_val = None
 
     resp_count = 0
-    for query in queries:
-        log.debug("Sending query:\n%s", query)
-        res = QueryResult(level)
-        missing_attrs: Set[str] = set()
-        for status, rdat in assoc.send_c_find(query, query_model=query_model):
-            rep_q.put((status, rdat))
-            if rdat is None:
-                break
-            if resp_count + 1 % 20 == 0:
-                if shutdown is not None and shutdown.is_set():
-                    return
-            resp_count += 1
-            log.debug("Got query response:\n%s", rdat)
-            split_val = getattr(rdat, split_attr)
-            if last_split_val != split_val:
-                if len(res) != 0:
-                    res_q.put((res, missing_attrs))
-                    res = QueryResult(level)
-                    missing_attrs = set()
-            last_split_val = split_val
-            rdat_keys = rdat.keys()
-            # TODO: Can't we just examine the qr at a higher level to determine this?
-            for tag in query.keys():
-                if tag not in rdat_keys:
-                    keyword = keyword_for_tag(tag)
-                    missing_attrs.add(keyword)
-            is_consistent = True
-            try:
-                dupe = rdat in res
-            except InconsistentDataError:
-                log.error("Got inconsistent data in query reponse from %s", assoc.ae)
-                is_consistent = False
-            if dupe:
-                log.warning("Got duplicate data in query response from %s", assoc.ae)
-            elif is_consistent:
+    try:
+        for q_idx, query in enumerate(queries):
+            # Before sending another c-find, check if we were asked to shutdown
+            if q_idx > 0 and shutdown is not None and shutdown.is_set():
+                log.debug("Query worker got shutdown event")
+                return
+            log.debug("Sending query:\n%s", query)
+            res = QueryResult(level)
+            missing_attrs: Set[str] = set()
+            for status, rdat in assoc.send_c_find(query, query_model=query_model):
+                rep_q.put((status, rdat))
+                if rdat is None:
+                    break
+                # Check periodically if we should shutdown prematurely
+                if resp_count + 1 % 20 == 0:
+                    if shutdown is not None and shutdown.is_set():
+                        log.debug("Query worker got shutdown event")
+                        return
+                resp_count += 1
+                log.debug("Got query response:\n%s", rdat)
+                split_val = getattr(rdat, split_attr)
+                if last_split_val != split_val:
+                    if len(res) != 0:
+                        res_q.put((res, missing_attrs))
+                        res = QueryResult(level)
+                        missing_attrs = set()
+                last_split_val = split_val
+                rdat_keys = rdat.keys()
+                # TODO: Can't we just examine the qr at a higher level to determine this?
+                for tag in query.keys():
+                    if tag not in rdat_keys:
+                        keyword = keyword_for_tag(tag)
+                        missing_attrs.add(keyword)
+                is_consistent = True
                 try:
-                    res.add(rdat)
-                except InvalidDicomError:
-                    log.error("Got invalid data in query reponse from %s", assoc.ae)
-        if len(res) != 0:
-            res_q.put((res, missing_attrs))
-    res_q.put(None)
-    rep_q.put(None)
+                    dupe = rdat in res
+                except InconsistentDataError:
+                    log.error(
+                        "Got inconsistent data in query reponse from %s", assoc.ae
+                    )
+                    is_consistent = False
+                if dupe:
+                    log.warning(
+                        "Got duplicate data in query response from %s", assoc.ae
+                    )
+                elif is_consistent:
+                    try:
+                        res.add(rdat)
+                    except InvalidDicomError:
+                        log.error("Got invalid data in query reponse from %s", assoc.ae)
+            if len(res) != 0:
+                res_q.put((res, missing_attrs))
+    finally:
+        # Signal consumers on other end of queues that we are done
+        res_q.put(None)
+        rep_q.put(None)
 
 
 def _make_move_request(ds: Dataset) -> Dataset:
@@ -870,7 +909,7 @@ def _make_move_request(ds: Dataset) -> Dataset:
 
 
 def _move_worker(
-    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Dataset]]],
+    rep_q: janus._SyncQueueProxy[Optional[Tuple[Dataset, Optional[Dataset]]]],
     assoc: Association,
     dest: DcmNode,
     query_res: QueryResult,
@@ -878,19 +917,32 @@ def _move_worker(
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Worker function for perfoming move operations in another thread"""
-    for d in query_res:
+    in_shutdown = False
+    for d_idx, d in enumerate(query_res):
+        if d_idx != 0 and shutdown is not None and shutdown.is_set():
+            log.debug("Move worker exiting from shutdown event")
+            break
         move_req = _make_move_request(d)
         move_req.QueryRetrieveLevel = query_res.level.name
+        log.debug("Worker thread is calling send_c_move")
         responses = assoc.send_c_move(move_req, dest.ae_title, query_model=query_model)
-        time.sleep(0.01)
+        time.sleep(0.05)
+        log.debug("Worker is about to iterate responses")
         for r_idx, (status, rdat) in enumerate(responses):
+            log.debug("Got c-move response")
             rep_q.put((status, rdat))
+            log.debug("Queued c-move reponse for report")
             if r_idx % 20 == 0:
                 if shutdown is not None and shutdown.is_set():
                     log.debug("Move worker exiting from shutdown event")
-                    return
+                    in_shutdown = True
+                    break
+        log.debug("All responses from c-move have been recieved")
+        if in_shutdown:
+            break
+    else:
+        log.debug("Move worker exiting normally")
     rep_q.put(None)
-    log.debug("Move worker exiting normally")
 
 
 def _send_worker(
@@ -948,7 +1000,7 @@ class EventFilter:
         if self.event_types is not None and event._event not in self.event_types:
             return False
         if self.ae_titles is not None:
-            norm_ae = event.assoc.requestor.ae_title.decode("ascii").strip()
+            norm_ae = event.assoc.requestor.ae_title.strip()
             if norm_ae not in self.ae_titles:
                 return False
         return True
@@ -1081,7 +1133,7 @@ class LocalEntity(metaclass=_SingletonEntity):
     ):
         self._local = local
         if transfer_syntaxes is None:
-            self._default_ts = ALL_TRANSFER_SYNTAXES[:]
+            self._default_ts = [uid_to_sop_class(x) for x in ALL_TRANSFER_SYNTAXES]
         else:
             self._default_ts = transfer_syntaxes
         self._ae = AE(ae_title=self._local.ae_title)
@@ -1104,19 +1156,12 @@ class LocalEntity(metaclass=_SingletonEntity):
     async def echo(self, remote: DcmNode) -> bool:
         """Perfrom an "echo" against `remote` to test connectivity
 
-        Returns True if successful, else False.
+        Returns True if successful, else False. Throws FailedAssociationError if the
+        initial association with the `remote` fails.
         """
         loop = asyncio.get_event_loop()
-        try:
-            assoc = await self._associate(remote, VerificationPresentationContexts)
-        except FailedAssociationError:
-            log.warn("Failed to associate for 'echo'")
-            return False
-        try:
+        async with self._associate(remote, VerificationPresentationContexts) as assoc:
             status = await loop.run_in_executor(self._thread_pool, assoc.send_c_echo)
-        finally:
-            assoc.release()
-
         if status and status.Status == 0x0:
             return True
         return False
@@ -1157,9 +1202,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         level
             The level of detail we want to query
 
-            If not provided, we try to automatically determine the most
-            appropriate level based on the `query`, then the `query_res`,
-            and finally fall back to using `QueryLevel.STUDY`.
+            If not provided, we try to automatically determine the most appropriate
+            level based on the `query`, then the `query_res`, and finally fall back to
+            using `QueryLevel.STUDY`.
 
         query
             Specifies the DICOM attributes we want to query with/for
@@ -1194,7 +1239,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         # a recursive pre-query to get those first
         if (
             level == QueryLevel.STUDY
-            and query_model == "PatientRoot"
+            and query_model == QR_MODELS["PatientRoot"]["find"]
             and not is_specified(query, "PatientID")
         ):
             if query_res is None:
@@ -1263,9 +1308,8 @@ class LocalEntity(metaclass=_SingletonEntity):
         res_q: janus.Queue[Tuple[QueryResult, Set[str]]] = janus.Queue()
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
 
-        # Create association with the remote node
-        log.debug("Making association with %s for query" % (remote,))
-        assoc = await self._associate(remote, QueryRetrievePresentationContexts)
+        # Make shutdown event for query worker
+        query_shutdown = threading.Event()
 
         # Setup args for building reports
         dicom_op = DicomOp(provider=remote, user=self._local, op_type="c-find")
@@ -1274,52 +1318,75 @@ class LocalEntity(metaclass=_SingletonEntity):
             "prog_hook": report._prog_hook,
         }
 
-        # Fire up a thread to perform the query and produce QueryResult chunks
+        # Create association with the remote node
+        log.debug("Making association with %s for query" % (remote,))
+        # While we will signal the worker thread to shutdown before sending any C-CANCEL
+        # there is no gaurantee the worker will see it, so we send the C-CANCEL and
+        # close the association before waiting for the thread to finish
+        query_fut = None
+        rep_builder_task = None
+        loop = asyncio.get_running_loop()
         try:
-            rep_builder_task = asyncio.create_task(
-                self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
-            )
-            query_fut = create_thread_task(
-                _query_worker,
-                (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
-                thread_pool=self._thread_pool,
-            )
-            qr_fut_done = False
-            qr_fut_exception = None
-            assoc_released = False
-            while True:
+            async with self._associate(
+                remote, QueryRetrievePresentationContexts, query_model
+            ) as assoc:
+                # Fire up a thread to perform the query and produce QueryResult chunks
+                rep_builder_task = asyncio.create_task(
+                    self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
+                )
+                query_fut = create_thread_task(
+                    _query_worker,
+                    (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
+                    loop=loop,
+                    thread_pool=self._thread_pool,
+                    shutdown=query_shutdown,
+                )
+                qr_fut_done = False
+                qr_fut_exception = None
                 try:
-                    res = await asyncio.wait_for(res_q.async_q.get(), timeout=1.0)
-                except asyncio.TimeoutError:
-                    if qr_fut_exception:
-                        raise qr_fut_exception
-                    assert qr_fut_done == False
-                    # Check if the worker thread is done
-                    if query_fut.done():
-                        qr_fut_done = True
-                        qr_fut_exception = query_fut.exception()
-                        assoc.release()
-                        assoc_released = True
-                else:
-                    if res is None:
-                        break
-                    qr, missing_attrs = res
-                    for missing_attr in missing_attrs:
-                        if missing_attr not in auto_attrs:
-                            # TODO: Still getting some false positives with this
-                            #       warning, presumably from pre-queries. Disable
-                            #       it until it is more reliable.
-                            pass
-                            # warnings.warn(f"Remote node {remote} doesn't "
-                            #              f"support querying on {missing_attr}")
-                    qr.prov.source = remote
-                    qr.prov.queried_elems = queried_elems.copy()
-                    yield qr
-            await query_fut
-            await rep_builder_task
+                    while True:
+                        try:
+                            res = await asyncio.wait_for(
+                                res_q.async_q.get(), timeout=1.0
+                            )
+                        except asyncio.TimeoutError:
+                            if qr_fut_exception:
+                                raise qr_fut_exception
+                            assert qr_fut_done == False
+                            # Check if the worker thread is done
+                            if query_fut.done():
+                                qr_fut_done = True
+                                qr_fut_exception = query_fut.exception()
+                        else:
+                            if res is None:
+                                break
+                            qr, missing_attrs = res
+                            for missing_attr in missing_attrs:
+                                if missing_attr not in auto_attrs:
+                                    # TODO: Still getting some false positives with this
+                                    #       warning, presumably from pre-queries. Disable
+                                    #       it until it is more reliable.
+                                    pass
+                                    # warnings.warn(f"Remote node {remote} doesn't "
+                                    #              f"support querying on {missing_attr}")
+                            qr.prov.source = remote
+                            qr.prov.queried_elems = queried_elems.copy()
+                            yield qr
+                finally:
+                    log.debug("Setting shutdown event for query worker")
+                    await loop.run_in_executor(self._thread_pool, query_shutdown.set)
+
         finally:
-            if not assoc_released:
-                assoc.release()
+            if query_fut is not None:
+                log.debug("Waiting for query worker thread to finish")
+                await query_fut
+                log.debug("The query worker thread has closed")
+            log.debug("Waiting for query report builder task to finish")
+            if rep_builder_task is not None:
+                try:
+                    await rep_builder_task
+                except BaseException as e:
+                    log.exception("Exception from report builder task")
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1329,7 +1396,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         self,
         handler: Callable[[evt.Event], Awaitable[int]],
         event_filter: Optional[EventFilter] = None,
-        presentation_contexts: Optional[SOPList] = None,
+        presentation_contexts: Optional[List[PresentationContext]] = None,
     ) -> AsyncIterator[None]:
         """Listen for incoming DICOM network events
 
@@ -1398,14 +1465,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
         self._add_qr_meta(report, query_res)
-
-        # Setup the association
         query_model = self._choose_qr_model(source, "move", query_res.level)
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        log.debug(f"About to associate with {source} to move data")
-        assoc = await self._associate(source, QueryRetrievePresentationContexts)
-
         # Setup queue args for building reports
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         dicom_op = DicomOp(provider=source, user=self._local, op_type="c-move")
@@ -1414,25 +1476,50 @@ class LocalEntity(metaclass=_SingletonEntity):
             "prog_hook": report._prog_hook,
         }
 
-        if not assoc.is_established:
-            raise FailedAssociationError(
-                "Failed to associate with " "remote: %s" % str(source)
-            )
+        # Make shutdown event for worker
+        move_shutdown = threading.Event()
+
+        # Setup the association
+        log.debug(f"About to associate with {source} to move data")
+        worker_task = None
+        rep_builder_task = None
+        loop = asyncio.get_running_loop()
         try:
-            rep_builder_task = asyncio.create_task(
-                self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
-            )
-            await create_thread_task(
-                _move_worker,
-                (rep_q.sync_q, assoc, dest, query_res, query_model),
-                thread_pool=self._thread_pool,
-            )
-            await rep_builder_task
+            async with self._associate(
+                source, QueryRetrievePresentationContexts, query_model
+            ) as assoc:
+                rep_builder_task = asyncio.create_task(
+                    self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
+                )
+                try:
+                    worker_task = create_thread_task(
+                        _move_worker,
+                        (rep_q.sync_q, assoc, dest, query_res, query_model),
+                        thread_pool=self._thread_pool,
+                        loop=loop,
+                        shutdown=move_shutdown,
+                    )
+                    while not worker_task.done():
+                        await asyncio.sleep(0.1)
+                finally:
+                    log.debug("Setting shutdown event for move worker")
+                    await loop.run_in_executor(self._thread_pool, move_shutdown.set)
+        except asyncio.CancelledError:
+            # No matter what we set the shutdown event for the worker thread above,
+            # so nothing to do here but prevent any CancelledError from propogating
+            pass
         finally:
-            assoc.release()
+            log.debug("Waiting for move worker task thread to finish")
+            if worker_task is not None:
+                await worker_task
+            log.debug("Move worker task has finished")
+            if rep_builder_task is not None:
+                await rep_builder_task
+            log.debug("Report builder task is done")
         if not extern_report:
             report.log_issues()
             report.check_errors()
+        log.debug("Call to LocalEntity.move has completed")
 
     async def retrieve(
         self,
@@ -1483,37 +1570,43 @@ class LocalEntity(metaclass=_SingletonEntity):
             move_task = asyncio.create_task(
                 self.move(remote, self._local, query_res, report=report.move_report)
             )
-            while True:
-                try:
-                    ds, file_meta = await asyncio.wait_for(res_q.get(), timeout=0.5)
-                except asyncio.TimeoutError:
-                    # Check if the move task is done
-                    if move_task.done():
-                        break
-                    else:
+            try:
+                while True:
+                    try:
+                        ds, file_meta = await asyncio.wait_for(res_q.get(), timeout=0.5)
+                    except asyncio.TimeoutError:
+                        # Check if the move task is done
+                        if move_task.done():
+                            break
+                        else:
+                            continue
+                    # Add the data set to our report and handle errors
+                    success = report.add(ds)
+                    if not success:
+                        log.debug("Retrieved data set filtered due to error")
                         continue
-                # Add the data set to our report and handle errors
-                success = report.add(ds)
-                if not success:
-                    log.debug("Retrieved data set filtered due to error")
-                    continue
-                # Remove any Group 0x0002 elements that may have been included
-                ds = ds[0x00030000:]
-                # Add the file_meta to the data set and yield it
-                # TODO: Get implementation UID and set it here
-                # file_meta.ImplementationUID = ...
-                # file_meta.ImplementationVersionName = __version__
-                ds.file_meta = file_meta
-                ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
-                ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR
-                yield ds
-            log.debug("About to await move task")
-            await move_task
+                    # Remove any Group 0x0002 elements that may have been included
+                    ds = ds[0x00030000:]
+                    # Add the file_meta to the data set and yield it
+                    # TODO: Get implementation UID and set it here
+                    # file_meta.ImplementationUID = ...
+                    # file_meta.ImplementationVersionName = VERSION
+                    ds.file_meta = file_meta
+                    ds.is_little_endian = file_meta.TransferSyntaxUID.is_little_endian
+                    ds.is_implicit_VR = file_meta.TransferSyntaxUID.is_implicit_VR
+                    yield ds
+            except GeneratorExit:
+                log.info("Retrieve generator closed early, cancelling move")
+                move_task.cancel()
+            finally:
+                log.debug("Waiting for move task to finish")
+                await move_task
         report.done = True
         if not extern_report:
             report.log_issues()
             log.debug("About to check errors")
             report.check_errors()
+        log.debug("The LocalEntity.retrieve method has completed")
 
     @asynccontextmanager
     async def send(
@@ -1558,33 +1651,29 @@ class LocalEntity(metaclass=_SingletonEntity):
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
 
         log.debug(f"About to associate with {remote} to send data")
-        assoc = await self._associate(remote, default_store_scu_pcs)
-
-        try:
-            rep_builder_task = asyncio.create_task(
-                self._single_report_builder(rep_q.async_q, report)
-            )
-            send_fut = create_thread_task(
-                _send_worker,
-                (send_q.sync_q, rep_q.sync_q, assoc),
-                thread_pool=self._thread_pool,
-            )
-            # Want it to be an error if external user sends None, so we have type
-            # mis-match here
-            yield send_q.async_q  # type: ignore
-        finally:
+        async with self._associate(remote, default_store_scu_pcs) as assoc:
             try:
-                # Signal send worker to shutdown, then wait for it
-                log.debug("Shutting down send worker")
-                await send_q.async_q.put(None)
-                await send_fut
-                log.debug("Send worker has shutdown, waiting for report builder")
-                await rep_builder_task
+                rep_builder_task = asyncio.create_task(
+                    self._single_report_builder(rep_q.async_q, report)
+                )
+                send_fut = create_thread_task(
+                    _send_worker,
+                    (send_q.sync_q, rep_q.sync_q, assoc),
+                    thread_pool=self._thread_pool,
+                )
+                # Want it to be an error if external user sends None, so we have type
+                # mis-match here
+                yield send_q.async_q  # type: ignore
             finally:
-                log.debug("Releasing send association")
-                report.done = True
-                assoc.release()
-
+                try:
+                    # Signal send worker to shutdown, then wait for it
+                    log.debug("Shutting down send worker")
+                    await send_q.async_q.put(None)
+                    await send_fut
+                    log.debug("Send worker has shutdown, waiting for report builder")
+                    await rep_builder_task
+                finally:
+                    report.done = True
         if not extern_report:
             report.log_issues()
             report.check_errors()
@@ -1626,9 +1715,13 @@ class LocalEntity(metaclass=_SingletonEntity):
                 )
                 await send_q.put(ds)
 
+    @asynccontextmanager
     async def _associate(
-        self, remote: DcmNode, pres_contexts: List[PresentationContext]
-    ) -> Association:
+        self,
+        remote: DcmNode,
+        pres_contexts: List[PresentationContext],
+        query_model: Optional[SOPClass] = None,
+    ) -> AsyncIterator[Association]:
         loop = asyncio.get_event_loop()
         assoc = await loop.run_in_executor(
             self._thread_pool,
@@ -1643,7 +1736,21 @@ class LocalEntity(metaclass=_SingletonEntity):
                 "Failed to associate with remote: %s", str(remote)
             )
         log.debug("Successfully associated with remote: %s", remote)
-        return assoc
+        try:
+            yield assoc
+        except (KeyboardInterrupt, GeneratorExit, asyncio.CancelledError):
+            if query_model is not None and assoc.is_established:
+                log.debug("Sending c-cancel to remote: %s", remote)
+                try:
+                    await loop.run_in_executor(
+                        self._thread_pool, assoc.send_c_cancel, 1, None, query_model
+                    )
+                except Exception as e:
+                    log.info("Exception occured when sending c-cancel: %s", e)
+            raise
+        finally:
+            log.debug("Releasing association")
+            await loop.run_in_executor(self._thread_pool, assoc.release)
 
     def _prep_query(
         self,
@@ -1680,17 +1787,19 @@ class LocalEntity(metaclass=_SingletonEntity):
     def _setup_listen_mgr(
         self,
         sync_cb: Callable[[evt.Event], Any],
-        presentation_contexts: SOPList,
+        presentation_contexts: List[PresentationContext],
     ) -> None:
         log.debug("Starting a threaded listener")
         # TODO: How to handle presentation contexts in generic way?
         ae = AE(ae_title=self._local.ae_title)
         ae.dimse_timeout = 180
         for context in presentation_contexts:
+            assert context.abstract_syntax is not None
             ae.add_supported_context(context.abstract_syntax, self._default_ts)
         self._listen_mgr = ae.start_server(
             (self._local.host, self._local.port), block=False
         )
+        assert self._listen_mgr is not None
         for evt_type in default_evt_pc_map.keys():
             log.debug(f"Binding to event {evt_type}")
             self._listen_mgr.bind(evt_type, sync_cb)
@@ -1742,7 +1851,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         report.append(curr_op_report)
         while True:
             res = await res_q.get()
+            log.debug("_multi_report_builder got an input")
             if res is None:
+                log.debug("_multi_report_builder got None and is shutting down")
                 if not curr_op_report.done:
                     if len(curr_op_report) != 0:
                         pass

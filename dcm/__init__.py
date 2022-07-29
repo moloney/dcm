@@ -1,4 +1,19 @@
 """This package makes high-level DICOM file/network operations easy"""
-import importlib_metadata
+from . import info, conf, diff, filt, net, normalize, query, route, sync, util, store
 
-__version__ = importlib_metadata.version("dcm")
+
+__version__ = info.VERSION
+
+
+__all__ = [
+    "conf",
+    "diff",
+    "filt",
+    "net",
+    "normalize",
+    "query",
+    "route",
+    "sync",
+    "util",
+    "store",
+]

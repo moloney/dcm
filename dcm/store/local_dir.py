@@ -10,7 +10,7 @@ from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union, D
 from pydicom.dataset import Dataset
 import janus
 
-from . import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
+from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 
@@ -294,10 +294,11 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
             yield send_q.async_q  # type: ignore
         finally:
             if not send_fut.done():
+                log.debug("Signaling disk writer thread to shutdown")
                 await send_q.async_q.put(None)
-            log.debug("awaiting send_fut")
+            log.debug("Waiting for disk writer thread to finish")
             await send_fut
-            log.debug("awaited send_fut")
+            log.debug("The disk writer thread has finished")
             report.done = True
         if not extern_report:
             report.log_issues()

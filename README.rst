@@ -159,6 +159,19 @@ that produces the incoming data as ``pydicom.Dataset`` objects.
   ...         print(ds.SOPInstanceUID)
 
   >>> asyncio.run(print_incoming(local, mypacs, qr))
+  
+Higher level data transfer functionality is exposed through the ``route`` and ``sync``
+modules. You can create ``route.StaticRoute`` and ``route.DynamicRoute``objects to add
+on-the-fly data filtering and dynamic selection of destinations. 
+
+A ``route.Router`` object can then be created with one or more routes and can then be 
+used to both do "pre-routing" using the ``Router.pre_route`` method or on-the-fly 
+routing using the ``Router.route`` context manager.
+
+The ``sync.sync`` function provides the highest level abstraction for data transfers,
+and is the closest to the CLI ``sync`` command in functionality. This function is mostly
+a convienance wrapper around the ``sync.SyncManager`` class which allows for more 
+control over how transfers are generated and what to do with them.
 
 
 Contributing Quickstart
@@ -185,17 +198,20 @@ Running Tests Locally
 ---------------------
 
 The dependencies needed for testing and development are all listed as poetry
-"development dependencies". Doing ``poetry run pytest`` is the easiest way to run
-all the tests against the current environment. If you have multiple python versions
-setup with pyenv you can do ``poetry run tox`` to run the tests against all versions.
+"development dependencies". Doing ``poetry run pytest --slow`` is the easiest way to run
+all the tests against the current environment. Leaving off the ``--slow`` argument will
+skip some particularly slow tests. 
+
+If you have multiple python versions setup with pyenv you can do ``poetry run tox`` to 
+run the tests against all versions.
 
 While the mypy checker is run by default by pytest, one advantge of mypy is that it
 can run many orders of magnitude faster that the test suite while still catching many
 errors. You can do ``poetry run mypy`` to just run the mypy checker.
 
 Many tests will be skipped if `dcmtk <https://dicom.offis.de/dcmtk.php.en>`_ is not
-installed as we use it to provide a test server. Using (the recently released)
-pynetdicom.apps.qrscp as an alternative test server is a high priority.
+installed as we use it to provide a test server. Most tests will still run against 
+a different test server provided by the pynetdicom ``qrscp`` app.
 
 
 Continuous integration
