@@ -897,6 +897,7 @@ class Router:
                 #       What happens if a user pushes None accidentally? Just
                 #       use a different sentinel value?
                 if ds is None:
+                    log.debug("The route task got None and is shutting down")
                     break
                 filter_dest_map = self.get_filter_dest_map(ds)
                 n_filt = len([f for f in filter_dest_map if f is not None])

@@ -44,17 +44,16 @@ test_retr_subsets = [
 ]
 
 
-def get_retr_subsets():
+def get_retr_subsets(node_types=("dcmtk", "pnd")):
     res = []
-    for node_type in ("dcmtk", "pnd"):
+    for node_type in node_types:
         if node_type == "dcmtk":
             for sub in test_retr_subsets:
                 marks = [has_dcmtk]
                 if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
                     marks.append(dcmtk_priv_sop_retr_xfail)
                 res.append(pytest.param(node_type, sub, marks=marks))
-        else:
-            assert node_type == "pnd"
+        elif node_type == "pnd":
             for sub in test_retr_subsets:
                 if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
                     res.append(
@@ -66,6 +65,9 @@ def get_retr_subsets():
                     )
                 else:
                     res.append((node_type, sub))
+        else:
+            for sub in test_retr_subsets:
+                res.append((node_type, sub))
     return res
 
 
@@ -81,17 +83,16 @@ test_send_subsets = [
 ]
 
 
-def get_send_subsets():
+def get_send_subsets(node_types=("dcmtk", "pnd")):
     res = []
-    for node_type in ("dcmtk", "pnd"):
+    for node_type in node_types:
         if node_type == "dcmtk":
             for sub in test_retr_subsets:
                 marks = [has_dcmtk]
                 if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
                     marks.append(dcmtk_priv_sop_send_xfail)
                 res.append(pytest.param(node_type, sub, marks=marks))
-        else:
-            assert node_type == "pnd"
+        elif node_type == "pnd":
             for sub in test_retr_subsets:
                 if sub in ("all", "PATIENT-0/STUDY-1/SERIES-2"):
                     res.append(
@@ -103,11 +104,14 @@ def get_send_subsets():
                     )
                 else:
                     res.append((node_type, sub))
+        else:
+            for sub in test_retr_subsets:
+                res.append((node_type, sub))
     return res
 
 
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
-def test_echo(make_local_node, make_remote_nodes):
+async def test_echo(make_local_node, make_remote_nodes):
     local_node = make_local_node()
     remote = make_remote_nodes([local_node], None)
     local = LocalEntity(local_node)

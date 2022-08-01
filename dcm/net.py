@@ -62,9 +62,9 @@ from .query import (
     InconsistentDataError,
     expand_queries,
     get_level_and_query,
-    uid_elems,
-    req_elems,
-    opt_elems,
+    UID_ELEMS,
+    REQ_ELEMS,
+    OPT_ELEMS,
     choose_level,
     minimal_copy,
     get_all_uids,
@@ -839,7 +839,7 @@ def _query_worker(
             split_level = QueryLevel(level - 1)
     elif split_level > level:
         raise ValueError("The split_level can't be higher than the query level")
-    split_attr = uid_elems[split_level]
+    split_attr = UID_ELEMS[split_level]
     last_split_val = None
 
     resp_count = 0
@@ -903,7 +903,7 @@ def _query_worker(
 
 def _make_move_request(ds: Dataset) -> Dataset:
     res = Dataset()
-    for uid_attr in uid_elems.values():
+    for uid_attr in UID_ELEMS.values():
         uid_val = getattr(ds, uid_attr, None)
         if uid_val is not None:
             setattr(res, uid_attr, uid_val)
@@ -1269,13 +1269,13 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         # Add in any required and default optional elements to query
         for lvl in QueryLevel:
-            for req_attr in req_elems[lvl]:
+            for req_attr in REQ_ELEMS[lvl]:
                 if getattr(query, req_attr, None) is None:
                     setattr(query, req_attr, "")
             if lvl == level:
                 break
         auto_attrs = set()
-        for opt_attr in opt_elems[level]:
+        for opt_attr in OPT_ELEMS[level]:
             if getattr(query, opt_attr, None) is None:
                 setattr(query, opt_attr, "")
                 auto_attrs.add(opt_attr)

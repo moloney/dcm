@@ -5,7 +5,17 @@ from contextlib import asynccontextmanager
 from glob import iglob
 from pathlib import Path
 from queue import Empty
-from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union, Dict
+from typing import (
+    Optional,
+    AsyncIterator,
+    Any,
+    Callable,
+    Tuple,
+    cast,
+    Union,
+    Dict,
+    FrozenSet,
+)
 
 from pydicom.dataset import Dataset
 import janus
@@ -24,6 +34,7 @@ def _dir_crawl_worker(
     recurse: bool = True,
     file_ext: str = "dcm",
     max_chunk: int = 1000,
+    skip_paths: Optional[FrozenSet[str]] = None,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     curr_files = []
@@ -32,7 +43,7 @@ def _dir_crawl_worker(
     if recurse:
         glob_comps.append("**")
     if file_ext:
-        glob_comps.append("*.%s" % file_ext)
+        glob_comps.append(f"*.{file_ext}")
     else:
         glob_comps.append("*")
     glob_exp = os.path.join(*glob_comps)
@@ -41,6 +52,8 @@ def _dir_crawl_worker(
             if shutdown is not None and shutdown.is_set():
                 return
         if not os.path.isfile(path):
+            continue
+        if skip_paths is not None and path in skip_paths:
             continue
         curr_files.append(path)
         if len(curr_files) == max_chunk:
@@ -129,6 +142,9 @@ def _disk_write_worker(
         except Exception as e:
             report.add_error(out_path, e)
         else:
+            if dest_qr is not None:
+                ds.StorageMediaFileSetID = str(out_path)
+                dest_qr.add(ds)
             report.add_success(out_path)
 
 
@@ -260,13 +276,6 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         elif len(toks) >= 4:
             raise ValueError(f"Invalid short form for LocalDir: {in_str}")
         return res
-
-    @property
-    def root_path(self) -> Path:
-        return self._root_path
-
-    def __str__(self) -> str:
-        return f"LocalDir({self._root_path})"
 
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()

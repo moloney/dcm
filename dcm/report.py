@@ -6,10 +6,13 @@ warning statuses that shouldn't interrupt the whole batch operation. We use a
 variety of "report" classes to capture this kind of information and provide
 real-time insight into an ongoing async operation.
 """
-import logging
+from contextlib import contextmanager
+import logging, inspect
 from dataclasses import dataclass, field
 from datetime import datetime
+import typing
 from typing import (
+    Iterable,
     Optional,
     Dict,
     List,
@@ -21,9 +24,12 @@ from typing import (
     ItemsView,
     KeysView,
     ValuesView,
+    Callable,
 )
 
 import rich.progress
+
+from .util import Args_Type, decorate_sync_async
 
 
 log = logging.getLogger(__name__)
@@ -276,6 +282,45 @@ class BaseReport:
         if val is None:
             return
         self._prog_hook = val
+
+
+def optional_report(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator for functions that optionally take a 'report' argument
+
+    If the report is not supplied, one will be created automatically and after the
+    function is called the report's `log_issues` and `check_errors` methods will be
+    called. If the user supplies the report themselves, it is up to them to call
+    these methods if they want to.
+    """
+    sig = inspect.signature(func)
+    report_type = typing.get_type_hints(func)["report"]
+    if not isinstance(report_type, type) or not issubclass(report_type, BaseReport):
+        for sub_type in typing.get_args(report_type):
+            if issubclass(sub_type, BaseReport):
+                report_type = sub_type
+                break
+        else:
+            raise ValueError("The 'report' arg isn't the correct type")
+
+    @contextmanager
+    def check_report(
+        args: Iterable[Any], kwargs: Dict[str, Any]
+    ) -> Iterator[Args_Type]:
+        bound_args = sig.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        report = bound_args.arguments["report"]
+        if report is None:
+            extern_report = False
+            report = report_type()
+            bound_args.arguments["report"] = report
+        else:
+            extern_report = True
+        yield (bound_args.args, bound_args.kwargs)
+        if not extern_report:
+            report.log_issues()
+            report.check_errors()
+
+    return decorate_sync_async(check_report, func)
 
 
 class MultiError(Exception):

@@ -15,7 +15,7 @@ from .query import (
     QueryResult,
     DataNode,
     get_uid,
-    uid_elems,
+    UID_ELEMS,
     QueryLevelMismatchError,
     InconsistentDataError,
 )
@@ -24,7 +24,7 @@ from .query import (
 log = logging.getLogger(__name__)
 
 
-uid_elem_set = FrozenLazySet(uid_elems.values())
+uid_elem_set = FrozenLazySet(UID_ELEMS.values())
 
 
 @dataclass(frozen=True)
@@ -241,7 +241,7 @@ class FilterTransform(DataTransform):
         if new_dupe:
             return None
         self.new.add(new_ds)
-        for lvl, uid_attr in uid_elems.items():
+        for lvl, uid_attr in UID_ELEMS.items():
             new_uid = get_uid(lvl, new_ds)
             old_uid = get_uid(lvl, old_ds)
             self._new_to_old[lvl][new_uid] = old_uid

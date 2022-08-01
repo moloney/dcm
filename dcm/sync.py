@@ -33,7 +33,7 @@ from .query import (
     DataNode,
     get_all_uids,
     minimal_copy,
-    uid_elems,
+    UID_ELEMS,
 )
 from .store.base import (
     TransferMethod,
@@ -775,7 +775,7 @@ class SyncManager:
             if filt is not None:
                 invertible_uids = filt.invertible_uids
                 can_invert_uids = all(
-                    uid in invertible_uids for uid in uid_elems.values()
+                    uid in invertible_uids for uid in UID_ELEMS.values()
                 )
             for dest in route.dests:
                 df_tuple = (dest, filt)

@@ -9,6 +9,7 @@ from functools import partial
 from enum import IntEnum
 from dataclasses import dataclass, field
 from typing import (
+    Iterable,
     Tuple,
     List,
     Dict,
@@ -19,6 +20,7 @@ from typing import (
     Union,
     Set,
 )
+from xml.etree.ElementInclude import include
 
 from pydicom.dataset import Dataset
 from tree_format import format_tree
@@ -39,7 +41,7 @@ class QueryLevel(IntEnum):
     IMAGE = 3
 
 
-uid_elems = {
+UID_ELEMS = {
     QueryLevel.PATIENT: "PatientID",
     QueryLevel.STUDY: "StudyInstanceUID",
     QueryLevel.SERIES: "SeriesInstanceUID",
@@ -50,7 +52,7 @@ uid_elems = {
 
 def get_uid(level: QueryLevel, data_set: Dataset) -> str:
     """Get the UID from the `data_set` for the given `level`"""
-    return getattr(data_set, uid_elems[level])
+    return getattr(data_set, UID_ELEMS[level])
 
 
 def get_all_uids(data_set: Dataset) -> Tuple[str, ...]:
@@ -58,7 +60,7 @@ def get_all_uids(data_set: Dataset) -> Tuple[str, ...]:
     uids = []
     last_found = -1
     for lvl in QueryLevel:
-        lvl_uid = getattr(data_set, uid_elems[lvl], "")
+        lvl_uid = getattr(data_set, UID_ELEMS[lvl], "")
         if lvl_uid != "":
             last_found = lvl
         uids.append(lvl_uid)
@@ -82,7 +84,7 @@ class DataPath:
 
     @classmethod
     def from_uids(cls, uids: Tuple[str, ...]) -> "DataPath":
-        return cls(QueryLevel(len(uids)), uids)
+        return cls(QueryLevel(len(uids) - 1), uids)
 
     level: QueryLevel
     """The level of the node in the hierarchy"""
@@ -118,7 +120,7 @@ class DataPath:
         return self.from_uids(self.uids[:-1])
 
 
-req_elems = {
+REQ_ELEMS = {
     QueryLevel.PATIENT: [
         "PatientID",
         "PatientName",
@@ -141,7 +143,7 @@ req_elems = {
 """Required attributes for each query level (accumulates at each level)"""
 
 
-blankable_req_elems = [
+BLANKABLE_REQ_ELEMS = [
     "PatientID",
     "PatientName",
     "StudyDate",
@@ -153,7 +155,7 @@ blankable_req_elems = [
 """
 
 
-opt_elems: Dict[QueryLevel, List[str]] = {
+OPT_ELEMS: Dict[QueryLevel, List[str]] = {
     QueryLevel.PATIENT: [
         "NumberOfPatientRelatedStudies",
         "NumberOfPatientRelatedSeries",
@@ -169,20 +171,20 @@ opt_elems: Dict[QueryLevel, List[str]] = {
     QueryLevel.SERIES: [
         "SeriesDescription",
         "ProtocolName",
-        "NumberOfSeriesRelatedInstances",
+        "SeriesTime" "NumberOfSeriesRelatedInstances",
     ],
     QueryLevel.IMAGE: [],
 }
 """Optional attributes we always try to query (exclusive to each level)"""
 
 
-level_filters = {
-    lvl: make_elem_filter(req_elems[lvl] + opt_elems[lvl]) for lvl in QueryLevel
+LEVEL_FILTERS = {
+    lvl: make_elem_filter(REQ_ELEMS[lvl] + OPT_ELEMS[lvl]) for lvl in QueryLevel
 }
 """Element filters for each level"""
 
 
-level_identifiers = {
+LEVEL_IDENTIFIERS = {
     QueryLevel.PATIENT: [
         "NumberOfPatientRelatedStudies",
         "NumberOfPatientRelatedSeries",
@@ -211,14 +213,17 @@ level_identifiers = {
 """Maps query levels to elements that imply that level is needed"""
 
 
-def minimal_copy(ds: Dataset) -> Dataset:
+MIN_ATTRS = tuple(chain.from_iterable(chain(REQ_ELEMS.values(), OPT_ELEMS.values())))
+
+
+def minimal_copy(ds: Dataset, include_elems: Iterable[str] = MIN_ATTRS) -> Dataset:
     """Make reduced copy with only the attributes needed for a QueryResult"""
     res = Dataset()
-    for attr in chain.from_iterable(chain(req_elems.values(), opt_elems.values())):
+    for attr in include_elems:
         val = getattr(ds, attr, None)
         if val is not None:
             setattr(res, attr, val)
-        elif val in blankable_req_elems:
+        elif val in BLANKABLE_REQ_ELEMS:
             setattr(res, attr, "")
     return res
 
@@ -226,7 +231,7 @@ def minimal_copy(ds: Dataset) -> Dataset:
 def choose_level(qdat: Dataset, default: QueryLevel = QueryLevel.STUDY) -> QueryLevel:
     """Try to choose the correct level for a given query"""
     for lvl in reversed(QueryLevel):
-        for attr in level_identifiers[lvl]:
+        for attr in LEVEL_IDENTIFIERS[lvl]:
             if hasattr(qdat, attr):
                 return lvl
     return default
@@ -471,7 +476,7 @@ class QueryResult:
         last_info = None
         branch_found = False
         for lvl in QueryLevel:
-            lvl_uid = getattr(data_set, uid_elems[lvl])
+            lvl_uid = getattr(data_set, UID_ELEMS[lvl])
             lvl_info = self._levels[lvl].get(lvl_uid)
             if lvl_info is None:
                 branch_found = True
@@ -479,11 +484,11 @@ class QueryResult:
                 if last_info is not None:
                     parent_uid = last_info["level_uid"]
                 lvl_info = OrderedDict()
-                normed_data = normalize(data_set, level_filters[lvl])
-                for attr in req_elems[lvl]:
+                normed_data = normalize(data_set, LEVEL_FILTERS[lvl])
+                for attr in REQ_ELEMS[lvl]:
                     val = normed_data.get(attr, None)
                     if val is None:
-                        if attr not in blankable_req_elems:
+                        if attr not in BLANKABLE_REQ_ELEMS:
                             raise InvalidDicomError(
                                 f"Dataset is missing required elem: {attr}"
                             )
@@ -492,7 +497,7 @@ class QueryResult:
                         )
                         val = ""
                     lvl_info[attr] = val
-                for attr in opt_elems[lvl]:
+                for attr in OPT_ELEMS[lvl]:
                     val = normed_data.get(attr)
                     if val is not None:
                         lvl_info[attr] = val
@@ -522,7 +527,7 @@ class QueryResult:
         for lvl in reversed(QueryLevel):
             if lvl > self._level:
                 continue
-            lvl_uid = getattr(data_set, uid_elems[lvl])
+            lvl_uid = getattr(data_set, UID_ELEMS[lvl])
             if lvl == self._level:
                 del self._data[lvl_uid]
             lvl_info = self._levels[lvl][lvl_uid]
@@ -546,7 +551,7 @@ class QueryResult:
         last_info = None
         for lvl in QueryLevel:
             try:
-                lvl_uid = getattr(data_set, uid_elems[lvl])
+                lvl_uid = getattr(data_set, UID_ELEMS[lvl])
             except AttributeError:
                 # The PatientID can be blank, though many systems won't support it...
                 if lvl == QueryLevel.PATIENT:
@@ -707,6 +712,20 @@ class QueryResult:
             path.append(parent["level_uid"])
             parent_uid = parent["parent_uid"]
         return DataPath(node.level, tuple(reversed(path)))
+
+    def check_path(self, path: DataPath) -> bool:
+        """Return true if this `path` exists in our data hierarchy
+
+        Raises InconsistentDataError if the path is not consistent with the hierarchy
+        """
+        if path.level > self._level:
+            raise InsufficientQueryLevelError()
+        n_match = sum(1 if path.uids[l] in self._levels[l] else 0 for l in QueryLevel)
+        if n_match == 0:
+            return False
+        elif n_match < path.level + 1:
+            raise InconsistentDataError()
+        return True
 
     def _get_info(self, lvl_info: Dict[str, Any]) -> Dict[str, Any]:
         res = {}
@@ -1056,14 +1075,14 @@ class QueryResult:
         return {
             "level": self._level.name,
             "patients": self._levels[QueryLevel.PATIENT],
-            "prov": self.prov,
+            "prov": self.prov.to_json_dict(),
         }
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryResult:
         """Create a QueryResult from a previous `to_json` call"""
         level = getattr(QueryLevel, json_dict["level"])
-        res = cls(level, prov=json_dict["prov"])
+        res = cls(level, prov=QueryProv.from_json_dict(json_dict["prov"]))
         patients = json_dict["patients"]
         visit_q = list(patients.values())
         visited_stack: List[Dict[str, Any]] = []
@@ -1235,8 +1254,8 @@ def expand_queries(
                 for lvl in QueryLevel:
                     if lvl > path.level:
                         break
-                    setattr(q, uid_elems[lvl], path.uids[lvl])
-                    queried_elems.add(uid_elems[lvl])
+                    setattr(q, UID_ELEMS[lvl], path.uids[lvl])
+                    queried_elems.add(UID_ELEMS[lvl])
                 queries.append(q)
                 sub_uids.clear()
     return queries, queried_elems
