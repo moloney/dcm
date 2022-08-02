@@ -6,6 +6,7 @@ warning statuses that shouldn't interrupt the whole batch operation. We use a
 variety of "report" classes to capture this kind of information and provide
 real-time insight into an ongoing async operation.
 """
+from collections import deque
 from contextlib import contextmanager
 import logging, inspect
 from dataclasses import dataclass, field
@@ -26,6 +27,7 @@ from typing import (
     ValuesView,
     Callable,
 )
+from typing_extensions import get_args
 
 import rich.progress
 
@@ -295,12 +297,19 @@ def optional_report(func: Callable[..., Any]) -> Callable[..., Any]:
     sig = inspect.signature(func)
     report_type = typing.get_type_hints(func)["report"]
     if not isinstance(report_type, type) or not issubclass(report_type, BaseReport):
-        for sub_type in typing.get_args(report_type):
-            if issubclass(sub_type, BaseReport):
-                report_type = sub_type
-                break
-        else:
-            raise ValueError("The 'report' arg isn't the correct type")
+        type_stack = deque([report_type])
+        report_type = None
+        while type_stack:
+            curr_type = type_stack.popleft()
+            for sub_type in get_args(curr_type):
+                if isinstance(sub_type, type):
+                    if issubclass(sub_type, BaseReport):
+                        report_type = sub_type
+                        break
+                else:
+                    type_stack.append(sub_type)
+        if report_type is None:
+            raise ValueError(f"The 'report' arg isn't the correct type: {report_type}")
 
     @contextmanager
     def check_report(

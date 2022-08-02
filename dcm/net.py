@@ -75,6 +75,7 @@ from .report import (
     MultiListReport,
     MultiError,
     ProgressHookBase,
+    optional_report,
 )
 from .util import (
     json_serializer,
@@ -1186,6 +1187,7 @@ class LocalEntity(metaclass=_SingletonEntity):
             res |= sub_res
         return res
 
+    @optional_report
     async def queries(
         self,
         remote: DcmNode,
@@ -1217,11 +1219,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report
             If provided, will store status report from DICOM operations
         """
-        if report is None:
-            extern_report = False
-            report = MultiListReport(meta_data={"remote": remote, "level": level})
-        else:
-            extern_report = True
+        assert report is not None
         if report._description is None:
             report.description = "queries"
         report._meta_data["remote"] = remote
@@ -1373,9 +1371,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await rep_builder_task
                 except BaseException as e:
                     log.exception("Exception from report builder task")
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
     @asynccontextmanager
     async def listen(
@@ -1432,6 +1427,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await self._cleanup_listen_mgr()
         log.debug("Listener lock released")
 
+    @optional_report
     async def move(
         self,
         source: DcmNode,
@@ -1441,11 +1437,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report: MultiListReport[DicomOpReport] = None,
     ) -> None:
         """Move DICOM files from one network entity to another"""
-        if report is None:
-            extern_report = False
-            report = MultiListReport()
-        else:
-            extern_report = True
+        assert report is not None
         if report._description is None:
             report.description = "move"
         report._meta_data["source"] = source
@@ -1502,11 +1494,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             if rep_builder_task is not None:
                 await rep_builder_task
             log.debug("Report builder task is done")
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
         log.debug("Call to LocalEntity.move has completed")
 
+    @optional_report
     async def retrieve(
         self,
         remote: DcmNode,
@@ -1532,11 +1522,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
             By default inconsistent, unexpected, and duplicate data are skipped
         """
-        if report is None:
-            extern_report = False
-            report = RetrieveReport()
-        else:
-            extern_report = True
+        assert report is not None
         report.requested = query_res
         report._meta_data["remote"] = remote
         self._add_qr_meta(report, query_res)
@@ -1588,13 +1574,10 @@ class LocalEntity(metaclass=_SingletonEntity):
                 log.debug("Waiting for move task to finish")
                 await move_task
         report.done = True
-        if not extern_report:
-            report.log_issues()
-            log.debug("About to check errors")
-            report.check_errors()
         log.debug("The LocalEntity.retrieve method has completed")
 
     @asynccontextmanager
+    @optional_report
     async def send(
         self,
         remote: DcmNode,
@@ -1623,13 +1606,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             as it is assumed the caller will handle this themselves (e.g. by
             calling the `log_issues` and `check_errors` methods on the report).
         """
+        assert report is not None
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        if report is None:
-            extern_report = False
-            report = DicomOpReport()
-        else:
-            extern_report = True
         report.dicom_op.provider = remote
         report.dicom_op.user = self._local
         report.dicom_op.op_type = "c-store"
@@ -1660,9 +1639,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await rep_builder_task
                 finally:
                     report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
     async def download(
         self,

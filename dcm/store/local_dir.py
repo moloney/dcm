@@ -20,6 +20,8 @@ from typing import (
 from pydicom.dataset import Dataset
 import janus
 
+from dcm.report import optional_report
+
 from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
 from ..query import InconsistentDataError, QueryResult
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
@@ -301,14 +303,11 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         await crawl_fut
 
     @asynccontextmanager
+    @optional_report
     async def send(
         self, report: Optional[LocalWriteReport] = None
     ) -> AsyncIterator["janus._AsyncQueueProxy[Dataset]"]:
-        if report is None:
-            extern_report = False
-            report = LocalWriteReport()
-        else:
-            extern_report = True
+        assert report is not None
         report._meta_data["root_path"] = self._root_path
         send_q: janus.Queue[Optional[Dataset]] = janus.Queue(10)
         send_fut = create_thread_task(
@@ -331,23 +330,17 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
             await send_fut
             log.debug("The disk writer thread has finished")
             report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
+    @optional_report
     async def oob_transfer(
         self,
         method: TransferMethod,
         chunk: LocalChunk,
         report: Optional[LocalWriteReport] = None,
     ) -> None:
+        assert report is not None
         if method is TransferMethod.PROXY or method not in self._supported_methods:
             raise ValueError(f"Invalid transfer method: {method}")
-        if report is None:
-            extern_report = False
-            report = LocalWriteReport()
-        else:
-            extern_report = True
         report._meta_data["root_path"] = self._root_path
         # At least for now, python seeems to lack the ability to define only
         # the required args to a callable while ignoring kwargs
@@ -377,6 +370,3 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         await oob_fut
         log.info("Oob transfer worker shutdown, marking report done")
         report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
