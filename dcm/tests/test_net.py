@@ -111,7 +111,7 @@ def get_send_subsets(node_types=("dcmtk", "pnd")):
 
 
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))
-async def test_echo(make_local_node, make_remote_nodes):
+def test_echo(make_local_node, make_remote_nodes):
     local_node = make_local_node()
     remote = make_remote_nodes([local_node], None)
     local = LocalEntity(local_node)

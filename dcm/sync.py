@@ -57,13 +57,11 @@ from .route import (
 from .diff import diff_data_sets, DataDiff
 from .net import (
     IncomingDataReport,
-    IncomingDataError,
     IncomingErrorType,
-    DicomOpReport,
     RetrieveReport,
 )
 from .report import (
-    BaseReport,
+    CountableReport,
     MultiAttrReport,
     MultiListReport,
     MultiDictReport,
@@ -356,15 +354,11 @@ async def _sync_iter_to_async(sync_gen: Iterator[T]) -> AsyncIterator[T]:
         yield result
 
 
-TransferReportTypes = Union[
-    DynamicTransferReport,
-    StaticTransferReport,
-]
-
+TransferReportTypes = Union[DynamicTransferReport, StaticTransferReport]
 
 DestType = Union[DataBucket, Route]
 
-SourceMissingQueryReportType = MultiListReport[MultiListReport[DicomOpReport]]
+SourceMissingQueryReportType = MultiListReport[CountableReport]
 
 DestMissingQueryReportType = MultiDictReport[
     DataRepo[Any, Any, Any, Any], SourceMissingQueryReportType
@@ -375,6 +369,8 @@ class RepoRequiredError(Exception):
     """Operation requires a DataRepo but a DataBucket was provided"""
 
 
+# TODO: This class shouldn't be responsible for building various sub-reports, because it
+#       doesn't know about the src / dests which determines the report types
 class SyncQueriesReport(MultiAttrReport):
     """Report for queries being performed during sync"""
 
@@ -385,7 +381,7 @@ class SyncQueriesReport(MultiAttrReport):
         depth: int = 0,
         prog_hook: Optional[ProgressHookBase[Any]] = None,
     ):
-        self._init_src_qr_report: Optional[MultiListReport[DicomOpReport]] = None
+        self._init_src_qr_report: Optional[CountableReport] = None
         self._missing_src_qr_reports: Optional[
             MultiListReport[SourceMissingQueryReportType]
         ] = None
@@ -400,12 +396,14 @@ class SyncQueriesReport(MultiAttrReport):
         super().__init__(description, meta_data, depth, prog_hook)
 
     @property
-    def init_src_qr_report(self) -> MultiListReport[DicomOpReport]:
-        if self._init_src_qr_report is None:
-            self._init_src_qr_report = MultiListReport(
-                "init-src-qr", depth=self._depth + 1, prog_hook=self._prog_hook
-            )
+    def init_src_qr_report(self) -> Optional[CountableReport]:
         return self._init_src_qr_report
+
+    @init_src_qr_report.setter
+    def init_src_qr_report(self, val: CountableReport) -> None:
+        if self._init_src_qr_report is not None:
+            raise ValueError("Report was already set")
+        self._init_src_qr_report = val
 
     @property
     def missing_src_qr_reports(self) -> MultiListReport[SourceMissingQueryReportType]:
@@ -492,6 +490,9 @@ class SyncManager:
 
     keep_errors
         Whether or not we try to sync erroneous data
+
+        Can be set to `True` to send all data regardless of the error, or a tuple of
+        `IncomingErrorType` specifying on which types of errors to send the data
 
     report
         Allows live introspection of the sync process, detailed results
@@ -618,7 +619,8 @@ class SyncManager:
                 expected_sub_qrs = query_res.get_count(gen_level)
             else:
                 q = dict_to_ds({elem: "*" for elem in self._router.required_elems})
-                qr_report = self.report.queries_report.init_src_qr_report
+                qr_report = self._src.query_report_type()
+                self.report.queries_report.init_src_qr_report = qr_report
                 qr_gen = self._src.queries(QueryLevel.STUDY, q, report=qr_report)
 
             n_sub_qr = 0
@@ -795,13 +797,13 @@ class SyncManager:
 
         # Build multi reports for capturing queries
         expected = QueryLevel.IMAGE - src_qr.level + 1
-        src_queries_report: MultiListReport[
-            MultiListReport[DicomOpReport]
-        ] = MultiListReport("missing-src-qr", n_expected=expected)
+        src_queries_report: MultiListReport[CountableReport] = MultiListReport(
+            "missing-src-qr", n_expected=expected
+        )
         self.report.queries_report.missing_src_qr_reports.append(src_queries_report)
         dest_queries_report: MultiDictReport[
             DataRepo[Any, Any, Any, Any],
-            MultiListReport[MultiListReport[DicomOpReport]],
+            MultiListReport[CountableReport],
         ] = MultiDictReport("missing-dests-qr")
         self.report.queries_report.missing_dest_qr_reports.append(dest_queries_report)
 
@@ -839,7 +841,7 @@ class SyncManager:
                 if curr_level > curr_src_qr.level:
                     # We need more details for the source QueryResult
                     log.debug("Querying src in _get_missing more details")
-                    src_report: MultiListReport[DicomOpReport] = MultiListReport()
+                    src_report: MultiListReport[CountableReport] = MultiListReport()
                     src_queries_report.append(src_report)
                     src_qr_task = asyncio.create_task(
                         self._src.query(
@@ -847,13 +849,13 @@ class SyncManager:
                         )
                     )
                 if dest not in dest_queries_report:
-                    dest_reports: MultiListReport[
-                        MultiListReport[DicomOpReport]
-                    ] = MultiListReport("missing-dest-qr")
+                    dest_reports: MultiListReport[CountableReport] = MultiListReport(
+                        "missing-dest-qr"
+                    )
                     dest_queries_report[dest] = dest_reports
                 else:
                     dest_reports = dest_queries_report[dest]
-                dest_report: MultiListReport[DicomOpReport] = MultiListReport()
+                dest_report: CountableReport = dest.query_report_type()
                 dest_reports.append(dest_report)
                 dest_qr = await dest.query(
                     level=curr_level, query_res=curr_matching[df], report=dest_report
@@ -1036,7 +1038,7 @@ async def sync_data(
     dests: List[DestType],
     query: Optional[Union[Dataset, List[Dataset]]] = None,
     query_res: Optional[List[Optional[QueryResult]]] = None,
-    query_reports: Optional[List[Optional[MultiListReport[DicomOpReport]]]] = None,
+    query_reports: Optional[List[Optional[MultiListReport[CountableReport]]]] = None,
     sm_kwargs: Optional[List[Dict[str, Any]]] = None,
     dry_run: bool = False,
 ) -> List[SyncReport]:

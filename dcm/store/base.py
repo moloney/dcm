@@ -299,7 +299,7 @@ class LocalRepoChunk(RepoChunk):
         """Generate both the paths and the corresponding data sets"""
         loop = asyncio.get_running_loop()
         for min_ds in self.qr:
-            ds_path = min_ds.StorageMediaFileSetID
+            ds_path = min_ds.StorageURL
             ds = await loop.run_in_executor(None, _read_f, ds_path)
             if not self.report.add(ds):
                 continue
@@ -309,7 +309,8 @@ class LocalRepoChunk(RepoChunk):
 
 T_chunk = TypeVar("T_chunk", bound=DataChunk, covariant=True)
 T_qreport = TypeVar(
-    "T_qreport", bound=Union[CountableReport, SummaryReport[Any]], contravariant=True
+    "T_qreport",
+    bound=Union[CountableReport, SummaryReport[Any]],
 )
 T_rreport = TypeVar("T_rreport", bound=CountableReport, contravariant=True)
 T_sreport = TypeVar(
@@ -376,6 +377,8 @@ class DataRepo(
 ):
     """Protocol for stores with query/retrieve functionality"""
 
+    query_report_type: Type[T_qreport]
+
     async def queries(
         self,
         level: Optional[QueryLevel] = None,
@@ -440,6 +443,8 @@ class DcmRepo(
         TransferMethod.PROXY,
         TransferMethod.REMOTE_COPY,
     )
+
+    query_report_type: Type[MultiListReport[DicomOpReport]] = MultiListReport
 
     @property
     def remote(self) -> DcmNode:

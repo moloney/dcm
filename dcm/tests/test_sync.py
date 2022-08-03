@@ -43,14 +43,13 @@ gen_transfer_sets = [
 ]
 
 
-def get_gen_transfer_sets():
+def get_gen_transfer_sets(node_types=("dcmtk", "pnd", "qr")):
     res = []
-    for node_type in ("dcmtk", "pnd"):
+    for node_type in node_types:
         if node_type == "dcmtk":
             for sub in gen_transfer_sets:
                 res.append(pytest.param(node_type, sub, marks=has_dcmtk))
         else:
-            assert node_type == "pnd"
             for sub in gen_transfer_sets:
                 res.append((node_type, sub))
     return res
@@ -68,9 +67,9 @@ sync_subsets = [
 ]
 
 
-def get_repo_to_repo_subsets():
+def get_repo_to_repo_subsets(node_types=("dcmtk", "pnd", "qr")):
     res = []
-    for node_type in ("dcmtk", "pnd"):
+    for node_type in node_types:
         if node_type == "dcmtk":
             for sub in sync_subsets:
                 marks = [has_dcmtk]
@@ -78,34 +77,35 @@ def get_repo_to_repo_subsets():
                     marks += priv_sop_marks
                 res.append(pytest.param(node_type, sub, marks=marks))
         else:
-            assert node_type == "pnd"
             for sub in sync_subsets:
                 res.append((node_type, sub))
     return res
 
 
-def get_bucket_to_repo_subsets():
+def get_bucket_to_repo_subsets(node_types=("dcmtk", "pnd", "qr")):
     res = []
-    for node_type in ("dcmtk", "pnd"):
+    for node_type in node_types:
         if node_type == "dcmtk":
             for sub in sync_subsets:
                 marks = [has_dcmtk] + priv_sop_marks
                 res.append(pytest.param(node_type, sub, marks=marks))
-        else:
-            assert node_type == "pnd"
+        elif node_type == "pnd":
             for sub in sync_subsets:
                 res.append(pytest.param(node_type, sub, marks=pnd_priv_sop_xfail))
+        else:
+            for sub in sync_subsets:
+                res.append((node_type, sub))
     return res
 
 
 @mark.parametrize("node_type, subset_specs", get_gen_transfer_sets())
 @mark.asyncio
-async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
+async def test_gen_transfers(make_local_node, make_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, src_node = await make_net_repo(local_node, subset="all")
-    dest1_repo, dest1_node = await make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, dest2_node = await make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, dest3_node = await make_net_repo(local_node, subset=subset_specs[2])
+    src_repo, src_node = await make_repo(local_node, subset="all")
+    dest1_repo, dest1_node = await make_repo(local_node, subset=subset_specs[0])
+    dest2_repo, dest2_node = await make_repo(local_node, subset=subset_specs[1])
+    dest3_repo, dest3_node = await make_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_lookup = make_lookup(dest2_repo, dest3_repo)
     dyn_route = DynamicRoute(dyn_lookup, required_elems=["PatientID"])
@@ -144,10 +144,10 @@ async def test_gen_transfers(make_local_node, make_net_repo, subset_specs):
 
 @mark.parametrize("node_type, subset_specs", get_repo_to_repo_subsets())
 @mark.asyncio
-async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_specs):
+async def test_repo_sync_single_static(make_local_node, make_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, src_node = await make_net_repo(local_node, subset="all")
-    dest1_repo, dest1_node = await make_net_repo(local_node, subset=subset_specs[0])
+    src_repo, src_node = await make_repo(local_node, subset="all")
+    dest1_repo, dest1_node = await make_repo(local_node, subset=subset_specs[0])
     static_route = StaticRoute([dest1_repo])
     dests = [static_route]
     async with SyncManager(src_repo, dests) as sm:
@@ -164,12 +164,12 @@ async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_sp
 
 @mark.parametrize("node_type, subset_specs", get_repo_to_repo_subsets())
 @mark.asyncio
-async def test_repo_sync_multi(make_local_node, make_net_repo, subset_specs):
+async def test_repo_sync_multi(make_local_node, make_repo, subset_specs):
     local_node = make_local_node()
-    src_repo, src_node = await make_net_repo(local_node, subset="all")
-    dest1_repo, dest1_node = await make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _ = await make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _ = await make_net_repo(local_node, subset=subset_specs[2])
+    src_repo, src_node = await make_repo(local_node, subset="all")
+    dest1_repo, dest1_node = await make_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _ = await make_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _ = await make_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
@@ -190,14 +190,12 @@ async def test_repo_sync_multi(make_local_node, make_net_repo, subset_specs):
 
 @mark.parametrize("node_type, subset_specs", get_bucket_to_repo_subsets())
 @mark.asyncio
-async def test_bucket_sync(
-    make_local_dir, make_local_node, make_net_repo, subset_specs
-):
+async def test_bucket_sync(make_local_dir, make_local_node, make_repo, subset_specs):
     src_bucket, init_qr, _ = make_local_dir("all", max_chunk=2)
     local_node = make_local_node()
-    dest1_repo, dest1_node = await make_net_repo(local_node, subset=subset_specs[0])
-    dest2_repo, _ = await make_net_repo(local_node, subset=subset_specs[1])
-    dest3_repo, _ = await make_net_repo(local_node, subset=subset_specs[2])
+    dest1_repo, dest1_node = await make_repo(local_node, subset=subset_specs[0])
+    dest2_repo, _ = await make_repo(local_node, subset=subset_specs[1])
+    dest3_repo, _ = await make_repo(local_node, subset=subset_specs[2])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]

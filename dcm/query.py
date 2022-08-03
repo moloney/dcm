@@ -171,7 +171,8 @@ OPT_ELEMS: Dict[QueryLevel, List[str]] = {
     QueryLevel.SERIES: [
         "SeriesDescription",
         "ProtocolName",
-        "SeriesTime" "NumberOfSeriesRelatedInstances",
+        "SeriesTime",
+        "NumberOfSeriesRelatedInstances",
     ],
     QueryLevel.IMAGE: [],
 }
@@ -931,8 +932,42 @@ class QueryResult:
         return res
 
     def level_sub_queries(self, level: QueryLevel) -> Iterator[QueryResult]:
+        """Generate sub queries at the given `level`"""
         for dpath in self.level_paths(level):
             yield self.sub_query(dpath.end)
+
+    def chunk(self, max_instances: int = 1000) -> Iterator[QueryResult]:
+        """Generate sub queries constrained by size
+
+        If n_instances is unknown, just yield series level (or highest available) sub
+        queries.
+        """
+        n_inst = self.n_instances()
+        if n_inst is None:
+            # We don't have info to constrain by size
+            for sub_qr in self.level_sub_queries(min(self._level, QueryLevel.SERIES)):
+                yield sub_qr
+        elif n_inst < max_instances:
+            yield deepcopy(self)
+        else:
+            chunk_qr = QueryResult(self._level)
+            for curr_path, sub_uids in self.walk():
+                n_inst = self.n_instances(curr_path.end)
+                assert n_inst is not None
+                if len(chunk_qr) + n_inst <= max_instances:
+                    chunk_qr |= self.sub_query(curr_path.end)
+                    sub_uids.clear()
+                elif curr_path.level == self._level:
+                    if len(chunk_qr) != 0:
+                        yield chunk_qr
+                        chunk_qr = QueryResult(self._level)
+                    if n_inst >= max_instances:
+                        # Result is too big but we can't get any smaller
+                        yield self.sub_query(curr_path.end)
+                    else:
+                        chunk_qr |= self.sub_query(curr_path.end)
+            if chunk_qr:
+                yield chunk_qr
 
     def reduced(self, level: QueryLevel) -> QueryResult:
         """Create lower level of detail copy"""
@@ -992,10 +1027,7 @@ class QueryResult:
             else:
                 pref, non_pref = other, self
         else:
-            if len(self) > len(other):
-                pref, non_pref = other, self
-            else:
-                pref, non_pref = self, other
+            pref, non_pref = self, other
         res = QueryResult(max(self._level, other._level), prov=deepcopy(pref.prov))
         for ds in pref._data.values():
             if ds in non_pref:
@@ -1259,23 +1291,3 @@ def expand_queries(
                 queries.append(q)
                 sub_uids.clear()
     return queries, queried_elems
-
-
-# TODO: Fix this or remove it
-# async def chunk_qrs(qr_gen: AsyncIterator[QueryResult],
-#                     chunk_size: int = 10) -> AsyncIterator[QueryResult]:
-#     '''Generator wrapper that aggregates QueryResults into larger chunks'''
-#     try:
-#         first = await qr_gen.__anext__()
-#     except StopAsyncIteration:
-#         return
-#     level = first.level
-#     res = QueryResult(level)
-#     res |= first
-#     res_size = 1
-#     async for qr in qr_gen:
-#         if res_size == chunk_size:
-#             yield res
-#             res = QueryResult(level)
-#             res |= first
-#             res_size = 1

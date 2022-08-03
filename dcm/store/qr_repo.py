@@ -1,6 +1,8 @@
 """Lightweight local DataRepo that just keeps a JSON serialized QueryResult around"""
 
-import asyncio, json, logging, fnmatch, re
+import asyncio, json, logging, fnmatch, re, inspect
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from contextlib import asynccontextmanager
 from copy import deepcopy
@@ -14,9 +16,11 @@ from typing import (
     Type,
     Dict,
     Any,
+    Protocol,
 )
 
 import janus
+import flufl.lock
 from pydicom import Dataset
 
 from ..util import PathInputType, InlineConfigurable, atomic_open, create_thread_task
@@ -30,6 +34,7 @@ from ..query import (
     QueryResult,
     expand_queries,
     get_level_and_query,
+    minimal_copy,
 )
 from ..net import IncomingDataReport
 from ..report import optional_report
@@ -61,12 +66,39 @@ DEFUALT_INDEX_ELEMS = MIN_ATTRS + (
 )
 
 
-class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
+class _SingletonQrRepo(type(Protocol)):  # type: ignore
+    """Make sure we have a single QrRepo for each root path"""
+
+    _instances = {}  # type: ignore
+    _init = {}  # type: ignore
+
+    def __init__(cls, name, bases, dct):  # type: ignore
+        super(_SingletonQrRepo, cls).__init__(name, bases, dct)
+        cls._init[cls] = dct.get("__init__", None)
+
+    def __call__(cls, *args, **kwargs):  # type: ignore
+        init = cls._init[cls]
+        local_path = inspect.getcallargs(init, None, *args, **kwargs)["path"]
+        if local_path is None:
+            raise ValueError("The 'path' arg can't be None")
+        key = (cls, local_path)
+        if key not in cls._instances:
+            cls._instances[key] = super(_SingletonQrRepo, cls).__call__(*args, **kwargs)
+        return cls._instances[key]
+
+
+class FsLockTimeout(Exception):
+    """Raised when we timeout trying to acquire a filesystem lock"""
+
+
+class QrRepo(LocalRepo, InlineConfigurable["QrRepo"], metaclass=_SingletonQrRepo):
     """Simple local data repository using QueryResult JSON serialization for persistence"""
 
     default_out_fmt = LocalDir.default_out_fmt
 
     chunk_type: Type[LocalRepoChunk] = LocalRepoChunk
+
+    query_report_type: Type[LocalQueryReport] = LocalQueryReport
 
     def __init__(
         self,
@@ -77,6 +109,7 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
         out_fmt: Optional[str] = None,
         overwrite_existing: bool = False,
         make_missing: bool = True,
+        max_sync_time: int = 30,
     ):
         self._root_path = get_root_dir(path, make_missing)
         self._index_elems = index_elems
@@ -91,6 +124,14 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
         self._overwrite = overwrite_existing
         self.description = str(self._root_path)
         self._qr_path = self._root_path / "dcm_meta.json"
+        self._lock_path = self._root_path / ".dcm_meta.lock"
+        self._max_sync_time = max_sync_time
+        self._fs_lock = flufl.lock.Lock(
+            str(self._lock_path),
+            lifetime=max_sync_time,
+            default_timeout=max_sync_time * 5,
+        )
+        self._sync_pool = ThreadPoolExecutor(1)
         if self._qr_path.exists():
             with open(self._qr_path, "rt") as qr_f:
                 self._qr = QueryResult.from_json_dict(json.load(qr_f))
@@ -168,33 +209,35 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
                             continue
                         if not dupe:
                             log.debug("Found a new file to index: %s", ds_path)
-                            ds.StorageMediaFileSetID = str(ds_path)
-                            # TODO: Still need some minimization here and in send...
-                            repo._qr.add(ds)
+                            min_ds = minimal_copy(ds, repo._index_elems)
+                            min_ds.StorageURL = str(ds_path)
+                            repo._qr.add(min_ds)
                             n_found += 1
             await crawl_fut
             log.info(f"Found {n_found} new files")
             if n_found:
                 repo._path_set = None
-                await loop.run_in_executor(None, repo._sync_qr)
+                await repo.sync()
         return repo
 
     @property
     def path_set(self) -> FrozenSet[str]:
         """Get a set of all paths currently indexed"""
         if self._path_set is None:
-            self._path_set = frozenset(ds.StorageMediaFileSetID for ds in self._qr)
+            self._path_set = frozenset(ds.StorageURL for ds in self._qr)
         return self._path_set
 
     async def gen_chunks(self) -> AsyncIterator[LocalRepoChunk]:
         """Generate the data in this bucket, one chunk at a time"""
-        chunk_qr = QueryResult(level=QueryLevel.IMAGE)
-        for ds in self._qr:
-            chunk_qr.add(ds)
-            if len(chunk_qr) == self._max_chunk:
-                yield LocalRepoChunk(self, chunk_qr)
-                chunk_qr = QueryResult(level=QueryLevel.IMAGE)
-        if len(chunk_qr) != 0:
+        for chunk_qr in self._qr.chunk(self._max_chunk):
+            yield LocalRepoChunk(self, chunk_qr)
+
+    async def gen_query_chunks(
+        self, query_res: QueryResult
+    ) -> AsyncIterator[LocalRepoChunk]:
+        """Generate chunks of data corresponding to `query_res`"""
+        matched = self._qr & query_res
+        for chunk_qr in matched.chunk(self._max_chunk):
             yield LocalRepoChunk(self, chunk_qr)
 
     @asynccontextmanager
@@ -216,6 +259,7 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
                 self._overwrite,
                 report,
                 self._qr,
+                self._index_elems,
             ),
         )
         try:
@@ -228,7 +272,7 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
             log.debug("awaited send_fut")
             report.done = True
         self._path_set = None
-        await loop.run_in_executor(None, self._sync_qr)
+        await self.sync()
 
     @optional_report
     async def queries(
@@ -333,21 +377,42 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"]):
         """Returns an async generator that will produce datasets"""
         assert report is not None
         loop = asyncio.get_running_loop()
-        for dpath in query_res.level_paths(query_res.level):
-            try:
-                if not self._qr.check_path(dpath):
-                    continue
-            except InconsistentDataError:
-                continue  # TODO: Track in report?
-            for sub_dpath, _ in self._qr.walk(dpath.end):
-                min_ds = self._qr.path_data_set(sub_dpath)
-                ds_path = min_ds.StorageMediaFileSetID
-                ds = await loop.run_in_executor(None, _read_f, ds_path)
-                if report.add(ds):
-                    yield ds
+        # TODO: Could use QueryProv to avoid duplicate operation here?
+        match = self._qr & query_res
+        for min_ds in match:
+            ds_path = min_ds.StorageURL
+            ds = await loop.run_in_executor(None, _read_f, ds_path)
+            if report.add(ds):
+                yield ds
         report.done = True
+
+    async def sync(self) -> None:
+        """Sync the in-memory and on disk QueryResults
+
+        Shouldn't need to be called manually unless a FsLockTimeoutError was raised on
+        a previous operation.
+        """
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(self._sync_pool, self._sync_qr)
 
     def _sync_qr(self) -> None:
         """Sync the in-memory and on disk QueryResults"""
-        with atomic_open(self._qr_path, mode="wt") as out_f:
-            out_f.write(json.dumps(self._qr.to_json_dict()))
+        json_str = json.dumps(self._qr.to_json_dict())
+        # TODO: We probably don't want to set the flufl Lock timeout too high here since
+        #       we don't want to block the thread too long on early shutdown, although
+        #       this shouldn't come up much in practice.
+        try:
+            self._fs_lock.lock()
+        except flufl.lock.TimeOutError:
+            raise FsLockTimeout("Unable to aquire FS lock, did another process die?")
+        try:
+            start = datetime.now()
+            with atomic_open(self._qr_path, mode="wt") as out_f:
+                out_f.write(json_str)
+            if (datetime.now() - start).total_seconds() > self._max_sync_time:
+                log.warning(
+                    "It took longer than max_sync_time (%s) seconds to sync JSON",
+                    self._max_sync_time,
+                )
+        finally:
+            self._fs_lock.unlock()

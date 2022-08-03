@@ -6,6 +6,7 @@ from glob import iglob
 from pathlib import Path
 from queue import Empty
 from typing import (
+    Iterable,
     Optional,
     AsyncIterator,
     Any,
@@ -23,7 +24,7 @@ import janus
 from dcm.report import optional_report
 
 from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
-from ..query import InconsistentDataError, QueryResult
+from ..query import MIN_ATTRS, InconsistentDataError, QueryResult, minimal_copy
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 
@@ -89,6 +90,7 @@ def _disk_write_worker(
     force_overwrite: bool,
     report: LocalWriteReport,
     dest_qr: Optional[QueryResult] = None,
+    include_elems: Iterable[str] = MIN_ATTRS,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Take data sets from a queue and write to disk"""
@@ -145,8 +147,9 @@ def _disk_write_worker(
             report.add_error(out_path, e)
         else:
             if dest_qr is not None:
-                ds.StorageMediaFileSetID = str(out_path)
-                dest_qr.add(ds)
+                min_ds = minimal_copy(ds, include_elems)
+                min_ds.StorageURL = str(out_path)
+                dest_qr.add(min_ds)
             report.add_success(out_path)
 
 
