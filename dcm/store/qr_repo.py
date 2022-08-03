@@ -16,8 +16,8 @@ from typing import (
     Type,
     Dict,
     Any,
-    Protocol,
 )
+from typing_extensions import Protocol
 
 import janus
 import flufl.lock
@@ -393,11 +393,12 @@ class QrRepo(LocalRepo, InlineConfigurable["QrRepo"], metaclass=_SingletonQrRepo
         a previous operation.
         """
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(self._sync_pool, self._sync_qr)
-
-    def _sync_qr(self) -> None:
-        """Sync the in-memory and on disk QueryResults"""
         json_str = json.dumps(self._qr.to_json_dict())
+        await loop.run_in_executor(self._sync_pool, self._sync_qr, json_str)
+
+    def _sync_qr(self, json_str: str) -> None:
+        """Sync the in-memory and on disk QueryResults"""
+
         # TODO: We probably don't want to set the flufl Lock timeout too high here since
         #       we don't want to block the thread too long on early shutdown, although
         #       this shouldn't come up much in practice.
