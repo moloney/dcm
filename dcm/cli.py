@@ -713,6 +713,7 @@ async def _do_route(
                                 break
             finally:
                 print("Listener shutting down")
+    report.log_issues()
 
 
 @click.command()
@@ -772,6 +773,8 @@ def forward(
 
     router = Router(dests)
     asyncio.run(_do_route(local, router, inactive_timeout))
+    log.debug("Forward call finished successfully")
+    return 0
 
 
 def make_print_cb(fmt, elem_filter=None):

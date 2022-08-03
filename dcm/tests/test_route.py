@@ -25,20 +25,22 @@ def make_id_lookup(dest1, dest2):
     (
         pytest.param("dcmtk", ["all", None, None, None], marks=has_dcmtk),
         ("pnd", ["all", None, None, None]),
+        ("qr", ["all", None, None, None]),
     ),
 )
-def test_pre_route(make_local_node, make_net_repo, node_subsets):
+@mark.asyncio
+async def test_pre_route(make_local_node, make_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, _ = make_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _ = make_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _ = make_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _ = make_net_repo(local_node, subset=node_subsets[3])
+    src_repo, _ = await make_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _ = await make_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _ = await make_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _ = await make_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     dyn_route = DynamicRoute(
         make_id_lookup(dest2_repo, dest3_repo), required_elems=["PatientID"]
     )
     router = Router([static_route, dyn_route])
-    res = asyncio.run(router.pre_route(src_repo))
+    res = await router.pre_route(src_repo)
     for routes, qr in res.items():
         print("%s -> %s" % ([str(r) for r in routes], qr))
         assert all(isinstance(r, StaticRoute) for r in routes)
@@ -74,14 +76,16 @@ def make_echo_lookup(dest1, dest2):
     (
         pytest.param("dcmtk", ["all", None, None, None], marks=has_dcmtk),
         ("pnd", ["all", None, None, None]),
+        ("qr", ["all", None, None, None]),
     ),
 )
-def test_pre_route_with_dl(make_local_node, make_net_repo, node_subsets):
+@mark.asyncio
+async def test_pre_route_with_dl(make_local_node, make_repo, node_subsets):
     local_node = make_local_node()
-    src_repo, src_node = make_net_repo(local_node, subset=node_subsets[0])
-    dest1_repo, _ = make_net_repo(local_node, subset=node_subsets[1])
-    dest2_repo, _ = make_net_repo(local_node, subset=node_subsets[2])
-    dest3_repo, _ = make_net_repo(local_node, subset=node_subsets[3])
+    src_repo, src_node = await make_repo(local_node, subset=node_subsets[0])
+    dest1_repo, _ = await make_repo(local_node, subset=node_subsets[1])
+    dest2_repo, _ = await make_repo(local_node, subset=node_subsets[2])
+    dest3_repo, _ = await make_repo(local_node, subset=node_subsets[3])
     static_route = StaticRoute([dest1_repo])
     # Setup a dynamic route where we route on an element that can't be queried for
     # thus forcing the router to download example data sets
@@ -91,7 +95,7 @@ def test_pre_route_with_dl(make_local_node, make_net_repo, node_subsets):
         required_elems=["EchoTime"],
     )
     router = Router([static_route, dyn_route])
-    res = asyncio.run(router.pre_route(src_repo))
+    res = await router.pre_route(src_repo)
     for routes, qr in res.items():
         print("%s -> %s" % ([str(r) for r in routes], qr))
         assert all(isinstance(r, StaticRoute) for r in routes)

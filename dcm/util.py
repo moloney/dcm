@@ -1,26 +1,25 @@
 """Various utility functions"""
 from __future__ import annotations
-import os, sys, json, time, logging, string
-import asyncio, threading
+from io import IOBase
+import os, json, logging, string, asyncio, threading, functools
+from pathlib import Path
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import is_dataclass, asdict
-from contextlib import asynccontextmanager
+from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
 from typing import (
     AsyncGenerator,
     Any,
     AsyncIterator,
     Dict,
-    List,
+    Generator,
+    Iterator,
+    Tuple,
     TypeVar,
     Optional,
     Union,
     Generic,
-    Iterator,
     Iterable,
-    KeysView,
-    ValuesView,
-    ItemsView,
     Type,
     Callable,
 )
@@ -29,10 +28,30 @@ from typing_extensions import Protocol
 from pydicom import Dataset
 from pydicom.tag import BaseTag, Tag, TagType
 from pydicom.datadict import tag_for_keyword
-from rich.progress import Progress, Task
 
 
 log = logging.getLogger(__name__)
+
+
+@contextmanager
+def atomic_open(
+    path: Path, file_factory: Callable[..., IOBase] = open, **kwargs: Any
+) -> Iterator[IOBase]:
+    """Open hidden file for writing and rename to `path` after closing without error
+
+    Hidden file is deleted if an exception occured
+    """
+    if "w" not in kwargs.get("mode", ""):
+        raise ValueError("Only valid for writing files")
+    tmp_path = path.parent / (".tmp_" + path.name)
+    try:
+        with file_factory(tmp_path, **kwargs) as tmp_f:
+            yield tmp_f
+    except BaseException:
+        os.remove(tmp_path)
+        raise
+    else:
+        tmp_path.rename(path)
 
 
 def dict_to_ds(data_dict: Dict[str, Any]) -> Dataset:
@@ -176,6 +195,31 @@ async def aclosing(
         yield thing
     finally:
         await thing.aclose()
+
+
+Args_Type = Tuple[Iterable[Any], Dict[str, Any]]
+
+DC_Type = Callable[[Iterable[Any], Dict[str, Any]], Any]
+
+
+def decorate_sync_async(
+    decorating_context: DC_Type, func: Callable[..., Any]
+) -> Callable[..., Any]:
+    """Helper to decorate functions that are sync or async"""
+    if asyncio.iscoroutinefunction(func):
+
+        async def adecorated(*args: Iterable[Any], **kwargs: Dict[str, Any]) -> Any:
+            with decorating_context(args, kwargs) as (args, kwargs):
+                return await func(*args, **kwargs)
+
+        return functools.wraps(func)(adecorated)
+    else:
+
+        def decorated(*args: Iterable[Any], **kwargs: Dict[str, Any]) -> Any:
+            with decorating_context(args, kwargs) as (args, kwargs):
+                return func(*args, **kwargs)
+
+        return functools.wraps(func)(decorated)
 
 
 def fstr_eval(

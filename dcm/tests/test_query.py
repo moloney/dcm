@@ -2,7 +2,7 @@ import random, itertools
 from pytest import fixture, mark
 from pydicom.dataset import Dataset
 
-from ..query import QueryLevel, QueryProv, QueryResult, req_elems
+from ..query import QueryLevel, QueryProv, QueryResult, REQ_ELEMS
 
 
 def make_dataset(attrs=None, level=QueryLevel.IMAGE):
@@ -10,7 +10,7 @@ def make_dataset(attrs=None, level=QueryLevel.IMAGE):
         attrs = {}
     ds = Dataset()
     for lvl in QueryLevel:
-        for attr in req_elems[lvl]:
+        for attr in REQ_ELEMS[lvl]:
             val = attrs.get(attr)
             if val is None:
                 if attr == "PatientID":

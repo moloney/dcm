@@ -106,6 +106,7 @@ def _run_forward(config_path, local_node, dest_dir):
     fwd_args = [
         "--config",
         config_path,
+        "--debug",
         "forward",
         "--inactive-timeout",
         "10",
@@ -113,7 +114,7 @@ def _run_forward(config_path, local_node, dest_dir):
         local_node,
         dest_dir,
     ]
-    return runner.invoke(cli, fwd_args)
+    return runner.invoke(cli, fwd_args, catch_exceptions=False)
 
 
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))

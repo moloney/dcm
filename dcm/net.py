@@ -60,9 +60,11 @@ from .query import (
     QueryLevel,
     QueryResult,
     InconsistentDataError,
-    uid_elems,
-    req_elems,
-    opt_elems,
+    expand_queries,
+    get_level_and_query,
+    UID_ELEMS,
+    REQ_ELEMS,
+    OPT_ELEMS,
     choose_level,
     minimal_copy,
     get_all_uids,
@@ -73,6 +75,7 @@ from .report import (
     MultiListReport,
     MultiError,
     ProgressHookBase,
+    optional_report,
 )
 from .util import (
     json_serializer,
@@ -837,7 +840,7 @@ def _query_worker(
             split_level = QueryLevel(level - 1)
     elif split_level > level:
         raise ValueError("The split_level can't be higher than the query level")
-    split_attr = uid_elems[split_level]
+    split_attr = UID_ELEMS[split_level]
     last_split_val = None
 
     resp_count = 0
@@ -901,7 +904,7 @@ def _query_worker(
 
 def _make_move_request(ds: Dataset) -> Dataset:
     res = Dataset()
-    for uid_attr in uid_elems.values():
+    for uid_attr in UID_ELEMS.values():
         uid_val = getattr(ds, uid_attr, None)
         if uid_val is not None:
             setattr(res, uid_attr, uid_val)
@@ -1178,12 +1181,13 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         See documentation for the `queries` method for details
         """
-        level, query = self._prep_query(level, query, query_res)
+        level, query = get_level_and_query(level, query, query_res)
         res = QueryResult(level)
         async for sub_res in self.queries(remote, level, query, query_res, report):
             res |= sub_res
         return res
 
+    @optional_report
     async def queries(
         self,
         remote: DcmNode,
@@ -1215,16 +1219,12 @@ class LocalEntity(metaclass=_SingletonEntity):
         report
             If provided, will store status report from DICOM operations
         """
-        if report is None:
-            extern_report = False
-            report = MultiListReport(meta_data={"remote": remote, "level": level})
-        else:
-            extern_report = True
+        assert report is not None
         if report._description is None:
             report.description = "queries"
         report._meta_data["remote"] = remote
 
-        level, query = self._prep_query(level, query, query_res)
+        level, query = get_level_and_query(level, query, query_res)
 
         report._meta_data["level"] = level
         if query is not None:
@@ -1267,13 +1267,13 @@ class LocalEntity(metaclass=_SingletonEntity):
 
         # Add in any required and default optional elements to query
         for lvl in QueryLevel:
-            for req_attr in req_elems[lvl]:
+            for req_attr in REQ_ELEMS[lvl]:
                 if getattr(query, req_attr, None) is None:
                     setattr(query, req_attr, "")
             if lvl == level:
                 break
         auto_attrs = set()
-        for opt_attr in opt_elems[level]:
+        for opt_attr in OPT_ELEMS[level]:
             if getattr(query, opt_attr, None) is None:
                 setattr(query, opt_attr, "")
                 auto_attrs.add(opt_attr)
@@ -1281,25 +1281,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         # Set the QueryRetrieveLevel
         query.QueryRetrieveLevel = level.name
 
-        # Pull out a list of the attributes we are querying on
-        queried_elems = set(e.keyword for e in query)
-
-        # If QueryResult was given we potentially generate multiple
-        # queries, one for each dataset referenced by the QueryResult
-        if query_res is None:
-            queries = [query]
-        else:
-            queries = []
-            for path, sub_uids in query_res.walk():
-                if path.level == min(level, query_res.level):
-                    q = deepcopy(query)
-                    for lvl in QueryLevel:
-                        if lvl > path.level:
-                            break
-                        setattr(q, uid_elems[lvl], path.uids[lvl])
-                        queried_elems.add(uid_elems[lvl])
-                    queries.append(q)
-                    sub_uids.clear()
+        # Potentially expand one query into multiple based on query_res
+        queries, queried_elems = expand_queries(level, query, query_res)
+        if query_res is not None:
             log.debug("QueryResult expansion results in %d sub-queries" % len(queries))
         if len(queries) > 1:
             report.n_expected = len(queries)
@@ -1387,9 +1371,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await rep_builder_task
                 except BaseException as e:
                     log.exception("Exception from report builder task")
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
     @asynccontextmanager
     async def listen(
@@ -1446,6 +1427,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await self._cleanup_listen_mgr()
         log.debug("Listener lock released")
 
+    @optional_report
     async def move(
         self,
         source: DcmNode,
@@ -1455,11 +1437,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         report: MultiListReport[DicomOpReport] = None,
     ) -> None:
         """Move DICOM files from one network entity to another"""
-        if report is None:
-            extern_report = False
-            report = MultiListReport()
-        else:
-            extern_report = True
+        assert report is not None
         if report._description is None:
             report.description = "move"
         report._meta_data["source"] = source
@@ -1516,11 +1494,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             if rep_builder_task is not None:
                 await rep_builder_task
             log.debug("Report builder task is done")
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
         log.debug("Call to LocalEntity.move has completed")
 
+    @optional_report
     async def retrieve(
         self,
         remote: DcmNode,
@@ -1546,11 +1522,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
             By default inconsistent, unexpected, and duplicate data are skipped
         """
-        if report is None:
-            extern_report = False
-            report = RetrieveReport()
-        else:
-            extern_report = True
+        assert report is not None
         report.requested = query_res
         report._meta_data["remote"] = remote
         self._add_qr_meta(report, query_res)
@@ -1602,13 +1574,10 @@ class LocalEntity(metaclass=_SingletonEntity):
                 log.debug("Waiting for move task to finish")
                 await move_task
         report.done = True
-        if not extern_report:
-            report.log_issues()
-            log.debug("About to check errors")
-            report.check_errors()
         log.debug("The LocalEntity.retrieve method has completed")
 
     @asynccontextmanager
+    @optional_report
     async def send(
         self,
         remote: DcmNode,
@@ -1637,13 +1606,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             as it is assumed the caller will handle this themselves (e.g. by
             calling the `log_issues` and `check_errors` methods on the report).
         """
+        assert report is not None
         if transfer_syntax is None:
             transfer_syntax = self._default_ts
-        if report is None:
-            extern_report = False
-            report = DicomOpReport()
-        else:
-            extern_report = True
         report.dicom_op.provider = remote
         report.dicom_op.user = self._local
         report.dicom_op.op_type = "c-store"
@@ -1674,9 +1639,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                     await rep_builder_task
                 finally:
                     report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
     async def download(
         self,
@@ -1751,30 +1713,6 @@ class LocalEntity(metaclass=_SingletonEntity):
         finally:
             log.debug("Releasing association")
             await loop.run_in_executor(self._thread_pool, assoc.release)
-
-    def _prep_query(
-        self,
-        level: Optional[QueryLevel],
-        query: Optional[Dataset],
-        query_res: Optional[QueryResult],
-    ) -> Tuple[QueryLevel, Dataset]:
-        """Resolve/check `level` and `query` args for query methods"""
-        # Build up our base query dataset
-        if query is None:
-            query = Dataset()
-        else:
-            query = deepcopy(query)
-
-        # Deterimine level if not specified, otherwise make sure it is valid
-        if level is None:
-            if query_res is None:
-                default_level = QueryLevel.STUDY
-            else:
-                default_level = query_res.level
-            level = choose_level(query, default_level)
-        elif level not in QueryLevel:
-            raise ValueError("Unknown 'level' for query: %s" % level)
-        return level, query
 
     async def _fwd_event(self, event: evt.Event) -> int:
         for filt, handler in self._event_handlers.items():

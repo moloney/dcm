@@ -38,6 +38,7 @@ from .report import (
     MultiDictReport,
     MultiKeyedError,
     ProgressHookBase,
+    optional_report,
 )
 from .util import DuplicateDataError, TomlConfigurable
 from .net import DicomOpReport, IncomingDataError, IncomingErrorType
@@ -870,17 +871,14 @@ class Router:
                 await data_q.put(None)
             await route_task
 
+    @optional_report
     async def _route(
         self,
         data_q: "asyncio.Queue[Optional[Dataset]]",
         keep_errors: Union[bool, Tuple[IncomingErrorType, ...]],
         report: Optional[DynamicTransferReport],
     ) -> None:
-        if report is None:
-            extern_report = False
-            report = DynamicTransferReport()
-        else:
-            extern_report = True
+        assert report is not None
         report.keep_errors = keep_errors  # type: ignore
         assoc_cache = SendAssociationCache(self._assoc_cache_time)
         try:
@@ -897,6 +895,7 @@ class Router:
                 #       What happens if a user pushes None accidentally? Just
                 #       use a different sentinel value?
                 if ds is None:
+                    log.debug("The route task got None and is shutting down")
                     break
                 filter_dest_map = self.get_filter_dest_map(ds)
                 n_filt = len([f for f in filter_dest_map if f is not None])
@@ -939,9 +938,6 @@ class Router:
             await assoc_cache.empty_cache()
             report.done = True
             log.debug("Done with routing")
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
     async def _fill_qr(
         self,

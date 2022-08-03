@@ -5,12 +5,26 @@ from contextlib import asynccontextmanager
 from glob import iglob
 from pathlib import Path
 from queue import Empty
-from typing import Optional, AsyncIterator, Any, Callable, Tuple, cast, Union, Dict
+from typing import (
+    Iterable,
+    Optional,
+    AsyncIterator,
+    Any,
+    Callable,
+    Tuple,
+    cast,
+    Union,
+    Dict,
+    FrozenSet,
+)
 
 from pydicom.dataset import Dataset
 import janus
 
+from dcm.report import optional_report
+
 from .base import LocalBucket, TransferMethod, LocalChunk, LocalWriteReport
+from ..query import MIN_ATTRS, InconsistentDataError, QueryResult, minimal_copy
 from ..util import fstr_eval, PathInputType, InlineConfigurable, create_thread_task
 
 
@@ -23,6 +37,7 @@ def _dir_crawl_worker(
     recurse: bool = True,
     file_ext: str = "dcm",
     max_chunk: int = 1000,
+    skip_paths: Optional[FrozenSet[str]] = None,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     curr_files = []
@@ -31,7 +46,7 @@ def _dir_crawl_worker(
     if recurse:
         glob_comps.append("**")
     if file_ext:
-        glob_comps.append("*.%s" % file_ext)
+        glob_comps.append(f"*.{file_ext}")
     else:
         glob_comps.append("*")
     glob_exp = os.path.join(*glob_comps)
@@ -40,6 +55,8 @@ def _dir_crawl_worker(
             if shutdown is not None and shutdown.is_set():
                 return
         if not os.path.isfile(path):
+            continue
+        if skip_paths is not None and path in skip_paths:
             continue
         curr_files.append(path)
         if len(curr_files) == max_chunk:
@@ -72,6 +89,8 @@ def _disk_write_worker(
     out_fmt: str,
     force_overwrite: bool,
     report: LocalWriteReport,
+    dest_qr: Optional[QueryResult] = None,
+    include_elems: Iterable[str] = MIN_ATTRS,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Take data sets from a queue and write to disk"""
@@ -93,9 +112,24 @@ def _disk_write_worker(
         if no_input:
             continue
         log.debug("disk_writer thread got a data set")
+        dupe = False
+        if dest_qr is not None:
+            try:
+                dupe = ds in dest_qr
+            except InconsistentDataError:
+                pass  # TODO
+        if dupe:
+            continue
         out_path = root_path / make_out_path(out_fmt, ds)
 
         if os.path.exists(out_path):
+            if dest_qr is not None and not dupe:
+                log.warning(
+                    "Skipping existing file that is not in destinaion index: %s",
+                    out_path,
+                )
+                report.add_skipped(out_path)
+                continue
             if force_overwrite:
                 log.debug("File exists, overwriting: %s", out_path)
             else:
@@ -112,6 +146,10 @@ def _disk_write_worker(
         except Exception as e:
             report.add_error(out_path, e)
         else:
+            if dest_qr is not None:
+                min_ds = minimal_copy(ds, include_elems)
+                min_ds.StorageURL = str(out_path)
+                dest_qr.add(min_ds)
             report.add_success(out_path)
 
 
@@ -168,6 +206,18 @@ def _oob_transfer_worker(
                 os.remove(existing_backup)
 
 
+def get_root_dir(in_path: PathInputType, make_missing: bool = True) -> Path:
+    res = Path(in_path).expanduser()
+    if not res.exists():
+        if make_missing:
+            res.mkdir(parents=True)
+        else:
+            raise ValueError(f"Path doesn't exist: {res}")
+    elif not res.is_dir():
+        raise ValueError(f"Path is a file not a directory: {res}")
+    return res
+
+
 class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
     """Local directory of data without any additional meta data"""
 
@@ -193,14 +243,7 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         force_overwrite: bool = False,
         make_missing: bool = True,
     ):
-        self._root_path = Path(path).expanduser()
-        if not self._root_path.exists():
-            if make_missing:
-                self._root_path.mkdir(parents=True)
-            else:
-                raise ValueError(f"Path doesn't exist: {self._root_path}")
-        elif not self._root_path.is_dir():
-            raise ValueError(f"Path is a file not a directory: {self._root_path}")
+        self._root_path = get_root_dir(path, make_missing)
         self._recurse = recurse
         self._max_chunk = max_chunk
         self._force_overwrite = force_overwrite
@@ -239,13 +282,6 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
             raise ValueError(f"Invalid short form for LocalDir: {in_str}")
         return res
 
-    @property
-    def root_path(self) -> Path:
-        return self._root_path
-
-    def __str__(self) -> str:
-        return f"LocalDir({self._root_path})"
-
     async def gen_chunks(self) -> AsyncIterator[LocalChunk]:
         res_q: janus.Queue[LocalChunk] = janus.Queue()
         crawl_fut = create_thread_task(
@@ -270,14 +306,11 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         await crawl_fut
 
     @asynccontextmanager
+    @optional_report
     async def send(
         self, report: Optional[LocalWriteReport] = None
     ) -> AsyncIterator["janus._AsyncQueueProxy[Dataset]"]:
-        if report is None:
-            extern_report = False
-            report = LocalWriteReport()
-        else:
-            extern_report = True
+        assert report is not None
         report._meta_data["root_path"] = self._root_path
         send_q: janus.Queue[Optional[Dataset]] = janus.Queue(10)
         send_fut = create_thread_task(
@@ -300,23 +333,17 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
             await send_fut
             log.debug("The disk writer thread has finished")
             report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()
 
+    @optional_report
     async def oob_transfer(
         self,
         method: TransferMethod,
         chunk: LocalChunk,
         report: Optional[LocalWriteReport] = None,
     ) -> None:
+        assert report is not None
         if method is TransferMethod.PROXY or method not in self._supported_methods:
             raise ValueError(f"Invalid transfer method: {method}")
-        if report is None:
-            extern_report = False
-            report = LocalWriteReport()
-        else:
-            extern_report = True
         report._meta_data["root_path"] = self._root_path
         # At least for now, python seeems to lack the ability to define only
         # the required args to a callable while ignoring kwargs
@@ -346,6 +373,3 @@ class LocalDir(LocalBucket, InlineConfigurable["LocalDir"]):
         await oob_fut
         log.info("Oob transfer worker shutdown, marking report done")
         report.done = True
-        if not extern_report:
-            report.log_issues()
-            report.check_errors()

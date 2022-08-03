@@ -1,10 +1,10 @@
+import os, time, shutil, tarfile, logging, re, asyncio
 from dataclasses import dataclass
-import os, time, shutil, tarfile, logging, re
 from copy import deepcopy
 import subprocess as sp
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 
 import pydicom
 from pynetdicom import AE
@@ -15,8 +15,10 @@ from pytest import fixture, mark
 from ..conf import _default_conf, DcmConfig
 from ..query import QueryLevel, QueryResult
 from ..net import DcmNode, _make_default_store_scu_pcs
+from ..store.base import IndexInitMode
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
+from ..store.qr_repo import QrRepo
 
 
 logging_opts = {}
@@ -184,17 +186,17 @@ class TestNode:
 
     node_type: str
 
-    dcm_node: DcmNode
-
     init_qr: QueryResult
 
     store_dir: Path
 
-    proc: sp.Popen
+    dcm_node: Optional[DcmNode] = None
 
-    stdout: BinaryIO
+    proc: Optional[sp.Popen] = None
 
-    stderr: BinaryIO
+    stdout: Optional[BinaryIO] = None
+
+    stderr: Optional[BinaryIO] = None
 
     _is_finalized: bool = False
 
@@ -203,7 +205,7 @@ class TestNode:
         return self._is_finalized
 
     def finalize(self):
-        if not self._is_finalized:
+        if not self._is_finalized and self.proc is not None:
             self.proc.terminate()
             self._is_finalized = True
             self.stdout.flush()
@@ -211,6 +213,26 @@ class TestNode:
             self.stdout.seek(0)
             self.stderr.seek(0)
             return self.stdout.read(), self.stderr.read()
+
+
+@fixture
+def make_qr_repo(get_dicom_subset):
+    """Factory fixutre to build QrRepo stores"""
+    curr_dirs = []
+    with TemporaryDirectory(prefix="dcm-test") as temp_dir:
+        temp_dir = Path(temp_dir)
+
+        async def _make_qr_repo(local_node=None, subset="all", **kwargs):
+            store_dir = temp_dir / f"store_dir{len(curr_dirs)}"
+            os.makedirs(store_dir)
+            curr_dirs.append(store_dir)
+            init_qr, init_data = get_dicom_subset(subset)
+            for dcm_path, _ in init_data:
+                shutil.copy(dcm_path, store_dir)
+            repo = await QrRepo.build(store_dir, scan_fs=True, **kwargs)
+            return (repo, TestNode("qr", init_qr, store_dir))
+
+        yield _make_qr_repo
 
 
 DCMQRSCP_PATH = shutil.which("dcmqrscp")
@@ -368,7 +390,7 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
             proc = sp.Popen(dcmqrscp_args, stdout=sout_f, stderr=serr_f)
             print("Done")
             res = TestNode(
-                "dcmtk", dcmtk_node, init_qr, test_store_dir, proc, sout_f, serr_f
+                "dcmtk", init_qr, test_store_dir, dcmtk_node, proc, sout_f, serr_f
             )
             nodes.append(res)
             time.sleep(2)
@@ -384,7 +406,7 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
 
 @fixture
 def make_dcmtk_net_repo(make_local_node, make_dcmtk_nodes):
-    def _make_net_repo(local_node=None, clients=[], subset="all"):
+    async def _make_net_repo(local_node=None, clients=[], subset="all"):
         if local_node is None:
             local_node = make_local_node()
         dcmtk_node = make_dcmtk_nodes([local_node] + clients, subset)
@@ -513,7 +535,7 @@ def make_pnd_nodes(get_dicom_subset, pytestconfig):
                     continue
                 init_assoc.send_c_store(ds)
             init_assoc.release()
-            res = TestNode("pnd", pnd_node, init_qr, data_dir, proc, sout_f, serr_f)
+            res = TestNode("pnd", init_qr, data_dir, pnd_node, proc, sout_f, serr_f)
             nodes.append(res)
             return res
 
@@ -527,7 +549,7 @@ def make_pnd_nodes(get_dicom_subset, pytestconfig):
 
 @fixture
 def make_pnd_net_repo(make_local_node, make_pnd_nodes):
-    def _make_net_repo(local_node=None, clients=[], subset="all"):
+    async def _make_net_repo(local_node=None, clients=[], subset="all"):
         if local_node is None:
             local_node = make_local_node()
         pnd_node = make_pnd_nodes([local_node] + clients, subset)
@@ -554,11 +576,22 @@ def make_net_repo(node_type, make_dcmtk_net_repo, make_pnd_net_repo):
         return make_pnd_net_repo
 
 
+@fixture
+def make_repo(node_type, make_dcmtk_net_repo, make_pnd_net_repo, make_qr_repo):
+    if node_type == "dcmtk":
+        return make_dcmtk_net_repo
+    elif node_type == "pnd":
+        return make_pnd_net_repo
+    else:
+        assert node_type == "qr"
+        return make_qr_repo
+
+
 def get_stored_files(store_dir):
     return [
         x
         for x in Path(store_dir).glob("**/*")
-        if not x.is_dir() and x.name != "index.dat"
+        if not x.is_dir() and x.name not in ("index.dat", "dcm_meta.json")
     ]
 
 

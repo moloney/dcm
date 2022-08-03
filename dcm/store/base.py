@@ -1,3 +1,4 @@
+"""Base classes and shared functionality for storage abstractions"""
 from __future__ import annotations
 import os, enum, logging, asyncio
 from contextlib import asynccontextmanager
@@ -24,7 +25,7 @@ import janus
 import pydicom
 from pydicom import Dataset
 
-from ..query import QueryLevel, QueryResult, uid_elems
+from ..query import QueryLevel, QueryResult, UID_ELEMS
 from ..net import (
     DcmNode,
     DicomOpReport,
@@ -218,7 +219,7 @@ _read_f = partial(pydicom.dcmread, force=True, defer_size=64)
 
 
 def is_valid_dicom(ds: Dataset) -> bool:
-    for uid_elem in uid_elems.values():
+    for uid_elem in UID_ELEMS.values():
         if not hasattr(ds, uid_elem):
             return False
     return True
@@ -270,9 +271,46 @@ class LocalChunk(DataChunk):
         self.report.done = True
 
 
+class LocalRepoChunk(RepoChunk):
+    """Repo chunk for local files"""
+
+    report: IncomingDataReport
+
+    def __init__(
+        self, repo: "LocalRepo", qr: QueryResult, description: Optional[str] = None
+    ):
+        self.repo = repo
+        self.qr = qr
+        self.description = description
+        if description is not None:
+            rep_descr = description
+        else:
+            rep_descr = str(self.repo.root_path)
+        self.report = IncomingDataReport(
+            description=rep_descr,
+            n_expected=self.n_expected,
+        )
+
+    async def gen_data(self) -> AsyncIterator[Dataset]:
+        async for _, ds in self.gen_paths_and_data():
+            yield ds
+
+    async def gen_paths_and_data(self) -> AsyncIterator[Tuple[PathInputType, Dataset]]:
+        """Generate both the paths and the corresponding data sets"""
+        loop = asyncio.get_running_loop()
+        for min_ds in self.qr:
+            ds_path = min_ds.StorageURL
+            ds = await loop.run_in_executor(None, _read_f, ds_path)
+            if not self.report.add(ds):
+                continue
+            yield ds_path, ds
+        self.report.done = True
+
+
 T_chunk = TypeVar("T_chunk", bound=DataChunk, covariant=True)
 T_qreport = TypeVar(
-    "T_qreport", bound=Union[CountableReport, SummaryReport[Any]], contravariant=True
+    "T_qreport",
+    bound=Union[CountableReport, SummaryReport[Any]],
 )
 T_rreport = TypeVar("T_rreport", bound=CountableReport, contravariant=True)
 T_sreport = TypeVar(
@@ -339,6 +377,8 @@ class DataRepo(
 ):
     """Protocol for stores with query/retrieve functionality"""
 
+    query_report_type: Type[T_qreport]
+
     async def queries(
         self,
         level: Optional[QueryLevel] = None,
@@ -404,6 +444,8 @@ class DcmRepo(
         TransferMethod.REMOTE_COPY,
     )
 
+    query_report_type: Type[MultiListReport[DicomOpReport]] = MultiListReport
+
     @property
     def remote(self) -> DcmNode:
         raise NotImplementedError
@@ -426,6 +468,18 @@ class DcmRepo(
 
     def __repr__(self) -> str:
         return f"DcmRepo({self.remote})"
+
+
+class LocalStore(Protocol):
+
+    _root_path: Path
+
+    @property
+    def root_path(self) -> Path:
+        return self._root_path
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.root_path})"
 
 
 class LocalWriteError(Exception):
@@ -498,6 +552,7 @@ class LocalWriteReport(CountableReport):
 
 
 class LocalBucket(
+    LocalStore,
     DataBucket[LocalChunk, LocalWriteReport],
     OobCapable[LocalChunk, LocalWriteReport],
     Protocol,
@@ -518,8 +573,105 @@ class LocalBucket(
         TransferMethod.MOVE,
     )
 
+    @asynccontextmanager
+    async def send(
+        self, report: Optional[LocalWriteReport] = None
+    ) -> AsyncIterator["janus._AsyncQueueProxy[Dataset]"]:
+        """Produces a Queue that you can put data sets into for storage"""
+        raise NotImplementedError
+        yield
+
+    def get_empty_send_report(self) -> LocalWriteReport:
+        return LocalWriteReport(meta_data={"root_path": self.root_path})
+
+    def get_empty_oob_report(self) -> LocalWriteReport:
+        return LocalWriteReport(meta_data={"root_path": self.root_path})
+
+
+class LocalQueryReport(CountableReport):
+    """Capture info about query operation against LocalRepo"""
+
+    def __init__(
+        self,
+        description: Optional[str] = None,
+        meta_data: Optional[Dict[str, Any]] = None,
+        depth: int = 0,
+        prog_hook: Optional[ProgressHookBase[Any]] = None,
+        n_expected: Optional[int] = None,
+    ):
+        self._inconsistent: List[Dataset] = []
+        super().__init__(description, meta_data, depth, prog_hook, n_expected)
+
+    def add_inconsistent(self, ds: Dataset) -> None:
+        self._inconsistent.append(ds)
+        self.count_input()
+
+    def add_success(self, ds: Dataset) -> None:
+        self.count_input()
+
     @property
-    def root_path(self) -> Path:
+    def n_success(self) -> int:
+        """Number of successfully handled inputs"""
+        return self._n_input - self.n_warnings
+
+    @property
+    def n_errors(self) -> int:
+        """Number of errors, where a single input can cause multiple errors"""
+        return 0
+
+    @property
+    def n_warnings(self) -> int:
+        """Number of warnings, where a single input can cause multiple warnings"""
+        return len(self._inconsistent)
+
+    def log_issues(self) -> None:
+        if self.n_warnings != 0:
+            log.warning("There were %d inconsitent query data sets", self.n_warnings)
+
+    def check_errors(self) -> None:
+        pass
+
+
+class IndexInitMode(enum.IntEnum):
+    """Define how to handle locally managed indices on initialization"""
+
+    ASSUME_CLEAN = 0  # Do nothing
+    CHECK_INDEXED = 1  # Check if all indexed files exist
+    SCRUB_INDEXED = 2  # Make sure indexed files exist and meta data matches
+
+
+class LocalRepo(
+    LocalStore,
+    DataRepo[LocalRepoChunk, LocalQueryReport, LocalWriteReport, IncomingDataReport],
+    OobCapable[LocalRepoChunk, LocalWriteReport],
+    Protocol,
+):
+    """Abstract base class for local files with some sort of meta data index"""
+
+    _supported_methods: Tuple[TransferMethod, ...] = (
+        TransferMethod.PROXY,
+        TransferMethod.LINK,
+    )
+
+    _streaming_methods: Tuple[TransferMethod, ...] = (
+        TransferMethod.PROXY,
+        TransferMethod.LINK,
+    )
+
+    @classmethod
+    async def is_repo(cls, path: PathInputType) -> bool:
+        """Return True if the path looks like a repo for the subclass"""
+        raise NotImplementedError
+
+    @classmethod
+    async def build(
+        cls: Type["LocalRepo"],
+        path: PathInputType,
+        index_init: IndexInitMode = IndexInitMode.ASSUME_CLEAN,
+        scan_fs: bool = False,
+        **init_kwargs: Any,
+    ) -> LocalRepo:
+        """Build LocalRepo with control of index initialization and new file handling"""
         raise NotImplementedError
 
     @asynccontextmanager
@@ -535,6 +687,3 @@ class LocalBucket(
 
     def get_empty_oob_report(self) -> LocalWriteReport:
         return LocalWriteReport(meta_data={"root_path": self.root_path})
-
-    def __repr__(self) -> str:
-        return f"LocalDir({self.root_path})"
