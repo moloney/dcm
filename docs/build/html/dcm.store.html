@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.store package - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -191,9 +191,9 @@
         </div>
         <article role="main">
           <section id="dcm-store-package">
-<h1>dcm.store package<a class="headerlink" href="#dcm-store-package" title="Permalink to this headline">#</a></h1>
+<h1>dcm.store package<a class="headerlink" href="#dcm-store-package" title="Permalink to this heading">#</a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">#</a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="dcm.store.base.html">dcm.store.base module</a></li>
@@ -202,8 +202,58 @@
 </ul>
 </div>
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="module-dcm.store">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dcm.store" title="Permalink to this heading">#</a></h2>
+<p>This sub-package captures all of the data storage abstractions</p>
+<p>We want to handle data stored in naive local directories or remote network
+repositories in a seamless manner, while still allowing users to take advantage
+of their specific capabilities.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.</span></span><span class="sig-name descname"><span class="pre">TransferMethod</span></span><a class="headerlink" href="#dcm.store.TransferMethod" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Enmerate different methods of transferring data</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.PROXY">
+<span class="sig-name descname"><span class="pre">PROXY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.store.TransferMethod.PROXY" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is read into memory and then forwarded to any dests</p>
+<p>This is the required transfer method for any filtering/validation</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.REMOTE_COPY">
+<span class="sig-name descname"><span class="pre">REMOTE_COPY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#dcm.store.TransferMethod.REMOTE_COPY" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is remotely copied from the src directly to the dest</p>
+<p>This includes the DICOM ‘Move-SCU’ operation which is a misnomer as it
+really copies the data.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.LOCAL_COPY">
+<span class="sig-name descname"><span class="pre">LOCAL_COPY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#dcm.store.TransferMethod.LOCAL_COPY" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is locally copied from src directly to dest</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.MOVE">
+<span class="sig-name descname"><span class="pre">MOVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#dcm.store.TransferMethod.MOVE" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is locally moved so it no longer exists on the src</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.LINK">
+<span class="sig-name descname"><span class="pre">LINK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#dcm.store.TransferMethod.LINK" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is locally hard linked from the src to the dest</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.SYMLINK">
+<span class="sig-name descname"><span class="pre">SYMLINK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#dcm.store.TransferMethod.SYMLINK" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is locally symlinked from the src to the dest</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
@@ -248,7 +298,7 @@
             <ul>
 <li><a class="reference internal" href="#">dcm.store package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li><a class="reference internal" href="#module-dcm.store">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -263,6 +313,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

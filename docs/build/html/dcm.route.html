@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.route module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,1058 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-route-module">
-<h1>dcm.route module<a class="headerlink" href="#dcm-route-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.route">
+<span id="dcm-route-module"></span><h1>dcm.route module<a class="headerlink" href="#module-dcm.route" title="Permalink to this heading">#</a></h1>
+<p>Define static/dynamic routes for copying DICOM data between storage abstractions</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">NoValidTransferMethodError</span></span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Error raised when we are unable to select a valid transfer method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dest_pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src_dest_pair</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.Route">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Route</span></span><a class="headerlink" href="#dcm.route.Route" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Abstract base class for all Routes</p>
+<p>The main functionality of routes is to map datasets to destinations.</p>
+<p>Routes can have a filter associated with them, which take a dataset as
+input and return one as output. The dataset can be modified and None can be
+returned to reject the dataset.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.Route.filt">
+<span class="sig-name descname"><span class="pre">filt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.Route.filt" title="Permalink to this definition">#</a></dt>
+<dd><p>Streaming data filter for editing and rejecting data sets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Route.get_dests">
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Route.get_dests" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the destintations for the <cite>data set</cite></p>
+<p>Must be implemented by all subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Route.get_filtered">
+<span class="sig-name descname"><span class="pre">get_filtered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Route.get_filtered" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Dataset</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Route.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Route.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filt</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">StaticRoute</span></span><a class="headerlink" href="#dcm.route.StaticRoute" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.route.Route" title="dcm.route.Route"><code class="xref py py-class docutils literal notranslate"><span class="pre">Route</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_StaticBase</span></code>, <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticRoute</span></code></a>]</p>
+<p>Static route that sends all (unfiltered) data to same dests</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.get_dests">
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.get_dests" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the destintations for the <cite>data set</cite></p>
+<p>Must be implemented by all subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.get_method">
+<span class="sig-name descname"><span class="pre">get_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.get_method" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">methods=(&lt;TransferMethod.PROXY:</span> <span class="pre">1&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dests</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>methods</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>filt</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.filt">
+<span class="sig-name descname"><span class="pre">filt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.StaticRoute.filt" title="Permalink to this definition">#</a></dt>
+<dd><p>Streaming data filter for editing and rejecting data sets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.get_filtered">
+<span class="sig-name descname"><span class="pre">get_filtered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.get_filtered" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Dataset</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.methods">
+<span class="sig-name descname"><span class="pre">methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><span class="pre">TransferMethod</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(&lt;TransferMethod.PROXY:</span> <span class="pre">1&gt;,)</span></em><a class="headerlink" href="#dcm.route.StaticRoute.methods" title="Permalink to this definition">#</a></dt>
+<dd><p>The transfer methods to use, in order of preference</p>
+<p>This will automatically be paired down to the methods supported by all the
+dests (or just allow PROXY if we have a filter). If no valid transfer
+methods are given a <cite>NoValidTransferMethodError</cite> will be raised.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.StaticRoute.dests">
+<span class="sig-name descname"><span class="pre">dests</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.StaticRoute.dests" title="Permalink to this definition">#</a></dt>
+<dd><p>Static tuple of destinations</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicRoute</span></span><a class="headerlink" href="#dcm.route.DynamicRoute" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.route.Route" title="dcm.route.Route"><code class="xref py py-class docutils literal notranslate"><span class="pre">Route</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_DynamicBase</span></code></p>
+<p>Dynamic route which determines destinations based on the data.</p>
+<p>Routing decisions are made before applying the filter to the data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.get_dests">
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.get_dests" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the destintations for the <cite>data set</cite></p>
+<p>Must be implemented by all subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.get_static_routes">
+<span class="sig-name descname"><span class="pre">get_static_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.get_static_routes" title="Permalink to this definition">#</a></dt>
+<dd><p>Resolve this dynamic route into one or more static routes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Tuple</em>[<a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lookup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_level=QueryLevel.STUDY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_elems=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_methods=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lookup</strong> (<em>Callable</em><em>[</em><em>[</em><em>Dataset</em><em>]</em><em>, </em><em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>...</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>route_level</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>required_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>dest_methods</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>Optional</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a><em>, </em><em>...</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>filt</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.dest_methods">
+<span class="sig-name descname"><span class="pre">dest_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><span class="pre">TransferMethod</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.DynamicRoute.dest_methods" title="Permalink to this definition">#</a></dt>
+<dd><p>Specify transfer methods for (some) dests</p>
+<p>Use <cite>None</cite> as the key to specify the default transfer methods for all dests
+not explicitly listed.</p>
+<p>Only respected when pre-routing is used. Dynamic routing can only proxy.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.filt">
+<span class="sig-name descname"><span class="pre">filt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.DynamicRoute.filt" title="Permalink to this definition">#</a></dt>
+<dd><p>Streaming data filter for editing and rejecting data sets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.get_filtered">
+<span class="sig-name descname"><span class="pre">get_filtered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.get_filtered" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Dataset</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.route_level">
+<span class="sig-name descname"><span class="pre">route_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.route.DynamicRoute.route_level" title="Permalink to this definition">#</a></dt>
+<dd><p>The level in the DICOM hierarchy we are making routing decisions at</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.lookup">
+<span class="sig-name descname"><span class="pre">lookup</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.DynamicRoute.lookup" title="Permalink to this definition">#</a></dt>
+<dd><p>Callable takes a dataset and returns destinations</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.DynamicRoute.required_elems">
+<span class="sig-name descname"><span class="pre">required_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.DynamicRoute.required_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>DICOM elements that we require to make a routing decision</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SelectorDestMap</span></span><a class="headerlink" href="#dcm.route.SelectorDestMap" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.route.SelectorDestMap" title="dcm.route.SelectorDestMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorDestMap</span></code></a>]</p>
+<p>Allow construction of dynamic routes from static config</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.routing_map">
+<span class="sig-name descname"><span class="pre">routing_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Selector" title="dcm.filt.Selector"><span class="pre">Selector</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.routing_map" title="Permalink to this definition">#</a></dt>
+<dd><p>One or more tuples of (selector, dests) pairs</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.default_dests">
+<span class="sig-name descname"><span class="pre">default_dests</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.default_dests" title="Permalink to this definition">#</a></dt>
+<dd><p>The default destinations to use when no selectors match</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.exclude">
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Selector" title="dcm.filt.Selector"><span class="pre">Selector</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.exclude" title="Permalink to this definition">#</a></dt>
+<dd><p>Exclude data at routing step (versus <cite>filt</cite> which is applied to each image)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.stop_on_first">
+<span class="sig-name descname"><span class="pre">stop_on_first</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.stop_on_first" title="Permalink to this definition">#</a></dt>
+<dd><p>Just return dests associated with first selector that matches</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.route_level">
+<span class="sig-name descname"><span class="pre">route_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.route_level" title="Permalink to this definition">#</a></dt>
+<dd><p>The level in the DICOM hierarchy we are making routing decisions at</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.dest_methods">
+<span class="sig-name descname"><span class="pre">dest_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><span class="pre">TransferMethod</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.dest_methods" title="Permalink to this definition">#</a></dt>
+<dd><p>Specify transfer methods for (some) dests</p>
+<p>Use <cite>None</cite> as the key to specify the default transfer methods for all dests
+not explicitly listed.</p>
+<p>Only respected when pre-routing is used. Dynamic routing can only proxy.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.required_elems">
+<span class="sig-name descname"><span class="pre">required_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.required_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>DICOM elements that we require to make a routing decision</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.filt">
+<span class="sig-name descname"><span class="pre">filt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.route.SelectorDestMap.filt" title="Permalink to this definition">#</a></dt>
+<dd><p>Steaming data filter for editing and rejecting data sets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.route.SelectorDestMap" title="dcm.route.SelectorDestMap"><em>SelectorDestMap</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.get_dynamic_route">
+<span class="sig-name descname"><span class="pre">get_dynamic_route</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.get_dynamic_route" title="Permalink to this definition">#</a></dt>
+<dd><p>Return equivalent DynamicRoute object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dcm.route.DynamicRoute" title="dcm.route.DynamicRoute"><em>DynamicRoute</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_dests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QueryLevel.STUDY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_methods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>routing_map</strong> (<em>Tuple</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>...</em><em>]</em><em>]</em><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>default_dests</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>...</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>exclude</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a><em>, </em><em>...</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>stop_on_first</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>route_level</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>dest_methods</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>Optional</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a><em>, </em><em>...</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>filt</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SelectorDestMap.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.route.ProxyTransferError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyTransferError</span></span><a class="headerlink" href="#dcm.route.ProxyTransferError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyTransferError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyTransferError.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store_errors</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiKeyedError" title="dcm.report.MultiKeyedError"><em>MultiKeyedError</em></a><em>]</em>) – </p></li>
+<li><p><strong>inconsistent</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>Dataset</em><em>, </em><em>Dataset</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>duplicate</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>Dataset</em><em>, </em><em>Dataset</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>incoming_error</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingDataError" title="dcm.net.IncomingDataError"><em>IncomingDataError</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyTransferError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyTransferError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.ProxyTransferError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.route.ProxyTransferError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyTransferError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyTransferError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyReport</span></span><a class="headerlink" href="#dcm.route.ProxyReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a></p>
+<p>Abstract base class for reports on proxy transfers</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
+<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>n_expected</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>keep_errors</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><em>IncomingErrorType</em></a><em>, </em><em>...</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.keep_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keep_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><span class="pre">IncomingErrorType</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.ProxyReport.keep_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Whether or not we are forwarding inconsistent/duplicate data</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_success" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of successfully handled inputs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of errors, where a single input can cause multiple errors</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_sent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_sent" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of times datasets were sent out</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_inconsistent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inconsistent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_inconsistent" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_duplicate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_duplicate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_duplicate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_reported">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_reported" title="Permalink to this definition">#</a></dt>
+<dd><p>Number store results that have been reported so far</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.all_reported">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.ProxyReport.all_reported" title="Permalink to this definition">#</a></dt>
+<dd><p>True if all sent data sets have a reported result</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add the route with pre/post filtering dataset to the report</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>route</strong> (<a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>) – </p></li>
+<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.log_issues">
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.log_issues" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce log messages for any warning/error statuses</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.check_errors">
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.check_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Raise an exception if any errors have occured so far</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.clear" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.all_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.ProxyReport.all_success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.count_input">
+<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.count_input" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.depth" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.route.ProxyReport.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.done">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.ProxyReport.done" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.has_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.ProxyReport.has_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any errors were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.has_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.ProxyReport.has_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any warnings were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_expected">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_expected" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of expected inputs, or None if unknown</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.n_input">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.ProxyReport.n_input" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of inputs seen so far</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.ProxyReport.prog_hook">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.ProxyReport.prog_hook" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicTransferReport</span></span><a class="headerlink" href="#dcm.route.DynamicTransferReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.route.ProxyReport" title="dcm.route.ProxyReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProxyReport</span></code></a></p>
+<p>Track what data is being routed where and any store results</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
+<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>n_expected</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>keep_errors</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><em>IncomingErrorType</em></a><em>, </em><em>...</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_success" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of successfully handled inputs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of errors, where a single input can cause multiple errors</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_reported">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_reported" title="Permalink to this definition">#</a></dt>
+<dd><p>Number store results that have been reported so far</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.add_store_report">
+<span class="sig-name descname"><span class="pre">add_store_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.add_store_report" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a DicomOpReport to keep track of</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dest</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
+<li><p><strong>store_report</strong> (<em>Union</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a><em>, </em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><em>LocalWriteReport</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.log_issues">
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce log messages for any warning/error statuses</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.check_errors">
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Raise an exception if any errors have occured so far</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.clear" title="Permalink to this definition">#</a></dt>
+<dd><p>Clear current info about data sets we have results for</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add the route with pre/post filtering dataset to the report</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>route</strong> (<a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>) – </p></li>
+<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.all_reported">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.all_reported" title="Permalink to this definition">#</a></dt>
+<dd><p>True if all sent data sets have a reported result</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.all_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.all_success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.count_input">
+<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.count_input" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.depth" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.done">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.done" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.has_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.has_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any errors were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.has_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.has_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any warnings were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.keep_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keep_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><span class="pre">IncomingErrorType</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.keep_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Whether or not we are forwarding inconsistent/duplicate data</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_duplicate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_duplicate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_duplicate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_expected">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_expected" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of expected inputs, or None if unknown</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_inconsistent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inconsistent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_inconsistent" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_input">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_input" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of inputs seen so far</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.n_sent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.n_sent" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of times datasets were sent out</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.prog_hook">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.DynamicTransferReport.prog_hook" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SendAssociationCache</span></span><a class="headerlink" href="#dcm.route.SendAssociationCache" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Keeps cache of recent associations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timeout</strong> (<em>float</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache.next_timeout">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">next_timeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#dcm.route.SendAssociationCache.next_timeout" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of seconds until the next cache entry will timeout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache.send">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.send" title="Permalink to this definition">#</a></dt>
+<dd><p>Send a data set to dests, utilizing the cache of active associations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>dest</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache.update_cache">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.update_cache" title="Permalink to this definition">#</a></dt>
+<dd><p>Close associations that haven’t been used in a while</p>
+<p>Returns reports for all closed associations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], <a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.SendAssociationCache.empty_cache">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.empty_cache" title="Permalink to this definition">#</a></dt>
+<dd><p>Close all associations</p>
+<p>Returns dict of dest/op_report for all closed associations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], <a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.route.InsufficientElemsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">InsufficientElemsError</span></span><a class="headerlink" href="#dcm.route.InsufficientElemsError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>We don’t have the required DICOM elements for the operation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.InsufficientElemsError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.InsufficientElemsError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.InsufficientElemsError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.InsufficientElemsError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.route.InsufficientElemsError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.route.InsufficientElemsError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.InsufficientElemsError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.InsufficientElemsError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.route.Router">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Router</span></span><a class="headerlink" href="#dcm.route.Router" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Work with multiple dynamic/static routes</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Router.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_cache_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>routes</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="#dcm.route.Route" title="dcm.route.Route"><em>Route</em></a><em>]</em>) – </p></li>
+<li><p><strong>assoc_cache_time</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.Router.required_elems">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">required_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.route.Router.required_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>All required DICOM elements for making routing decisions</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.Router.has_dynamic_routes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_dynamic_routes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.Router.has_dynamic_routes" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.Router.can_pre_route">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">can_pre_route</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.Router.can_pre_route" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.route.Router.can_dyn_route">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">can_dyn_route</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.route.Router.can_dyn_route" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Router.get_filter_dest_map">
+<span class="sig-name descname"><span class="pre">get_filter_dest_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.get_filter_dest_map" title="Permalink to this definition">#</a></dt>
+<dd><p>Get dict mapping filters to lists of destinations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[<em>Optional</em>[<a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a>], <em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Router.pre_route">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.pre_route" title="Permalink to this definition">#</a></dt>
+<dd><p>Pre-calculate any dynamic routing for data on <cite>src</cite></p>
+<p>If DICOM elements needed for routing decisions can’t be queried for, we
+will retrieve an example data set for that study.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataRepo" title="dcm.store.base.DataRepo"><em>DataRepo</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>, </em><em>Any</em><em>, </em><em>Any</em><em>]</em>) – The data source</p></li>
+<li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>]</em>) – A query that defines the data to route</p></li>
+<li><p><strong>query_res</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a><em>]</em>) – A QueryResult that defines the data to route</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>result</strong> – Maps tuples of StaticRoute objects to QueryResults defining all of
+the data that should be sent to those routes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.route.Router.route">
+<span class="sig-name descname"><span class="pre">route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.route" title="Permalink to this definition">#</a></dt>
+<dd><p>Produces queue where datasets can be put for dynamic routing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keep_errors</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><em>IncomingErrorType</em></a><em>, </em><em>...</em><em>]</em><em>]</em>) – Set to true to send all data, even if it is inconsistent/duplicate</p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.route.DynamicTransferReport" title="dcm.route.DynamicTransferReport"><em>DynamicTransferReport</em></a><em>]</em>) – <p>Pass a DynamicTransferReport in to be filled out on the fly</p>
+<p>Provides insight into what data is being routed where</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[asyncio.Queue[Dataset]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +1280,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

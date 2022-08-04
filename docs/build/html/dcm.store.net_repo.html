@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.store.net_repo module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,239 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-store-net-repo-module">
-<h1>dcm.store.net_repo module<a class="headerlink" href="#dcm-store-net-repo-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.store.net_repo">
+<span id="dcm-store-net-repo-module"></span><h1>dcm.store.net_repo module<a class="headerlink" href="#module-dcm.store.net_repo" title="Permalink to this heading">#</a></h1>
+<p>Data storage abstraction for DICOM network entities</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.net_repo.</span></span><span class="sig-name descname"><span class="pre">NetRepo</span></span><a class="headerlink" href="#dcm.store.net_repo.NetRepo" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.store.base.html#dcm.store.base.DcmRepo" title="dcm.store.base.DcmRepo"><code class="xref py py-class docutils literal notranslate"><span class="pre">DcmRepo</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.store.net_repo.NetRepo" title="dcm.store.net_repo.NetRepo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NetRepo</span></code></a>]</p>
+<p>Smart data store corresponding to a DICOM network entity</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.is_local">
+<span class="sig-name descname"><span class="pre">is_local</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#dcm.store.net_repo.NetRepo.is_local" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local</strong> (<a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><em>DcmNode</em></a>) – </p></li>
+<li><p><strong>remote</strong> (<a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><em>DcmNode</em></a>) – </p></li>
+<li><p><strong>level</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em>) – </p></li>
+<li><p><strong>base_query</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>]</em>) – </p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.store.net_repo.NetRepo.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.store.net_repo.NetRepo" title="dcm.store.net_repo.NetRepo"><em>NetRepo</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.remote">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remote</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><span class="pre">DcmNode</span></a></em><a class="headerlink" href="#dcm.store.net_repo.NetRepo.remote" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.base_query">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">base_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.store.net_repo.NetRepo.base_query" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.query">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.query" title="Permalink to this definition">#</a></dt>
+<dd><p>Perform a query against the data repo</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em>) – </p></li>
+<li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>]</em>) – </p></li>
+<li><p><strong>query_res</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a><em>]</em>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><em>MultiListReport</em></a><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.queries">
+<span class="sig-name descname"><span class="pre">queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.queries" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns async generator that produces partial QueryResult objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em>) – </p></li>
+<li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>]</em>) – </p></li>
+<li><p><strong>query_res</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a><em>]</em>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><em>MultiListReport</em></a><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.gen_chunks">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_chunks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_chunks" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate the data in this bucket, one chunk at a time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>AsyncIterator</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DcmNetChunk" title="dcm.store.base.DcmNetChunk"><em>DcmNetChunk</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.gen_query_chunks">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_query_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_query_chunks" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate chunks of data corresponding to <cite>query_res</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>query_res</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DcmNetChunk" title="dcm.store.base.DcmNetChunk"><em>DcmNetChunk</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.send">
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.send" title="Permalink to this definition">#</a></dt>
+<dd><p>Produces a Queue that you can put data sets into for storage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[janus._AsyncQueueProxy[Dataset]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.retrieve">
+<span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.retrieve" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns an async generator that will produce datasets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_res</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.RetrieveReport" title="dcm.net.RetrieveReport"><em>RetrieveReport</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[<em>Dataset</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.oob_transfer">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.oob_transfer" title="Permalink to this definition">#</a></dt>
+<dd><p>Perform out-of-band transfer instead of proxying data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p></li>
+<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DcmNetChunk" title="dcm.store.base.DcmNetChunk"><em>DcmNetChunk</em></a>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><em>MultiListReport</em></a><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.get_empty_oob_report">
+<span class="sig-name descname"><span class="pre">get_empty_oob_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.get_empty_oob_report" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><em>MultiListReport</em></a>[<a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.get_empty_send_report">
+<span class="sig-name descname"><span class="pre">get_empty_send_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.get_empty_send_report" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><em>DicomOpReport</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.n_chunks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_chunks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.store.net_repo.NetRepo.n_chunks" title="Permalink to this definition">#</a></dt>
+<dd><p>Subclasses can return an int if they know how many chunks to expect</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.oob_send">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.oob_send" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce queue for streaming out-of-band transfer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p></li>
+<li><p><strong>chunk</strong> (<em>T_oob_chunk</em>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><em>T_oob_report</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[janus._AsyncQueueProxy[Dataset]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +461,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

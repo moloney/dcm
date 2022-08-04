@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.store.local_dir module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,223 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-store-local-dir-module">
-<h1>dcm.store.local_dir module<a class="headerlink" href="#dcm-store-local-dir-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.store.local_dir">
+<span id="dcm-store-local-dir-module"></span><h1>dcm.store.local_dir module<a class="headerlink" href="#module-dcm.store.local_dir" title="Permalink to this heading">#</a></h1>
+<p>Data storage abstraction for local directories</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.store.local_dir.DefaultDicomWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.local_dir.</span></span><span class="sig-name descname"><span class="pre">DefaultDicomWrapper</span></span><a class="headerlink" href="#dcm.store.local_dir.DefaultDicomWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.DefaultDicomWrapper.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unknown'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.DefaultDicomWrapper.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>default</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.store.local_dir.make_out_path">
+<span class="sig-prename descclassname"><span class="pre">dcm.store.local_dir.</span></span><span class="sig-name descname"><span class="pre">make_out_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_fmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.make_out_path" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_fmt</strong> (<em>str</em>) – </p></li>
+<li><p><strong>ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.local_dir.</span></span><span class="sig-name descname"><span class="pre">LocalDir</span></span><a class="headerlink" href="#dcm.store.local_dir.LocalDir" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalBucket" title="dcm.store.base.LocalBucket"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalBucket</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.InlineConfigurable" title="dcm.util.InlineConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineConfigurable</span></code></a>[<a class="reference internal" href="#dcm.store.local_dir.LocalDir" title="dcm.store.local_dir.LocalDir"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalDir</span></code></a>]</p>
+<p>Local directory of data without any additional meta data</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.is_local">
+<span class="sig-name descname"><span class="pre">is_local</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#dcm.store.local_dir.LocalDir.is_local" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.default_out_fmt">
+<span class="sig-name descname"><span class="pre">default_out_fmt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'{d.PatientID}/{d.StudyInstanceUID}/{d.Modality}/{d.SeriesNumber:03d}-{d.ProtocolName}/{d.SOPInstanceUID}'</span></em><a class="headerlink" href="#dcm.store.local_dir.LocalDir.default_out_fmt" title="Permalink to this definition">#</a></dt>
+<dd><p>Default format for output paths when saving data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dcm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chunk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>os.PathLike</em><em>]</em>) – </p></li>
+<li><p><strong>recurse</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>file_ext</strong> (<em>str</em>) – </p></li>
+<li><p><strong>max_chunk</strong> (<em>int</em>) – </p></li>
+<li><p><strong>out_fmt</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>force_overwrite</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>make_missing</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.store.local_dir.LocalDir.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.inline_to_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inline_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.inline_to_dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Parse inline string format ‘path[:out_fmt][:file_ext]’</p>
+<p>Both the second components are optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_str</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.root_path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">root_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#dcm.store.local_dir.LocalDir.root_path" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.gen_chunks">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_chunks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.gen_chunks" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate the data in this bucket, one chunk at a time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>AsyncIterator</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalChunk" title="dcm.store.base.LocalChunk"><em>LocalChunk</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.get_empty_oob_report">
+<span class="sig-name descname"><span class="pre">get_empty_oob_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.get_empty_oob_report" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><em>LocalWriteReport</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.get_empty_send_report">
+<span class="sig-name descname"><span class="pre">get_empty_send_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.get_empty_send_report" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><em>LocalWriteReport</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.n_chunks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_chunks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.store.local_dir.LocalDir.n_chunks" title="Permalink to this definition">#</a></dt>
+<dd><p>Subclasses can return an int if they know how many chunks to expect</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.oob_send">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.oob_send" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce queue for streaming out-of-band transfer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p></li>
+<li><p><strong>chunk</strong> (<em>T_oob_chunk</em>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><em>T_oob_report</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[janus._AsyncQueueProxy[Dataset]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.send">
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.send" title="Permalink to this definition">#</a></dt>
+<dd><p>Produces a Queue that you can put data sets into for storage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><em>LocalWriteReport</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[janus._AsyncQueueProxy[Dataset]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.store.local_dir.LocalDir.oob_transfer">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.local_dir.LocalDir.oob_transfer" title="Permalink to this definition">#</a></dt>
+<dd><p>Perform out-of-band transfer instead of proxying data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p></li>
+<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalChunk" title="dcm.store.base.LocalChunk"><em>LocalChunk</em></a>) – </p></li>
+<li><p><strong>report</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><em>LocalWriteReport</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +445,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

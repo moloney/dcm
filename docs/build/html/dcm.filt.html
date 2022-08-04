@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.filt module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,740 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-filt-module">
-<h1>dcm.filt module<a class="headerlink" href="#dcm-filt-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.filt">
+<span id="dcm-filt-module"></span><h1>dcm.filt module<a class="headerlink" href="#module-dcm.filt" title="Permalink to this heading">#</a></h1>
+<p>DICOM data filtering</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.Filter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><a class="headerlink" href="#dcm.filt.Filter" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_BaseFilter</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_SingleFilter</span></code></p>
+<p>Callable for modifying data sets with info about its read/write needs</p>
+<p>By default it is assumed the filter needs access to the full data set and
+can modify any element in any way. More info can be provided by setting
+the various <cite>*_elems</cite> attributes which will allow for various optimizations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Filter.get_dependencies">
+<span class="sig-name descname"><span class="pre">get_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elems</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Filter.get_dependencies" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>elems</strong> (<em>Any</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tuple</em>[<em>List</em>[<em>Callable</em>[[<em>Dataset</em>], <em>Optional</em>[<em>Dataset</em>]]], <a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a>[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Filter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_elems=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_elems=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invertible_elems=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Filter.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>Callable</em><em>[</em><em>[</em><em>Dataset</em><em>]</em><em>, </em><em>Optional</em><em>[</em><em>Dataset</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>read_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>write_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>invertible_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.filt.Filter.invertible_uids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">invertible_uids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.invertible_uids" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.filt.Filter.uninvertible_elems">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uninvertible_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.uninvertible_elems" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.Filter.read_elems">
+<span class="sig-name descname"><span class="pre">read_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.read_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements the function needs to read to make any modifications</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.Filter.write_elems">
+<span class="sig-name descname"><span class="pre">write_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.write_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements that might be modified by the function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.Filter.invertible_elems">
+<span class="sig-name descname"><span class="pre">invertible_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.invertible_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements where values are only modified in isolated/deterministic way</p>
+<p>The same input value for these elements should always get the same output
+value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.Filter.func">
+<span class="sig-name descname"><span class="pre">func</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.Filter.func" title="Permalink to this definition">#</a></dt>
+<dd><p>A function that takes a DICOM data set and can return a modified
+version, or None to signify the data should be skipped</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">MultiFilter</span></span><a class="headerlink" href="#dcm.filt.MultiFilter" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_BaseFilter</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_MultiFilter</span></code></p>
+<p>MultiFilter(filters: ‘Tuple[Filter, …]’, read_elems: ‘FrozenLazySet[str]’ = &lt;factory&gt;, write_elems: ‘FrozenLazySet[str]’ = &lt;factory&gt;, invertible_elems: ‘FrozenLazySet[str]’ = &lt;factory&gt;)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.get_dependencies">
+<span class="sig-name descname"><span class="pre">get_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elems</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiFilter.get_dependencies" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>elems</strong> (<em>Any</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tuple</em>[<em>List</em>[<em>Callable</em>[[<em>Dataset</em>], <em>Optional</em>[<em>Dataset</em>]]], <a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a>[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_elems=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_elems=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invertible_elems=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiFilter.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filters</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>read_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>write_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>invertible_elems</strong> (<a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a><em>[</em><em>str</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.invertible_uids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">invertible_uids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.invertible_uids" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.uninvertible_elems">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uninvertible_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.uninvertible_elems" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.read_elems">
+<span class="sig-name descname"><span class="pre">read_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.read_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements the function needs to read to make any modifications</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.write_elems">
+<span class="sig-name descname"><span class="pre">write_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.write_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements that might be modified by the function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.invertible_elems">
+<span class="sig-name descname"><span class="pre">invertible_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><span class="pre">FrozenLazySet</span></a><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.invertible_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Elements where values are only modified in isolated/deterministic way</p>
+<p>The same input value for these elements should always get the same output
+value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiFilter.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.MultiFilter.filters" title="Permalink to this definition">#</a></dt>
+<dd><p>The collection of filters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.DataCollection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">DataCollection</span></span><a class="headerlink" href="#dcm.filt.DataCollection" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Collection of dicom data that can include inconsistent/duplicate data</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DataCollection.qr">
+<span class="sig-name descname"><span class="pre">qr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.DataCollection.qr" title="Permalink to this definition">#</a></dt>
+<dd><p>Captures all the consistent non-duplicate data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DataCollection.inconsistent">
+<span class="sig-name descname"><span class="pre">inconsistent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.DataCollection.inconsistent" title="Permalink to this definition">#</a></dt>
+<dd><p>List of data sets that can’t be stored in <cite>qr</cite> due to inconsistancy</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DataCollection.duplicate">
+<span class="sig-name descname"><span class="pre">duplicate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.filt.DataCollection.duplicate" title="Permalink to this definition">#</a></dt>
+<dd><p>List of data sets that are duplicates of those in <cite>qr</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DataCollection.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inconsistent=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DataCollection.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p></li>
+<li><p><strong>inconsistent</strong> (<em>List</em><em>[</em><em>Dataset</em><em>]</em>) – </p></li>
+<li><p><strong>duplicate</strong> (<em>List</em><em>[</em><em>Dataset</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.DataTransform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">DataTransform</span></span><a class="headerlink" href="#dcm.filt.DataTransform" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Transforms data, and keeps track so it can be reversed</p>
+<p>Abstract base class. All subclasses should have two QueryResult attributes
+<cite>old</cite> and <cite>new</cite> (which should be treated as read-only) plus the methods
+below.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DataTransform.old">
+<span class="sig-name descname"><span class="pre">old</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.DataTransform.old" title="Permalink to this definition">#</a></dt>
+<dd><p>Pre-transform data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DataTransform.new">
+<span class="sig-name descname"><span class="pre">new</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.DataTransform.new" title="Permalink to this definition">#</a></dt>
+<dd><p>Post-transform data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DataTransform.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DataTransform.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add pre/post transformed data set</p>
+<p>Will raise InconsistentDataError or DuplicateDataError based on the
+post-filtering data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DataTransform.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_qr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DataTransform.reverse" title="Permalink to this definition">#</a></dt>
+<dd><p>Invert the transformation for some subset of the new QueryResult</p>
+<p>Returns a DataCollection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.filt.DataCollection" title="dcm.filt.DataCollection"><em>DataCollection</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">DummyTransform</span></span><a class="headerlink" href="#dcm.filt.DummyTransform" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.filt.DataTransform" title="dcm.filt.DataTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransform</span></code></a></p>
+<p>Dummy transform for efficiently handling no-op</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DummyTransform.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform.old">
+<span class="sig-name descname"><span class="pre">old</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.DummyTransform.old" title="Permalink to this definition">#</a></dt>
+<dd><p>Pre-transform data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform.new">
+<span class="sig-name descname"><span class="pre">new</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.DummyTransform.new" title="Permalink to this definition">#</a></dt>
+<dd><p>Post-transform data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DummyTransform.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add pre/post transformed data set</p>
+<p>Will raise InconsistentDataError or DuplicateDataError based on the
+post-filtering data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.DummyTransform.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_qr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.DummyTransform.reverse" title="Permalink to this definition">#</a></dt>
+<dd><p>Invert the transformation for some subset of the new QueryResult</p>
+<p>Returns a DataCollection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.filt.DataCollection" title="dcm.filt.DataCollection"><em>DataCollection</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">FilterTransform</span></span><a class="headerlink" href="#dcm.filt.FilterTransform" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.filt.DataTransform" title="dcm.filt.DataTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransform</span></code></a></p>
+<p>Data transform described by Filter</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.FilterTransform.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p></li>
+<li><p><strong>filt</strong> (<em>_BaseFilter</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform.old">
+<span class="sig-name descname"><span class="pre">old</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.FilterTransform.old" title="Permalink to this definition">#</a></dt>
+<dd><p>Pre-transform data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform.new">
+<span class="sig-name descname"><span class="pre">new</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><span class="pre">QueryResult</span></a></em><a class="headerlink" href="#dcm.filt.FilterTransform.new" title="Permalink to this definition">#</a></dt>
+<dd><p>Post-transform data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.FilterTransform.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add pre/post transformed data set</p>
+<p>Will raise InconsistentDataError or DuplicateDataError based on the
+post-filtering data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.FilterTransform.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_qr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.FilterTransform.reverse" title="Permalink to this definition">#</a></dt>
+<dd><p>Invert the remapping for some subset of the new QueryResult</p>
+<p>Returns a DataCollection so we can also capture data that was duplicate
+or inconsistent prior to filtering (and thus can’t be included in a
+QueryResult)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.filt.DataCollection" title="dcm.filt.DataCollection"><em>DataCollection</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.filt.get_transform">
+<span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">get_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.get_transform" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qr</strong> (<a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p></li>
+<li><p><strong>filt</strong> (<em>Optional</em><em>[</em><em>_BaseFilter</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.filt.DataTransform" title="dcm.filt.DataTransform"><em>DataTransform</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.filt.make_uid_update_cb">
+<span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">make_uid_update_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2.25'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_uid_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.make_uid_update_cb" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid_prefix</strong> (<em>str</em>) – </p></li>
+<li><p><strong>add_uid_entropy</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Callable</em>[[<em>Dataset</em>, <em>DataElement</em>], None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.filt.make_edit_filter">
+<span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">make_edit_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edit_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_uids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2.25'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_uid_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.make_edit_filter" title="Permalink to this definition">#</a></dt>
+<dd><p>Make a Filter that edits some DICOM attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>edit_dict</strong> (<em>dict</em>) – Maps keywords to new values (or None to delete the element)</p></li>
+<li><p><strong>update_uids</strong> (<em>bool</em>) – Set to False to avoid automatically updating UID values</p></li>
+<li><p><strong>add_uid_entropy</strong> (<em>list</em><em> or </em><em>None</em>) – One or more strings used as “entropy” when remapping UIDs</p></li>
+<li><p><strong>uid_prefix</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>_BaseFilter</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.filt.make_reject_filter">
+<span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">make_reject_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reject_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.make_reject_filter" title="Permalink to this definition">#</a></dt>
+<dd><p>Make a filter that rejects certain datasets</p>
+<p>This is useful when you want to limit a transfer based on attributes that can’t be
+queried for.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reject_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Tuple</em><em>[</em><em>Callable</em><em>[</em><em>[</em><em>Dataset</em><em>, </em><em>Dataset</em><em>]</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – Maps keywords to (operator, rvalue) tuples defining which datasets to reject</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>_BaseFilter</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.Selector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">Selector</span></span><a class="headerlink" href="#dcm.filt.Selector" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Abstract base for objects that can select/reject data sets</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Selector.get_read_elems">
+<span class="sig-name descname"><span class="pre">get_read_elems</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Selector.get_read_elems" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Selector.test_ds">
+<span class="sig-name descname"><span class="pre">test_ds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Selector.test_ds" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Selector.get_filter">
+<span class="sig-name descname"><span class="pre">get_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Selector.get_filter" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Selector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Selector.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.Selector.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.Selector.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">SingleSelector</span></span><a class="headerlink" href="#dcm.filt.SingleSelector" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Selector</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.InlineConfigurable" title="dcm.util.InlineConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineConfigurable</span></code></a>[<a class="reference internal" href="#dcm.filt.SingleSelector" title="dcm.filt.SingleSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleSelector</span></code></a>]</p>
+<p>Define a selection based on a single attribute</p>
+<p>Can be defined in config file or as single string</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.attr">
+<span class="sig-name descname"><span class="pre">attr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.filt.SingleSelector.attr" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.op">
+<span class="sig-name descname"><span class="pre">op</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.filt.SingleSelector.op" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.rvalue">
+<span class="sig-name descname"><span class="pre">rvalue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="headerlink" href="#dcm.filt.SingleSelector.rvalue" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.invert">
+<span class="sig-name descname"><span class="pre">invert</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#dcm.filt.SingleSelector.invert" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.reject_missing">
+<span class="sig-name descname"><span class="pre">reject_missing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#dcm.filt.SingleSelector.reject_missing" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvalue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reject_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr</strong> (<em>str</em>) – </p></li>
+<li><p><strong>op</strong> (<em>str</em>) – </p></li>
+<li><p><strong>rvalue</strong> (<em>Any</em>) – </p></li>
+<li><p><strong>invert</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>reject_missing</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.get_filter">
+<span class="sig-name descname"><span class="pre">get_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.get_filter" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.inline_to_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inline_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.inline_to_dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Support simple forms to be encoded in single string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_str</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.get_read_elems">
+<span class="sig-name descname"><span class="pre">get_read_elems</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.get_read_elems" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.SingleSelector.test_ds">
+<span class="sig-name descname"><span class="pre">test_ds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.SingleSelector.test_ds" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.filt.</span></span><span class="sig-name descname"><span class="pre">MultiSelector</span></span><a class="headerlink" href="#dcm.filt.MultiSelector" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Selector</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.filt.MultiSelector" title="dcm.filt.MultiSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiSelector</span></code></a>]</p>
+<p>Logically combine selectors for more complex selections</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_of</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">any_of</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">none_of</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>all_of</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>any_of</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a><em>, </em><em>...</em><em>]</em>) – </p></li>
+<li><p><strong>none_of</strong> (<em>Tuple</em><em>[</em><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a><em>, </em><em>...</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.__new__">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.from_toml_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.from_toml_val">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.from_toml_val" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TC_Type</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.get_filter">
+<span class="sig-name descname"><span class="pre">get_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.get_filter" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dcm.filt.Filter" title="dcm.filt.Filter"><em>Filter</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.all_of">
+<span class="sig-name descname"><span class="pre">all_of</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><span class="pre">Selector</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></em><a class="headerlink" href="#dcm.filt.MultiSelector.all_of" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.any_of">
+<span class="sig-name descname"><span class="pre">any_of</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><span class="pre">Selector</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></em><a class="headerlink" href="#dcm.filt.MultiSelector.any_of" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.none_of">
+<span class="sig-name descname"><span class="pre">none_of</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.filt.Selector" title="dcm.filt.Selector"><span class="pre">Selector</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></em><a class="headerlink" href="#dcm.filt.MultiSelector.none_of" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.get_read_elems">
+<span class="sig-name descname"><span class="pre">get_read_elems</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.get_read_elems" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="dcm.lazyset.html#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><em>FrozenLazySet</em></a>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.filt.MultiSelector.test_ds">
+<span class="sig-name descname"><span class="pre">test_ds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.filt.MultiSelector.test_ds" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +962,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

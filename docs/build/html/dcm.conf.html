@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.conf module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,315 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-conf-module">
-<h1>dcm.conf module<a class="headerlink" href="#dcm-conf-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.conf">
+<span id="dcm-conf-module"></span><h1>dcm.conf module<a class="headerlink" href="#module-dcm.conf" title="Permalink to this heading">#</a></h1>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.conf.InvalidConfigError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.conf.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigError</span></span><a class="headerlink" href="#dcm.conf.InvalidConfigError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised if invalid configuration is detected</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.InvalidConfigError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.InvalidConfigError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.InvalidConfigError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.InvalidConfigError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.conf.InvalidConfigError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.conf.InvalidConfigError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.InvalidConfigError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.InvalidConfigError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.conf.NoLocalNodeError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.conf.</span></span><span class="sig-name descname"><span class="pre">NoLocalNodeError</span></span><a class="headerlink" href="#dcm.conf.NoLocalNodeError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when the local DICOM node info is requested but missing</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.NoLocalNodeError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.NoLocalNodeError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.NoLocalNodeError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.NoLocalNodeError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.conf.NoLocalNodeError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.conf.NoLocalNodeError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.NoLocalNodeError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.NoLocalNodeError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.conf.get_version">
+<span class="sig-prename descclassname"><span class="pre">dcm.conf.</span></span><span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.get_version" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>MutableMapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.conf.migrate">
+<span class="sig-prename descclassname"><span class="pre">dcm.conf.</span></span><span class="sig-name descname"><span class="pre">migrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.migrate" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version</strong> (<em>int</em>) – </p></li>
+<li><p><strong>data</strong> (<em>MutableMapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>MutableMapping</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.conf.</span></span><span class="sig-name descname"><span class="pre">DcmConfig</span></span><a class="headerlink" href="#dcm.conf.DcmConfig" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Capture config and support mixing with external (eg. CLI) options</p>
+<p>The various <cite>get_*</cite> methods will tranparently handle inputs that are
+named references from the config file, inline configuration strings, or
+configuration dicts.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">CONF_PATH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_if_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>PathLike</em><em>]</em>) – </p></li>
+<li><p><strong>create_if_missing</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.set_net_repo_kwargs">
+<span class="sig-name descname"><span class="pre">set_net_repo_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.set_net_repo_kwargs" title="Permalink to this definition">#</a></dt>
+<dd><p>Override parameters for any NetRepo built</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.set_local_dir_kwargs">
+<span class="sig-name descname"><span class="pre">set_local_dir_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.set_local_dir_kwargs" title="Permalink to this definition">#</a></dt>
+<dd><p>Override parameters for any LocalDir built</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.set_static_route_kwargs">
+<span class="sig-name descname"><span class="pre">set_static_route_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.set_static_route_kwargs" title="Permalink to this definition">#</a></dt>
+<dd><p>Override parameters for any StaticRoute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.set_dynamic_route_kwargs">
+<span class="sig-name descname"><span class="pre">set_dynamic_route_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.set_dynamic_route_kwargs" title="Permalink to this definition">#</a></dt>
+<dd><p>Override any parameters for SelectorDestMap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.default_local">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_local</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><span class="pre">DcmNode</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.conf.DcmConfig.default_local" title="Permalink to this definition">#</a></dt>
+<dd><p>The default local DcmNode to use</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_local_node">
+<span class="sig-name descname"><span class="pre">get_local_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_local_node" title="Permalink to this definition">#</a></dt>
+<dd><p>Get local DcmNode corresponding to <cite>in_val</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><em>DcmNode</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_remote_node">
+<span class="sig-name descname"><span class="pre">get_remote_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_remote_node" title="Permalink to this definition">#</a></dt>
+<dd><p>Get remote DcmNode corresponding to <cite>in_val</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.net.html#dcm.net.DcmNode" title="dcm.net.DcmNode"><em>DcmNode</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_selector">
+<span class="sig-name descname"><span class="pre">get_selector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_selector" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a Selector corresponding to <cite>in_val</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.filt.html#dcm.filt.Selector" title="dcm.filt.Selector"><em>Selector</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_net_repo">
+<span class="sig-name descname"><span class="pre">get_net_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_net_repo" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a NetRepo corresponding to <cite>in_val</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.store.net_repo.html#dcm.store.net_repo.NetRepo" title="dcm.store.net_repo.NetRepo"><em>NetRepo</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_local_dir">
+<span class="sig-name descname"><span class="pre">get_local_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_local_dir" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a LocalDir corresponding to <cite>in_val</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.store.local_dir.html#dcm.store.local_dir.LocalDir" title="dcm.store.local_dir.LocalDir"><em>LocalDir</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_bucket">
+<span class="sig-name descname"><span class="pre">get_bucket</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_bucket" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Union</em>[<a class="reference internal" href="dcm.store.net_repo.html#dcm.store.net_repo.NetRepo" title="dcm.store.net_repo.NetRepo"><em>NetRepo</em></a>, <a class="reference internal" href="dcm.store.local_dir.html#dcm.store.local_dir.LocalDir" title="dcm.store.local_dir.LocalDir"><em>LocalDir</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_static_route">
+<span class="sig-name descname"><span class="pre">get_static_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_static_route" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_selector_dest_map">
+<span class="sig-name descname"><span class="pre">get_selector_dest_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_selector_dest_map" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="dcm.route.html#dcm.route.SelectorDestMap" title="dcm.route.SelectorDestMap"><em>SelectorDestMap</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_route">
+<span class="sig-name descname"><span class="pre">get_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_route" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_val</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Union</em>[<a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>, <a class="reference internal" href="dcm.route.html#dcm.route.DynamicRoute" title="dcm.route.DynamicRoute"><em>DynamicRoute</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.conf.DcmConfig.get_routes">
+<span class="sig-name descname"><span class="pre">get_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.conf.DcmConfig.get_routes" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_vals</strong> (<em>List</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<em>Union</em>[<a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>, <a class="reference internal" href="dcm.route.html#dcm.route.DynamicRoute" title="dcm.route.DynamicRoute"><em>DynamicRoute</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +537,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>

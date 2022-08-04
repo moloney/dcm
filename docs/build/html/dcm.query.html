@@ -2,10 +2,10 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.06.21"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.query module - dcm 0.1.0-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
@@ -190,8 +190,898 @@
           </label>
         </div>
         <article role="main">
-          <section id="dcm-query-module">
-<h1>dcm.query module<a class="headerlink" href="#dcm-query-module" title="Permalink to this headline">#</a></h1>
+          <section id="module-dcm.query">
+<span id="dcm-query-module"></span><h1>dcm.query module<a class="headerlink" href="#module-dcm.query" title="Permalink to this heading">#</a></h1>
+<p>Provides an abstraction around the DICOM query model and data hierarchy</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.query.QueryLevel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">QueryLevel</span></span><a class="headerlink" href="#dcm.query.QueryLevel" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
+<p>Represents the depth for a query, with larger values meaning more detail</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryLevel.PATIENT">
+<span class="sig-name descname"><span class="pre">PATIENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#dcm.query.QueryLevel.PATIENT" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryLevel.STUDY">
+<span class="sig-name descname"><span class="pre">STUDY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.query.QueryLevel.STUDY" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryLevel.SERIES">
+<span class="sig-name descname"><span class="pre">SERIES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#dcm.query.QueryLevel.SERIES" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryLevel.IMAGE">
+<span class="sig-name descname"><span class="pre">IMAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#dcm.query.QueryLevel.IMAGE" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.uid_elems">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">uid_elems</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{QueryLevel.PATIENT:</span> <span class="pre">'PatientID',</span> <span class="pre">QueryLevel.STUDY:</span> <span class="pre">'StudyInstanceUID',</span> <span class="pre">QueryLevel.SERIES:</span> <span class="pre">'SeriesInstanceUID',</span> <span class="pre">QueryLevel.IMAGE:</span> <span class="pre">'SOPInstanceUID'}</span></em><a class="headerlink" href="#dcm.query.uid_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Map QueryLevels to the DICOM keyword that gives the corresponding UID</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.get_uid">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">get_uid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.get_uid" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the UID from the <cite>data_set</cite> for the given <cite>level</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>data_set</strong> (<em>Dataset</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.get_all_uids">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">get_all_uids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.get_all_uids" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tuple</em>[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.query.DataNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">DataNode</span></span><a class="headerlink" href="#dcm.query.DataNode" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Identifies a node in the DICOM data hierarchy</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.DataNode.level">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a></em><a class="headerlink" href="#dcm.query.DataNode.level" title="Permalink to this definition">#</a></dt>
+<dd><p>The level of the node in the hierarchy</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.DataNode.uid">
+<span class="sig-name descname"><span class="pre">uid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.query.DataNode.uid" title="Permalink to this definition">#</a></dt>
+<dd><p>The unique id at the node’s level in the hierarchy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.DataNode.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.DataNode.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>uid</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.query.DataPath">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">DataPath</span></span><a class="headerlink" href="#dcm.query.DataPath" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Identifies the path to a node in the DICOM data hierarchy</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.DataPath.level">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a></em><a class="headerlink" href="#dcm.query.DataPath.level" title="Permalink to this definition">#</a></dt>
+<dd><p>The level of the node in the hierarchy</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.DataPath.uids">
+<span class="sig-name descname"><span class="pre">uids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.query.DataPath.uids" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.DataPath.end">
+<span class="sig-name descname"><span class="pre">end</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><span class="pre">DataNode</span></a></em><a class="headerlink" href="#dcm.query.DataPath.end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.DataPath.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.DataPath.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>uids</strong> (<em>Tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.req_elems">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">req_elems</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{QueryLevel.PATIENT:</span> <span class="pre">['PatientID',</span> <span class="pre">'PatientName'],</span> <span class="pre">QueryLevel.STUDY:</span> <span class="pre">['StudyInstanceUID',</span> <span class="pre">'StudyDate',</span> <span class="pre">'StudyTime'],</span> <span class="pre">QueryLevel.SERIES:</span> <span class="pre">['SeriesInstanceUID',</span> <span class="pre">'SeriesNumber',</span> <span class="pre">'Modality'],</span> <span class="pre">QueryLevel.IMAGE:</span> <span class="pre">['SOPInstanceUID',</span> <span class="pre">'InstanceNumber']}</span></em><a class="headerlink" href="#dcm.query.req_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Required attributes for each query level (accumulates at each level)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.blankable_req_elems">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">blankable_req_elems</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['PatientID',</span> <span class="pre">'PatientName',</span> <span class="pre">'StudyDate',</span> <span class="pre">'StudyTime',</span> <span class="pre">'SeriesNumber',</span> <span class="pre">'InstanceNumber']</span></em><a class="headerlink" href="#dcm.query.blankable_req_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Some ‘required’ attributes can be blank, treat missing values as blank in this case</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.opt_elems">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">opt_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{QueryLevel.PATIENT:</span> <span class="pre">['NumberOfPatientRelatedStudies',</span> <span class="pre">'NumberOfPatientRelatedSeries',</span> <span class="pre">'NumberOfPatientRelatedInstances'],</span> <span class="pre">QueryLevel.STUDY:</span> <span class="pre">['StudyDescription',</span> <span class="pre">'AccessionNumber',</span> <span class="pre">'ModalitiesInStudy',</span> <span class="pre">'NumberOfStudyRelatedSeries',</span> <span class="pre">'NumberOfStudyRelatedInstances'],</span> <span class="pre">QueryLevel.SERIES:</span> <span class="pre">['SeriesDescription',</span> <span class="pre">'ProtocolName',</span> <span class="pre">'NumberOfSeriesRelatedInstances'],</span> <span class="pre">QueryLevel.IMAGE:</span> <span class="pre">[]}</span></em><a class="headerlink" href="#dcm.query.opt_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional attributes we always try to query (exclusive to each level)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.level_filters">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">level_filters</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{QueryLevel.PATIENT:</span> <span class="pre">&lt;function</span> <span class="pre">make_elem_filter.&lt;locals&gt;.filt&gt;,</span> <span class="pre">QueryLevel.STUDY:</span> <span class="pre">&lt;function</span> <span class="pre">make_elem_filter.&lt;locals&gt;.filt&gt;,</span> <span class="pre">QueryLevel.SERIES:</span> <span class="pre">&lt;function</span> <span class="pre">make_elem_filter.&lt;locals&gt;.filt&gt;,</span> <span class="pre">QueryLevel.IMAGE:</span> <span class="pre">&lt;function</span> <span class="pre">make_elem_filter.&lt;locals&gt;.filt&gt;}</span></em><a class="headerlink" href="#dcm.query.level_filters" title="Permalink to this definition">#</a></dt>
+<dd><p>Element filters for each level</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="dcm.query.level_identifiers">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">level_identifiers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{QueryLevel.PATIENT:</span> <span class="pre">['NumberOfPatientRelatedStudies',</span> <span class="pre">'NumberOfPatientRelatedSeries',</span> <span class="pre">'NumberOfPatientRelatedInstances'],</span> <span class="pre">QueryLevel.STUDY:</span> <span class="pre">['StudyInstanceUID',</span> <span class="pre">'StudyDate',</span> <span class="pre">'StudyTime',</span> <span class="pre">'NumberOfStudyRelatedSeries',</span> <span class="pre">'NumberOfStudyRelatedInstances'],</span> <span class="pre">QueryLevel.SERIES:</span> <span class="pre">['SeriesInstanceUID',</span> <span class="pre">'SeriesNumber',</span> <span class="pre">'Modality',</span> <span class="pre">'SeriesDescription',</span> <span class="pre">'ProtocolName',</span> <span class="pre">'NumberOfSeriesRelatedInstances'],</span> <span class="pre">QueryLevel.IMAGE:</span> <span class="pre">['SOPInstanceUID',</span> <span class="pre">'InstanceNumber']}</span></em><a class="headerlink" href="#dcm.query.level_identifiers" title="Permalink to this definition">#</a></dt>
+<dd><p>Maps query levels to elements that imply that level is needed</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.minimal_copy">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">minimal_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.minimal_copy" title="Permalink to this definition">#</a></dt>
+<dd><p>Make reduced copy with only the attributes needed for a QueryResult</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dataset</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.choose_level">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">choose_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qdat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QueryLevel.STUDY</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.choose_level" title="Permalink to this definition">#</a></dt>
+<dd><p>Try to choose the correct level for a given query</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qdat</strong> (<em>Dataset</em>) – </p></li>
+<li><p><strong>default</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.get_subcount_attr">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">get_subcount_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_level</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.get_subcount_attr" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>count_level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.query.info_to_dataset">
+<span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">info_to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.info_to_dataset" title="Permalink to this definition">#</a></dt>
+<dd><p>Turn normalized <cite>info</cite> dict back into DICOM data set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>info</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dataset</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.query.InsufficientQueryLevelError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">InsufficientQueryLevelError</span></span><a class="headerlink" href="#dcm.query.InsufficientQueryLevelError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Can’t perform operation due to the query level being too shallow</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InsufficientQueryLevelError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InsufficientQueryLevelError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InsufficientQueryLevelError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InsufficientQueryLevelError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.InsufficientQueryLevelError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.query.InsufficientQueryLevelError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InsufficientQueryLevelError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InsufficientQueryLevelError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.query.QueryLevelMismatchError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">QueryLevelMismatchError</span></span><a class="headerlink" href="#dcm.query.QueryLevelMismatchError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Query levels differ and they need to be the same for this operation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryLevelMismatchError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryLevelMismatchError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryLevelMismatchError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryLevelMismatchError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryLevelMismatchError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.query.QueryLevelMismatchError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryLevelMismatchError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryLevelMismatchError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.query.InconsistentDataError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">InconsistentDataError</span></span><a class="headerlink" href="#dcm.query.InconsistentDataError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.util.html#dcm.util.DicomDataError" title="dcm.util.DicomDataError"><code class="xref py py-class docutils literal notranslate"><span class="pre">DicomDataError</span></code></a></p>
+<p>The data set violates the established patient/study/series heirarchy</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InconsistentDataError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InconsistentDataError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InconsistentDataError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InconsistentDataError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.InconsistentDataError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.query.InconsistentDataError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InconsistentDataError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InconsistentDataError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.query.InvalidDicomError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">InvalidDicomError</span></span><a class="headerlink" href="#dcm.query.InvalidDicomError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.util.html#dcm.util.DicomDataError" title="dcm.util.DicomDataError"><code class="xref py py-class docutils literal notranslate"><span class="pre">DicomDataError</span></code></a></p>
+<p>A DICOM dataset is invalid</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InvalidDicomError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InvalidDicomError.__init__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InvalidDicomError.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InvalidDicomError.__new__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.InvalidDicomError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.query.InvalidDicomError.args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.InvalidDicomError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.InvalidDicomError.with_traceback" title="Permalink to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.query.QueryProv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">QueryProv</span></span><a class="headerlink" href="#dcm.query.QueryProv" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Track how a QueryResult was created</p>
+<p>Allows consumers to avoid duplicate work, and users can avoid repeating
+themselves when chaining operations</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.source">
+<span class="sig-name descname"><span class="pre">source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.util.html#dcm.util.JsonSerializable" title="dcm.util.JsonSerializable"><span class="pre">JsonSerializable</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.query.QueryProv.source" title="Permalink to this definition">#</a></dt>
+<dd><p>The source of this query result</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.queried_elems">
+<span class="sig-name descname"><span class="pre">queried_elems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.query.QueryProv.queried_elems" title="Permalink to this definition">#</a></dt>
+<dd><p>The attributes that were queried for</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.removed_existing_on">
+<span class="sig-name descname"><span class="pre">removed_existing_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.util.html#dcm.util.JsonSerializable" title="dcm.util.JsonSerializable"><span class="pre">JsonSerializable</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#dcm.query.QueryProv.removed_existing_on" title="Permalink to this definition">#</a></dt>
+<dd><p>A remote we queried and removed any data that already exists on it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.merged">
+<span class="sig-name descname"><span class="pre">merged</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_attrs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryProv.merged" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> (<a class="reference internal" href="#dcm.query.QueryProv" title="dcm.query.QueryProv"><em>QueryProv</em></a>) – </p></li>
+<li><p><strong>keep_attrs</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryProv" title="dcm.query.QueryProv"><em>QueryProv</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.to_json_dict">
+<span class="sig-name descname"><span class="pre">to_json_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryProv.to_json_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.from_json_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryProv.from_json_dict" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>json_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryProv" title="dcm.query.QueryProv"><em>QueryProv</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryProv.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queried_elems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_existing_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryProv.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.util.html#dcm.util.JsonSerializable" title="dcm.util.JsonSerializable"><em>JsonSerializable</em></a><em>]</em>) – </p></li>
+<li><p><strong>queried_elems</strong> (<em>Optional</em><em>[</em><em>Set</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>removed_existing_on</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.util.html#dcm.util.JsonSerializable" title="dcm.util.JsonSerializable"><em>JsonSerializable</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.query.QueryResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.query.</span></span><span class="sig-name descname"><span class="pre">QueryResult</span></span><a class="headerlink" href="#dcm.query.QueryResult" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>High level representation of a collection of DICOM data sets</p>
+<p>Object is both set-like as it is a set of unique DICOM datasets, and also
+tree-like as these data sets describe a patient/study/series/image
+hierarchy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> – The max level in the hierarchy we have data for</p></li>
+<li><p><strong>data_sets</strong> – Initial DICOM datasets to add to the result</p></li>
+<li><p><strong>prov</strong> – Optional provenance information about how this QueryResult was built</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>data_sets</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Dataset</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>prov</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.QueryProv" title="dcm.query.QueryProv"><em>QueryProv</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><span class="pre">QueryLevel</span></a></em><a class="headerlink" href="#dcm.query.QueryResult.level" title="Permalink to this definition">#</a></dt>
+<dd><p>The maximum depth of detail provided</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.uids">
+<span class="sig-name descname"><span class="pre">uids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.uids" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates the UIDs for each contained data set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.clear" title="Permalink to this definition">#</a></dt>
+<dd><p>Clear all contained data sets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.patients">
+<span class="sig-name descname"><span class="pre">patients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.patients" title="Permalink to this definition">#</a></dt>
+<dd><p>Genarates all PatientID values in this query result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.studies">
+<span class="sig-name descname"><span class="pre">studies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patient_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.studies" title="Permalink to this definition">#</a></dt>
+<dd><p>Genarates StudyUIDs in this query result, or for a specific patient</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>patient_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.series">
+<span class="sig-name descname"><span class="pre">series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">study_uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.series" title="Permalink to this definition">#</a></dt>
+<dd><p>Genarates SeriesUIDs in this query result, or for a specific study</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>study_uid</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.instances">
+<span class="sig-name descname"><span class="pre">instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.instances" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates InstanceUIDs for this query result, or a specific series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_uid</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a data set to the query result</p>
+<p>Does nothing if an equivalent data set has already been added</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.remove" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove a single data set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.equivalent">
+<span class="sig-name descname"><span class="pre">equivalent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.equivalent" title="Permalink to this definition">#</a></dt>
+<dd><p>Slightly looser equality testing allows different levels</p>
+<p>Provided the lower level QueryResult has sub-counts that match the
+higher level one, they are considered equivalent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.children">
+<span class="sig-name descname"><span class="pre">children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.children" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate child nodes of the given one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.walk" title="Permalink to this definition">#</a></dt>
+<dd><p>Generator that traverses the hierarchy in depth-first order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – Limit the traversal to the subtree rooted here</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>curr_path</em> – Identifies the current traversal path</p></li>
+<li><p><em>sub_uids</em> – List of uids for child nodes, can be trimmed to avoid traversing</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[<em>Tuple</em>[<a class="reference internal" href="#dcm.query.DataPath" title="dcm.query.DataPath"><em>DataPath</em></a>, <em>List</em>[str]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.level_paths">
+<span class="sig-name descname"><span class="pre">level_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.level_paths" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate all paths at the given level</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.query.DataPath" title="dcm.query.DataPath"><em>DataPath</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.get_path">
+<span class="sig-name descname"><span class="pre">get_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.get_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Get path to the node in hierarchy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.DataPath" title="dcm.query.DataPath"><em>DataPath</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.node_info">
+<span class="sig-name descname"><span class="pre">node_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.node_info" title="Permalink to this definition">#</a></dt>
+<dd><p>Get meta data specific to this node in the hierarchy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.path_info">
+<span class="sig-name descname"><span class="pre">path_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.path_info" title="Permalink to this definition">#</a></dt>
+<dd><p>Get all meta data along a path through the hierarchy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_path</strong> (<a class="reference internal" href="#dcm.query.DataPath" title="dcm.query.DataPath"><em>DataPath</em></a>) – The path we want to collect meta data for</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.path_data_set">
+<span class="sig-name descname"><span class="pre">path_data_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.path_data_set" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a DICOM data set containing the meta data for the <cite>data_path</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_path</strong> (<a class="reference internal" href="#dcm.query.DataPath" title="dcm.query.DataPath"><em>DataPath</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dataset</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.n_patients">
+<span class="sig-name descname"><span class="pre">n_patients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.n_patients" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of patients in the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.n_studies">
+<span class="sig-name descname"><span class="pre">n_studies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.n_studies" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of studies in the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – Get the number of studies under this data node, or globally if None</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.n_series">
+<span class="sig-name descname"><span class="pre">n_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.n_series" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of series in the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – Get the number of series under this data node, or globally if None</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.n_instances">
+<span class="sig-name descname"><span class="pre">n_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.n_instances" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of instances in the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – Get the number of instances under this data node, globally if None</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.get_count">
+<span class="sig-name descname"><span class="pre">get_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.get_count" title="Permalink to this definition">#</a></dt>
+<dd><p>Get number of nodes at the <cite>level</cite> in the subtree under <cite>node</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.sub_query">
+<span class="sig-name descname"><span class="pre">sub_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.sub_query" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a subset as its own QueryResult</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a>) – The node in the hierarchy we want as a subset</p></li>
+<li><p><strong>max_level</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em>) – The level of detail to include in the result</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.level_sub_queries">
+<span class="sig-name descname"><span class="pre">level_sub_queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.level_sub_queries" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.reduced">
+<span class="sig-name descname"><span class="pre">reduced</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.reduced" title="Permalink to this definition">#</a></dt>
+<dd><p>Create lower level of detail copy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.sub">
+<span class="sig-name descname"><span class="pre">sub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_subcounts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.sub" title="Permalink to this definition">#</a></dt>
+<dd><p>Take the difference between two QueryResutls, with options</p>
+<p>Using __sub__ is equivalent to calling this with default options</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> (<a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a>) – </p></li>
+<li><p><strong>ignore_subcounts</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.to_json_dict">
+<span class="sig-name descname"><span class="pre">to_json_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.to_json_dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Dump a JSON representation of the heirarchy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.from_json_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.from_json_dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a QueryResult from a previous <cite>to_json</cite> call</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>json_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.to_line">
+<span class="sig-name descname"><span class="pre">to_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_fmts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">|</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NA'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.to_line" title="Permalink to this definition">#</a></dt>
+<dd><p>Get line of text describing a single node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.DataNode" title="dcm.query.DataNode"><em>DataNode</em></a><em>]</em>) – </p></li>
+<li><p><strong>level_fmts</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em><em>, </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>sep</strong> (<em>str</em>) – </p></li>
+<li><p><strong>missing</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.query.QueryResult.to_tree">
+<span class="sig-name descname"><span class="pre">to_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QueryLevel.IMAGE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_fmts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">|</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NA'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.query.QueryResult.to_tree" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce a formatted text tree representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_level</strong> (<a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a>) – </p></li>
+<li><p><strong>level_fmts</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>Optional</em><em>[</em><a class="reference internal" href="#dcm.query.QueryLevel" title="dcm.query.QueryLevel"><em>QueryLevel</em></a><em>]</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>sep</strong> (<em>str</em>) – </p></li>
+<li><p><strong>missing</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -230,6 +1120,7 @@
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
