@@ -85,10 +85,6 @@ disallow_untyped_defs = true
 disallow_any_generics = true
 
 [[tool.mypy.overrides]]
-module = "mycode.bar"
-warn_return_any = false
-
-[[tool.mypy.overrides]]
 module = "dcm.tests.*"
 ignore_errors = true
 

@@ -10,4 +10,4 @@ __pycache__
 .python-version
 .coverage
 coverage.xml
-docs/build/
+docs/build/doctrees/

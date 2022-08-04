@@ -4,3 +4,11 @@ repos:
     hooks:
       - id: black
         language_version: python3 # Should be a command that runs python3.6+
+  - repo: https://github.com/thclark/pre-commit-sphinx
+    rev: 0.0.3
+    hooks:
+      - id: build-docs
+        additional_dependencies:
+          - furo
+        args: ['--cache-dir', 'docs/build/doctrees', '--html-dir', 'docs/build/html', '--source-dir', 'docs/source']
+        language_version: python3

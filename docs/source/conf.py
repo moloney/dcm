@@ -42,3 +42,19 @@ autodoc_class_signature = "separated"
 
 html_theme = "furo"
 html_static_path = ["_static"]
+
+# -- Auto run sphinx-apidoc on each build -----------------------------------
+def run_apidoc(_):
+    from sphinx.ext.apidoc import main
+    import os
+
+    # import sys
+    doc_src = os.path.abspath(os.path.dirname(__file__))
+    code_src = os.path.abspath(os.path.join(doc_src, "../../dcm"))
+    # sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    ignore_pattern = os.path.join(code_src, "tests", "**")
+    main(["--force", "--separate", "-o", doc_src, code_src, ignore_pattern])
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)
