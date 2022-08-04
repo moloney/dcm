@@ -193,39 +193,46 @@
           <section id="module-dcm.cli">
 <span id="dcm-cli-module"></span><h1>dcm.cli module<a class="headerlink" href="#module-dcm.cli" title="Permalink to this heading">#</a></h1>
 <p>Command line interface</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="dcm.cli.cli_error">
-<span class="sig-prename descclassname"><span class="pre">dcm.cli.</span></span><span class="sig-name descname"><span class="pre">cli_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.cli_error" title="Permalink to this definition">#</a></dt>
-<dd><p>Print msg to stderr and exit with non-zero exit code</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.cli.QueryResponseFilter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.cli.</span></span><span class="sig-name descname"><span class="pre">QueryResponseFilter</span></span><a class="headerlink" href="#dcm.cli.QueryResponseFilter" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Filter</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.cli.QueryResponseFilter.filter">
-<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.QueryResponseFilter.filter" title="Permalink to this definition">#</a></dt>
-<dd><p>Determine if the specified record is to be logged.</p>
-<p>Returns True if the record should be logged, or False otherwise.
-If deemed appropriate, the record may be modified in-place.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.cli.QueryResponseFilter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.QueryResponseFilter.__init__" title="Permalink to this definition">#</a></dt>
-<dd><p>Initialize a filter.</p>
-<p>Initialize with the name of the logger which, together with its
-children, will have its events allowed through the filter. If no
-name is specified, allow every event.</p>
-</dd></dl>
-
-</dd></dl>
-
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.cli.PerformedQueryFilter" title="dcm.cli.PerformedQueryFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PerformedQueryFilter</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.cli.QueryResponseFilter" title="dcm.cli.QueryResponseFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QueryResponseFilter</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Functions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.cli.cli_error" title="dcm.cli.cli_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli_error</span></code></a>(msg[, exit_code])</p></td>
+<td><p>Print msg to stderr and exit with non-zero exit code</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.cli.make_print_cb" title="dcm.cli.make_print_cb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_print_cb</span></code></a>(fmt[, elem_filter])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.cli.PerformedQueryFilter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.cli.</span></span><span class="sig-name descname"><span class="pre">PerformedQueryFilter</span></span><a class="headerlink" href="#dcm.cli.PerformedQueryFilter" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Filter</span></code></p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.cli.PerformedQueryFilter.filter" title="dcm.cli.PerformedQueryFilter.filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter</span></code></a>(record)</p></td>
+<td><p>Determine if the specified record is to be logged.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.cli.PerformedQueryFilter.filter">
 <span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.PerformedQueryFilter.filter" title="Permalink to this definition">#</a></dt>
@@ -234,15 +241,36 @@ name is specified, allow every event.</p>
 If deemed appropriate, the record may be modified in-place.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.cli.PerformedQueryFilter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.PerformedQueryFilter.__init__" title="Permalink to this definition">#</a></dt>
-<dd><p>Initialize a filter.</p>
-<p>Initialize with the name of the logger which, together with its
-children, will have its events allowed through the filter. If no
-name is specified, allow every event.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.cli.QueryResponseFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.cli.</span></span><span class="sig-name descname"><span class="pre">QueryResponseFilter</span></span><a class="headerlink" href="#dcm.cli.QueryResponseFilter" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Filter</span></code></p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.cli.QueryResponseFilter.filter" title="dcm.cli.QueryResponseFilter.filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter</span></code></a>(record)</p></td>
+<td><p>Determine if the specified record is to be logged.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.cli.QueryResponseFilter.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.QueryResponseFilter.filter" title="Permalink to this definition">#</a></dt>
+<dd><p>Determine if the specified record is to be logged.</p>
+<p>Returns True if the record should be logged, or False otherwise.
+If deemed appropriate, the record may be modified in-place.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.cli.cli_error">
+<span class="sig-prename descclassname"><span class="pre">dcm.cli.</span></span><span class="sig-name descname"><span class="pre">cli_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.cli.cli_error" title="Permalink to this definition">#</a></dt>
+<dd><p>Print msg to stderr and exit with non-zero exit code</p>
 </dd></dl>
 
 <dl class="py function">

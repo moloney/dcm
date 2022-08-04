@@ -193,15 +193,50 @@
           <section id="module-dcm.diff">
 <span id="dcm-diff-module"></span><h1>dcm.diff module<a class="headerlink" href="#module-dcm.diff" title="Permalink to this heading">#</a></h1>
 <p>Logic for comparing DICOM data sets and data sources</p>
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.diff.DataDiff" title="dcm.diff.DataDiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataDiff</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Functions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.diff.diff_data_sets" title="dcm.diff.diff_data_sets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diff_data_sets</span></code></a>(left, right)</p></td>
+<td><p>Get list of all differences between <cite>left</cite> and <cite>right</cite> data sets</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.diff.DataDiff">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.diff.</span></span><span class="sig-name descname"><span class="pre">DataDiff</span></span><a class="headerlink" href="#dcm.diff.DataDiff" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.diff.DataDiff.default_elem_fmt">
-<span class="sig-name descname"><span class="pre">default_elem_fmt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'{elem.tag}</span> <span class="pre">{elem.name:</span> <span class="pre">&lt;35}</span> <span class="pre">{elem.VR}:</span> <span class="pre">{value}'</span></em><a class="headerlink" href="#dcm.diff.DataDiff.default_elem_fmt" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.diff.DataDiff.__init__" title="dcm.diff.DataDiff.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(tag, l_elem, r_elem[, elem_fmt])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.diff.DataDiff.default_elem_fmt" title="dcm.diff.DataDiff.default_elem_fmt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_elem_fmt</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.diff.DataDiff.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_elem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_elem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">default_elem_fmt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.diff.DataDiff.__init__" title="Permalink to this definition">#</a></dt>
@@ -216,6 +251,11 @@
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.diff.DataDiff.default_elem_fmt">
+<span class="sig-name descname"><span class="pre">default_elem_fmt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'{elem.tag}</span> <span class="pre">{elem.name:</span> <span class="pre">&lt;35}</span> <span class="pre">{elem.VR}:</span> <span class="pre">{value}'</span></em><a class="headerlink" href="#dcm.diff.DataDiff.default_elem_fmt" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

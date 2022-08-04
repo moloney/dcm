@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging, operator, re
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Tuple, List, Any, Dict, Union, MutableMapping
+from typing import Callable, Optional, Tuple, List, Any, Dict
 from typing_extensions import Protocol
 
 from pydicom import Dataset, DataElement
@@ -74,7 +74,7 @@ class Filter(_BaseFilter, _SingleFilter):
 
     By default it is assumed the filter needs access to the full data set and
     can modify any element in any way. More info can be provided by setting
-    the various `*_elems` attributes which will allow for various optimizations.
+    the various ``*_elems`` attributes which will allow for various optimizations.
     """
 
     def __post_init__(self) -> None:
@@ -150,17 +150,17 @@ class DataCollection:
     """Captures all the consistent non-duplicate data"""
 
     inconsistent: List[Dataset] = field(default_factory=list)
-    """List of data sets that can't be stored in `qr` due to inconsistancy"""
+    """List of data sets that can't be stored in ``qr`` due to inconsistancy"""
 
     duplicate: List[Dataset] = field(default_factory=list)
-    """List of data sets that are duplicates of those in `qr`"""
+    """List of data sets that are duplicates of those in ``qr``"""
 
 
 class DataTransform:
     """Transforms data, and keeps track so it can be reversed
 
     Abstract base class. All subclasses should have two QueryResult attributes
-    `old` and `new` (which should be treated as read-only) plus the methods
+    ``old`` and ``new`` (which should be treated as read-only) plus the methods
     below.
     """
 
@@ -328,7 +328,7 @@ def make_uid_update_cb(
         uid_prefix += "."
 
     def update_uids_cb(ds: Dataset, elem: DataElement) -> None:
-        """Callback for updating UID values except `SOPClassUID`"""
+        """Callback for updating UID values except ``SOPClassUID``"""
         if elem.VR == "UI" and elem.keyword != "SOPClassUID":
             if elem.VM > 1:
                 elem.value = [

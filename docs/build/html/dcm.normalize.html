@@ -195,6 +195,28 @@
 <p>Convert DICOM data sets to just dict/list/tuple/str/float/int</p>
 <p>Results can be easily serialized and the goal is to be fully reversable, but
 that is not implemented yet</p>
+<p><strong>Functions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.normalize.bytes_or_text" title="dcm.normalize.bytes_or_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bytes_or_text</span></code></a>(val)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.normalize.convert_or_none" title="dcm.normalize.convert_or_none"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_or_none</span></code></a>(converter, val)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.normalize.make_elem_filter" title="dcm.normalize.make_elem_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_elem_filter</span></code></a>(include_elems)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.normalize.norm_elem_val" title="dcm.normalize.norm_elem_val"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm_elem_val</span></code></a>(elem)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.normalize.normalize" title="dcm.normalize.normalize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize</span></code></a>(data_set[, elem_filter])</p></td>
+<td><p>Convert a DICOM data set into basic python types that can be serialized</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.normalize.bytes_or_text">
 <span class="sig-prename descclassname"><span class="pre">dcm.normalize.</span></span><span class="sig-name descname"><span class="pre">bytes_or_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.normalize.bytes_or_text" title="Permalink to this definition">#</a></dt>
@@ -206,13 +228,13 @@ that is not implemented yet</p>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="dcm.normalize.norm_elem_val">
-<span class="sig-prename descclassname"><span class="pre">dcm.normalize.</span></span><span class="sig-name descname"><span class="pre">norm_elem_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.normalize.norm_elem_val" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.normalize.make_elem_filter">
+<span class="sig-prename descclassname"><span class="pre">dcm.normalize.</span></span><span class="sig-name descname"><span class="pre">make_elem_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_elems</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.normalize.make_elem_filter" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="dcm.normalize.make_elem_filter">
-<span class="sig-prename descclassname"><span class="pre">dcm.normalize.</span></span><span class="sig-name descname"><span class="pre">make_elem_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_elems</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.normalize.make_elem_filter" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.normalize.norm_elem_val">
+<span class="sig-prename descclassname"><span class="pre">dcm.normalize.</span></span><span class="sig-name descname"><span class="pre">norm_elem_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.normalize.norm_elem_val" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">

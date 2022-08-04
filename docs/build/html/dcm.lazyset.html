@@ -192,33 +192,41 @@
         <article role="main">
           <section id="module-dcm.lazyset">
 <span id="dcm-lazyset-module"></span><h1>dcm.lazyset module<a class="headerlink" href="#module-dcm.lazyset" title="Permalink to this heading">#</a></h1>
+<p><strong>Exceptions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.lazyset.LazyEnumerationError" title="dcm.lazyset.LazyEnumerationError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazyEnumerationError</span></code></a></p></td>
+<td><p>Raised when attempting to iterate a LazySet that can't be enumerated</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.lazyset.FrozenLazySet" title="dcm.lazyset.FrozenLazySet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrozenLazySet</span></code></a></p></td>
+<td><p>Frozen LazySet</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.lazyset.LazySet" title="dcm.lazyset.LazySet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazySet</span></code></a></p></td>
+<td><p>Set like object that can contain all elements without enumerating them</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.lazyset.LazyEnumerationError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.lazyset.</span></span><span class="sig-name descname"><span class="pre">LazyEnumerationError</span></span><a class="headerlink" href="#dcm.lazyset.LazyEnumerationError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Raised when attempting to iterate a LazySet that can’t be enumerated</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazyEnumerationError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazyEnumerationError.__init__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazyEnumerationError.__new__">
-<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazyEnumerationError.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.lazyset.LazyEnumerationError.args">
-<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.lazyset.LazyEnumerationError.args" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazyEnumerationError.with_traceback">
-<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazyEnumerationError.with_traceback" title="Permalink to this definition">#</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.lazyset.</span></span><span class="sig-name descname"><span class="pre">FrozenLazySet</span></span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_BaseLazySet</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
+<p>Frozen LazySet</p>
 </dd></dl>
 
 <dl class="py class">
@@ -227,115 +235,6 @@ set self.__traceback__ to tb and return self.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_BaseLazySet</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
 <p>Set like object that can contain all elements without enumerating them</p>
 <p>Can also represent exclusive sets (everything except…)</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazySet.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazySet.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>elems</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>_BaseLazySet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Set</em><em>[</em><em>T</em><em>]</em><em>, </em><em>FrozenSet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>T</em><em>]</em><em>, </em><em>_AllElems</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>exclude</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Set</em><em>[</em><em>T</em><em>]</em><em>, </em><em>FrozenSet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>T</em><em>]</em><em>, </em><em>_AllElems</em><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazySet.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazySet.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazySet.collides">
-<span class="sig-name descname"><span class="pre">collides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazySet.collides" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>other</strong> (<em>_BaseLazySet</em><em>[</em><em>T</em><em>]</em>) – </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazySet.excludes">
-<span class="sig-name descname"><span class="pre">excludes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazySet.excludes" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<em>T</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.LazySet.is_enumerable">
-<span class="sig-name descname"><span class="pre">is_enumerable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.LazySet.is_enumerable" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.lazyset.</span></span><span class="sig-name descname"><span class="pre">FrozenLazySet</span></span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_BaseLazySet</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
-<p>Frozen LazySet</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>elems</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>_BaseLazySet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Set</em><em>[</em><em>T</em><em>]</em><em>, </em><em>FrozenSet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>T</em><em>]</em><em>, </em><em>_AllElems</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>exclude</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Set</em><em>[</em><em>T</em><em>]</em><em>, </em><em>FrozenSet</em><em>[</em><em>T</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>T</em><em>]</em><em>, </em><em>_AllElems</em><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet.collides">
-<span class="sig-name descname"><span class="pre">collides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet.collides" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>other</strong> (<em>_BaseLazySet</em><em>[</em><em>T</em><em>]</em>) – </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet.excludes">
-<span class="sig-name descname"><span class="pre">excludes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet.excludes" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<em>T</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.lazyset.FrozenLazySet.is_enumerable">
-<span class="sig-name descname"><span class="pre">is_enumerable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.lazyset.FrozenLazySet.is_enumerable" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>

@@ -208,24 +208,50 @@
 <p>We want to handle data stored in naive local directories or remote network
 repositories in a seamless manner, while still allowing users to take advantage
 of their specific capabilities.</p>
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.store.TransferMethod" title="dcm.store.TransferMethod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransferMethod</span></code></a></p></td>
+<td><p>Enmerate different methods of transferring data</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.store.TransferMethod">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.</span></span><span class="sig-name descname"><span class="pre">TransferMethod</span></span><a class="headerlink" href="#dcm.store.TransferMethod" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Enmerate different methods of transferring data</p>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.LINK" title="dcm.store.TransferMethod.LINK"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LINK</span></code></a></p></td>
+<td><p>Data is locally hard linked from the src to the dest</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.LOCAL_COPY" title="dcm.store.TransferMethod.LOCAL_COPY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LOCAL_COPY</span></code></a></p></td>
+<td><p>Data is locally copied from src directly to dest</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.MOVE" title="dcm.store.TransferMethod.MOVE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MOVE</span></code></a></p></td>
+<td><p>Data is locally moved so it no longer exists on the src</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.PROXY" title="dcm.store.TransferMethod.PROXY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROXY</span></code></a></p></td>
+<td><p>Data is read into memory and then forwarded to any dests</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.REMOTE_COPY" title="dcm.store.TransferMethod.REMOTE_COPY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REMOTE_COPY</span></code></a></p></td>
+<td><p>Data is remotely copied from the src directly to the dest</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.store.TransferMethod.SYMLINK" title="dcm.store.TransferMethod.SYMLINK"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SYMLINK</span></code></a></p></td>
+<td><p>Data is locally symlinked from the src to the dest</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.store.TransferMethod.PROXY">
-<span class="sig-name descname"><span class="pre">PROXY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.store.TransferMethod.PROXY" title="Permalink to this definition">#</a></dt>
-<dd><p>Data is read into memory and then forwarded to any dests</p>
-<p>This is the required transfer method for any filtering/validation</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.store.TransferMethod.REMOTE_COPY">
-<span class="sig-name descname"><span class="pre">REMOTE_COPY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#dcm.store.TransferMethod.REMOTE_COPY" title="Permalink to this definition">#</a></dt>
-<dd><p>Data is remotely copied from the src directly to the dest</p>
-<p>This includes the DICOM ‘Move-SCU’ operation which is a misnomer as it
-really copies the data.</p>
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.LINK">
+<span class="sig-name descname"><span class="pre">LINK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#dcm.store.TransferMethod.LINK" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is locally hard linked from the src to the dest</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -241,9 +267,18 @@ really copies the data.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.store.TransferMethod.LINK">
-<span class="sig-name descname"><span class="pre">LINK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#dcm.store.TransferMethod.LINK" title="Permalink to this definition">#</a></dt>
-<dd><p>Data is locally hard linked from the src to the dest</p>
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.PROXY">
+<span class="sig-name descname"><span class="pre">PROXY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcm.store.TransferMethod.PROXY" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is read into memory and then forwarded to any dests</p>
+<p>This is the required transfer method for any filtering/validation</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.store.TransferMethod.REMOTE_COPY">
+<span class="sig-name descname"><span class="pre">REMOTE_COPY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#dcm.store.TransferMethod.REMOTE_COPY" title="Permalink to this definition">#</a></dt>
+<dd><p>Data is remotely copied from the src directly to the dest</p>
+<p>This includes the DICOM ‘Move-SCU’ operation which is a misnomer as it
+really copies the data.</p>
 </dd></dl>
 
 <dl class="py attribute">

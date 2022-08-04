@@ -159,8 +159,8 @@ that produces the incoming data as ``pydicom.Dataset`` objects.
   ...         print(ds.SOPInstanceUID)
 
   >>> asyncio.run(print_incoming(local, mypacs, qr))
-  
-Higher level data transfer functionality is exposed through the ``route`` and ``sync``
+
+Higher level data transfer functionality is exposed through the ``route`` and ``sync`` 
 modules. You can create ``route.StaticRoute`` and ``route.DynamicRoute``objects to add
 on-the-fly data filtering and dynamic selection of destinations. 
 

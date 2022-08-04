@@ -261,6 +261,8 @@ T_report = TypeVar(
 
 @dataclass
 class Transfer(Generic[T_report]):
+    """Generic base class for all transfers"""
+
     chunk: DataChunk
 
     report: T_report
@@ -268,6 +270,8 @@ class Transfer(Generic[T_report]):
 
 @dataclass
 class DynamicTransfer(Transfer["DynamicTransferReport"]):
+    """A transfer where destinations are resolve dynamically"""
+
     chunk: DataChunk
 
     report: DynamicTransferReport = field(default_factory=DynamicTransferReport)
@@ -275,6 +279,8 @@ class DynamicTransfer(Transfer["DynamicTransferReport"]):
 
 @dataclass
 class StaticTransfer(Transfer["StaticTransferReport"]):
+    """A transfer where all destinations are statically predetermined"""
+
     chunk: DataChunk
 
     report: StaticTransferReport = field(default_factory=StaticTransferReport)
@@ -1042,7 +1048,7 @@ async def sync_data(
 ) -> List[SyncReport]:
     """Sync data from one or more sources to one or more destinations
 
-    The `query` paramater can be a single item that applies to all sources or
+    The ``query`` paramater can be a single item that applies to all sources or
     a list of items (one for each source).
 
     The data from each source if forwarded to all destinations (unless those
@@ -1050,6 +1056,7 @@ async def sync_data(
 
     Parameters
     ----------
+
     sources
         The sources we are syncing data from
 

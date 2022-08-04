@@ -1113,8 +1113,9 @@ class _SingletonEntity(type):
 class LocalEntity(metaclass=_SingletonEntity):
     """Low level interface to DICOM networking functionality
 
-    Params
-    ------
+    Parameters
+    ----------
+
     local
         The local DICOM network node properties
 
@@ -1194,8 +1195,8 @@ class LocalEntity(metaclass=_SingletonEntity):
     ) -> AsyncIterator[QueryResult]:
         """Query the `remote` entity in an iterative manner
 
-        Params
-        ------
+        Parameters
+        ----------
         remote
             The network node we are querying
 

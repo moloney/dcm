@@ -193,197 +193,156 @@
           <section id="module-dcm.sync">
 <span id="dcm-sync-module"></span><h1>dcm.sync module<a class="headerlink" href="#module-dcm.sync" title="Permalink to this heading">#</a></h1>
 <p>Synchronize DICOM data between local and/or remote locations</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticStoreReport</span></span><a class="headerlink" href="#dcm.sync.StaticStoreReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiDictReport</span></code></a>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataBucket</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">DicomOpReport</span></code></a>, <a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalWriteReport</span></code></a>]]</p>
-<p>Transfer report that only captures storage</p>
+<p><strong>Exceptions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.RepoRequiredError" title="dcm.sync.RepoRequiredError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RepoRequiredError</span></code></a></p></td>
+<td><p>Operation requires a DataRepo but a DataBucket was provided</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferError" title="dcm.sync.StaticTransferError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticTransferError</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.DynamicTransfer" title="dcm.sync.DynamicTransfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DynamicTransfer</span></code></a></p></td>
+<td><p>A transfer where destinations are resolve dynamically</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticOobTransferReport" title="dcm.sync.StaticOobTransferReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticOobTransferReport</span></code></a></p></td>
+<td><p>Transfer report for out-of-band transfers</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport" title="dcm.sync.StaticProxyTransferReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticProxyTransferReport</span></code></a></p></td>
+<td><p>Static proxy transfer report</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticStoreReport" title="dcm.sync.StaticStoreReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticStoreReport</span></code></a></p></td>
+<td><p>Transfer report that only captures storage</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer" title="dcm.sync.StaticTransfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticTransfer</span></code></a></p></td>
+<td><p>A transfer where all destinations are statically predetermined</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport" title="dcm.sync.StaticTransferReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticTransferReport</span></code></a></p></td>
+<td><p>Capture all possible info about a single StaticTranfer</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncManager" title="dcm.sync.SyncManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SyncManager</span></code></a></p></td>
+<td><p>Can generate and execute transfers needed to sync <cite>src</cite> and <cite>dests</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.SyncQueriesReport" title="dcm.sync.SyncQueriesReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SyncQueriesReport</span></code></a></p></td>
+<td><p>Report for queries being performed during sync</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncReport" title="dcm.sync.SyncReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SyncReport</span></code></a></p></td>
+<td><p>Top level report from a sync operation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Transfer</span></code></a></p></td>
+<td><p>Generic base class for all transfers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Functions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.make_basic_validator" title="dcm.sync.make_basic_validator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_basic_validator</span></code></a>([diff_filters])</p></td>
+<td><p>Create validator that logs a warning on any differing elements</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.sync_data" title="dcm.sync.sync_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sync_data</span></code></a>(sources, dests[, query, ...])</p></td>
+<td><p>Sync data from one or more sources to one or more destinations</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">RepoRequiredError</span></span><a class="headerlink" href="#dcm.sync.RepoRequiredError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Operation requires a DataRepo but a DataBucket was provided</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticTransferError</span></span><a class="headerlink" href="#dcm.sync.StaticTransferError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxy_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oob_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>n_expected</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>proxy_error</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.route.html#dcm.route.ProxyTransferError" title="dcm.route.ProxyTransferError"><em>ProxyTransferError</em></a><em>]</em>) – </p></li>
+<li><p><strong>oob_error</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiKeyedError" title="dcm.report.MultiKeyedError"><em>MultiKeyedError</em></a><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors have occured so far</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">DynamicTransfer</span></span><a class="headerlink" href="#dcm.sync.DynamicTransfer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transfer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicTransferReport</span></code>]</p>
+<p>A transfer where destinations are resolve dynamically</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.DynamicTransfer.__init__" title="dcm.sync.DynamicTransfer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(chunk[, report])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.DynamicTransfer.chunk" title="dcm.sync.DynamicTransfer.chunk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chunk</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.DynamicTransfer.report" title="dcm.sync.DynamicTransfer.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.clear" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.DynamicTransfer.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><em>DataChunk</em></a>) – </p></li>
+<li><p><strong>report</strong> (<a class="reference internal" href="dcm.route.html#dcm.route.DynamicTransferReport" title="dcm.route.DynamicTransferReport"><em>DynamicTransferReport</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.count_input" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.depth" title="Permalink to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.chunk">
+<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.DynamicTransfer.chunk" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.description" title="Permalink to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.report">
+<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.route.html#dcm.route.DynamicTransferReport" title="dcm.route.DynamicTransferReport"><span class="pre">DynamicTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.DynamicTransfer.report" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<em>R</em>]</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.items">
-<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.items" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ItemsView</em>[<em>K</em>, <em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.keys" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>KeysView</em>[<em>K</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_sub_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_sub_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_sub_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_sub_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticStoreReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport.values">
-<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticStoreReport.values" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ValuesView</em>[<em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticOobTransferReport</span></span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiDictReport</span></code></a>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransferMethod</span></code></a>, <a class="reference internal" href="#dcm.sync.StaticStoreReport" title="dcm.sync.StaticStoreReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticStoreReport</span></code></a>]</p>
+<p>Transfer report for out-of-band transfers</p>
 </dd></dl>
 
 <dl class="py class">
@@ -391,6 +350,47 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticProxyTransferReport</span></span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.route.html#dcm.route.ProxyReport" title="dcm.route.ProxyReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProxyReport</span></code></a></p>
 <p>Static proxy transfer report</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.__init__" title="dcm.sync.StaticProxyTransferReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.add_store_report" title="dcm.sync.StaticProxyTransferReport.add_store_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_store_report</span></code></a>(dest, store_report)</p></td>
+<td><p>Add a DicomOpReport or LocalWriteReport to keep track of</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.check_errors" title="dcm.sync.StaticProxyTransferReport.check_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_errors</span></code></a>()</p></td>
+<td><p>Raise an exception if any errors have occured so far</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.clear" title="dcm.sync.StaticProxyTransferReport.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.log_issues" title="dcm.sync.StaticProxyTransferReport.log_issues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_issues</span></code></a>()</p></td>
+<td><p>Produce log messages for any warning/error statuses</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.n_errors" title="dcm.sync.StaticProxyTransferReport.n_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_errors</span></code></a></p></td>
+<td><p>Number of errors, where a single input can cause multiple errors</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.n_reported" title="dcm.sync.StaticProxyTransferReport.n_reported"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_reported</span></code></a></p></td>
+<td><p>Number store results that have been reported so far</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.n_success" title="dcm.sync.StaticProxyTransferReport.n_success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_success</span></code></a></p></td>
+<td><p>Number of successfully handled inputs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport.n_warnings" title="dcm.sync.StaticProxyTransferReport.n_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_warnings</span></code></a></p></td>
+<td><p>Number of warnings, where a single input can cause multiple warnings</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.__init__" title="Permalink to this definition">#</a></dt>
@@ -408,30 +408,6 @@
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_reported">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_reported" title="Permalink to this definition">#</a></dt>
-<dd><p>Number store results that have been reported so far</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.add_store_report">
 <span class="sig-name descname"><span class="pre">add_store_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.add_store_report" title="Permalink to this definition">#</a></dt>
@@ -445,17 +421,6 @@
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Produce log messages for any warning/error statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -482,236 +447,9 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.add" title="Permalink to this definition">#</a></dt>
-<dd><p>Add the route with pre/post filtering dataset to the report</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>route</strong> (<a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><em>StaticRoute</em></a>) – </p></li>
-<li><p><strong>old_ds</strong> (<em>Dataset</em>) – </p></li>
-<li><p><strong>new_ds</strong> (<em>Dataset</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.all_reported">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.all_reported" title="Permalink to this definition">#</a></dt>
-<dd><p>True if all sent data sets have a reported result</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.count_input" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.keep_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keep_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.IncomingErrorType" title="dcm.net.IncomingErrorType"><span class="pre">IncomingErrorType</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.keep_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Whether or not we are forwarding inconsistent/duplicate data</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_duplicate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_duplicate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_duplicate" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_inconsistent">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inconsistent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_inconsistent" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_sent">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_sent" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of times datasets were sent out</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticOobTransferReport</span></span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiDictReport</span></code></a>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransferMethod</span></code></a>, <a class="reference internal" href="#dcm.sync.StaticStoreReport" title="dcm.sync.StaticStoreReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticStoreReport</span></code></a>]</p>
-<p>Transfer report for out-of-band transfers</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>n_expected</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors have occured so far</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.count_input" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.items">
-<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.items" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ItemsView</em>[<em>K</em>, <em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.keys" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>KeysView</em>[<em>K</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
+<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.log_issues">
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
+<dd><p>Produce log messages for any warning/error statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -720,336 +458,75 @@
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_errors" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of errors, where a single input can cause multiple errors</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
+<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_reported">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_reported</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_reported" title="Permalink to this definition">#</a></dt>
+<dd><p>Number store results that have been reported so far</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_sub_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_sub_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_sub_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_sub_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_success" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_success" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of successfully handled inputs</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.n_warnings" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticProxyTransferReport.n_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticProxyTransferReport.n_warnings" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of warnings, where a single input can cause multiple warnings</p>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticOobTransferReport.values">
-<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticOobTransferReport.values" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ValuesView</em>[<em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticTransferError</span></span><a class="headerlink" href="#dcm.sync.StaticTransferError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxy_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oob_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferError.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>proxy_error</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.route.html#dcm.route.ProxyTransferError" title="dcm.route.ProxyTransferError"><em>ProxyTransferError</em></a><em>]</em>) – </p></li>
-<li><p><strong>oob_error</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.MultiKeyedError" title="dcm.report.MultiKeyedError"><em>MultiKeyedError</em></a><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferError.__new__">
-<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferError.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferError.args">
-<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.sync.StaticTransferError.args" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferError.with_traceback">
-<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferError.with_traceback" title="Permalink to this definition">#</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticTransferReport</span></span><a class="headerlink" href="#dcm.sync.StaticTransferReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p>
-<p>Capture all possible info about a single StaticTranfer</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>incoming_report</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingDataReport" title="dcm.net.IncomingDataReport"><em>IncomingDataReport</em></a><em>, </em><a class="reference internal" href="dcm.net.html#dcm.net.RetrieveReport" title="dcm.net.RetrieveReport"><em>RetrieveReport</em></a><em>, </em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalIncomingReport" title="dcm.store.base.LocalIncomingReport"><em>LocalIncomingReport</em></a><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.incoming_report">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">incoming_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.IncomingDataReport" title="dcm.net.IncomingDataReport"><span class="pre">IncomingDataReport</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.net.html#dcm.net.RetrieveReport" title="dcm.net.RetrieveReport"><span class="pre">RetrieveReport</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalIncomingReport" title="dcm.store.base.LocalIncomingReport"><span class="pre">LocalIncomingReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.incoming_report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.proxy_report">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">proxy_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport" title="dcm.sync.StaticProxyTransferReport"><span class="pre">StaticProxyTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.proxy_report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.oob_report">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticOobTransferReport" title="dcm.sync.StaticOobTransferReport"><span class="pre">StaticOobTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.oob_report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors have occured so far</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="dcm.report.html#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.Transfer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">Transfer</span></span><a class="headerlink" href="#dcm.sync.Transfer" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T_report</span></code>]</p>
-<p>Transfer(<a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwds)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.Transfer.chunk">
-<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.Transfer.chunk" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.Transfer.report">
-<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">T_report</span></em><a class="headerlink" href="#dcm.sync.Transfer.report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.Transfer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.Transfer.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><em>DataChunk</em></a>) – </p></li>
-<li><p><strong>report</strong> (<em>T_report</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.Transfer.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.Transfer.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">DynamicTransfer</span></span><a class="headerlink" href="#dcm.sync.DynamicTransfer" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transfer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicTransferReport</span></code>]</p>
-<p>DynamicTransfer(<a href="#id5"><span class="problematic" id="id6">*</span></a>args, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwds)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.chunk">
-<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.DynamicTransfer.chunk" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.report">
-<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.route.html#dcm.route.DynamicTransferReport" title="dcm.route.DynamicTransferReport"><span class="pre">DynamicTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.DynamicTransfer.report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.DynamicTransfer.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><em>DataChunk</em></a>) – </p></li>
-<li><p><strong>report</strong> (<a class="reference internal" href="dcm.route.html#dcm.route.DynamicTransferReport" title="dcm.route.DynamicTransferReport"><em>DynamicTransferReport</em></a>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.DynamicTransfer.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.DynamicTransfer.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="dcm.sync.StaticStoreReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticStoreReport</span></span><a class="headerlink" href="#dcm.sync.StaticStoreReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiDictReport</span></code></a>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataBucket</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">DicomOpReport</span></code></a>, <a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalWriteReport" title="dcm.store.base.LocalWriteReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalWriteReport</span></code></a>]]</p>
+<p>Transfer report that only captures storage</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.sync.StaticTransfer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticTransfer</span></span><a class="headerlink" href="#dcm.sync.StaticTransfer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transfer</span></code></a>[<a class="reference internal" href="#dcm.sync.StaticTransferReport" title="dcm.sync.StaticTransferReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticTransferReport</span></code></a>]</p>
-<p>StaticTransfer(<a href="#id9"><span class="problematic" id="id10">*</span></a>args, <a href="#id11"><span class="problematic" id="id12">**</span></a>kwds)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.chunk">
-<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransfer.chunk" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.report">
-<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticTransferReport" title="dcm.sync.StaticTransferReport"><span class="pre">StaticTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransfer.report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.method_routes_map">
-<span class="sig-name descname"><span class="pre">method_routes_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><span class="pre">TransferMethod</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><span class="pre">StaticRoute</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransfer.method_routes_map" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.proxy_filter_dest_map">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">proxy_filter_dest_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransfer.proxy_filter_dest_map" title="Permalink to this definition">#</a></dt>
-<dd><p>Get dict mapping filters to destinations for proxy transfers</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.get_dests">
-<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransfer.get_dests" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]</p>
-</dd>
-</dl>
-</dd></dl>
-
+<p>A transfer where all destinations are statically predetermined</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.__init__" title="dcm.sync.StaticTransfer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(chunk[, report, method_routes_map])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.get_dests" title="dcm.sync.StaticTransfer.get_dests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_dests</span></code></a>(method)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.chunk" title="dcm.sync.StaticTransfer.chunk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chunk</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.method_routes_map" title="dcm.sync.StaticTransfer.method_routes_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">method_routes_map</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.proxy_filter_dest_map" title="dcm.sync.StaticTransfer.proxy_filter_dest_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxy_filter_dest_map</span></code></a></p></td>
+<td><p>Get dict mapping filters to destinations for proxy transfers</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransfer.report" title="dcm.sync.StaticTransfer.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.sync.StaticTransfer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_routes_map=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransfer.__init__" title="Permalink to this definition">#</a></dt>
@@ -1068,64 +545,78 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransfer.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="dcm.sync.make_basic_validator">
-<span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">make_basic_validator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diff_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.make_basic_validator" title="Permalink to this definition">#</a></dt>
-<dd><p>Create validator that logs a warning on any differing elements</p>
-<p>List of filter functions can be supplied to modify/delete the diffs</p>
-<dl class="field-list simple">
+<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.get_dests">
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransfer.get_dests" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>diff_filters</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="dcm.diff.html#dcm.diff.DataDiff" title="dcm.diff.DataDiff"><em>DataDiff</em></a><em>]</em><em>, </em><em>Optional</em><em>[</em><a class="reference internal" href="dcm.diff.html#dcm.diff.DataDiff" title="dcm.diff.DataDiff"><em>DataDiff</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>method</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><em>TransferMethod</em></a>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Callable</em>[[<em>Dataset</em>, <em>Dataset</em>], None]</p>
+<dd class="field-even"><p><em>Tuple</em>[<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a>[<em>Any</em>, <em>Any</em>], …]</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py exception">
-<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">RepoRequiredError</span></span><a class="headerlink" href="#dcm.sync.RepoRequiredError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Operation requires a DataRepo but a DataBucket was provided</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.RepoRequiredError.__init__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError.__new__">
-<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.RepoRequiredError.__new__" title="Permalink to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.chunk">
+<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransfer.chunk" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError.args">
-<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.sync.RepoRequiredError.args" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.method_routes_map">
+<span class="sig-name descname"><span class="pre">method_routes_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.TransferMethod" title="dcm.store.base.TransferMethod"><span class="pre">TransferMethod</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.route.html#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><span class="pre">StaticRoute</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransfer.method_routes_map" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.RepoRequiredError.with_traceback">
-<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.RepoRequiredError.with_traceback" title="Permalink to this definition">#</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.proxy_filter_dest_map">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">proxy_filter_dest_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.filt.html#dcm.filt.Filter" title="dcm.filt.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><span class="pre">DataBucket</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransfer.proxy_filter_dest_map" title="Permalink to this definition">#</a></dt>
+<dd><p>Get dict mapping filters to destinations for proxy transfers</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.StaticTransfer.report">
+<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticTransferReport" title="dcm.sync.StaticTransferReport"><span class="pre">StaticTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransfer.report" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">SyncQueriesReport</span></span><a class="headerlink" href="#dcm.sync.SyncQueriesReport" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">StaticTransferReport</span></span><a class="headerlink" href="#dcm.sync.StaticTransferReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p>
-<p>Report for queries being performed during sync</p>
+<p>Capture all possible info about a single StaticTranfer</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport.__init__" title="dcm.sync.StaticTransferReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport.check_errors" title="dcm.sync.StaticTransferReport.check_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_errors</span></code></a>()</p></td>
+<td><p>Raise an exception if any errors have occured so far</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport.incoming_report" title="dcm.sync.StaticTransferReport.incoming_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">incoming_report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport.oob_report" title="dcm.sync.StaticTransferReport.oob_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oob_report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.StaticTransferReport.proxy_report" title="dcm.sync.StaticTransferReport.proxy_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxy_report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1133,94 +624,16 @@ set self.__traceback__ to tb and return self.</p>
 <li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>depth</strong> (<em>int</em>) – </p></li>
 <li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>incoming_report</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="dcm.net.html#dcm.net.IncomingDataReport" title="dcm.net.IncomingDataReport"><em>IncomingDataReport</em></a><em>, </em><a class="reference internal" href="dcm.net.html#dcm.net.RetrieveReport" title="dcm.net.RetrieveReport"><em>RetrieveReport</em></a><em>, </em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalIncomingReport" title="dcm.store.base.LocalIncomingReport"><em>LocalIncomingReport</em></a><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.init_src_qr_report">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_src_qr_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.init_src_qr_report" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.missing_src_qr_reports">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_src_qr_reports</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.missing_src_qr_reports" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.missing_dest_qr_reports">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_dest_qr_reports</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><span class="pre">MultiDictReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataRepo" title="dcm.store.base.DataRepo"><span class="pre">DataRepo</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.missing_dest_qr_reports" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="dcm.report.html#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.check_errors">
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.StaticTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Raise an exception if any errors have occured so far</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -1229,115 +642,18 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">SyncReport</span></span><a class="headerlink" href="#dcm.sync.SyncReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p>
-<p>Top level report from a sync operation</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.queries_report">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queries_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.SyncQueriesReport" title="dcm.sync.SyncQueriesReport"><span class="pre">SyncQueriesReport</span></a></em><a class="headerlink" href="#dcm.sync.SyncReport.queries_report" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.incoming_report">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">incoming_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.IncomingDataReport" title="dcm.net.IncomingDataReport"><span class="pre">IncomingDataReport</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.net.html#dcm.net.RetrieveReport" title="dcm.net.RetrieveReport"><span class="pre">RetrieveReport</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.LocalIncomingReport" title="dcm.store.base.LocalIncomingReport"><span class="pre">LocalIncomingReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.incoming_report" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.sync.SyncReport.depth" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.oob_report">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticOobTransferReport" title="dcm.sync.StaticOobTransferReport"><span class="pre">StaticOobTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.oob_report" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.sync.SyncReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="dcm.report.html#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.sync.SyncReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.sync.SyncReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncReport.prog_hook" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.StaticTransferReport.proxy_report">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">proxy_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.StaticProxyTransferReport" title="dcm.sync.StaticProxyTransferReport"><span class="pre">StaticProxyTransferReport</span></a></em><a class="headerlink" href="#dcm.sync.StaticTransferReport.proxy_report" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1367,6 +683,28 @@ set to True.</p>
 </ul>
 </dd>
 </dl>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncManager.__init__" title="dcm.sync.SyncManager.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(src, dests[, trust_level, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.SyncManager.close" title="dcm.sync.SyncManager.close"><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncManager.exec_transfer" title="dcm.sync.SyncManager.exec_transfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exec_transfer</span></code></a>(transfer)</p></td>
+<td><p>Execute the given transfer</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.SyncManager.gen_transfers" title="dcm.sync.SyncManager.gen_transfers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_transfers</span></code></a>([query_res])</p></td>
+<td><p>Generate the needed transfers</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncManager.sync" title="dcm.sync.SyncManager.sync"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sync</span></code></a>([query_res])</p></td>
+<td><p>Generate and exec all transfers for <cite>query_res</cite></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.sync.SyncManager.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QueryLevel.IMAGE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.__init__" title="Permalink to this definition">#</a></dt>
@@ -1386,15 +724,11 @@ set to True.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncManager.gen_transfers">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_transfers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.gen_transfers" title="Permalink to this definition">#</a></dt>
-<dd><p>Generate the needed transfers</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>query_res</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a><em>]</em>) – Only transfer data that matches this QueryResult</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>AsyncIterator</em>[<a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><em>Transfer</em></a>[<em>Any</em>]]</p>
+<dt class="sig sig-object py" id="dcm.sync.SyncManager.close">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.close" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1414,6 +748,20 @@ set to True.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="dcm.sync.SyncManager.gen_transfers">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_transfers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.gen_transfers" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate the needed transfers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>query_res</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.query.html#dcm.query.QueryResult" title="dcm.query.QueryResult"><em>QueryResult</em></a><em>]</em>) – Only transfer data that matches this QueryResult</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AsyncIterator</em>[<a class="reference internal" href="#dcm.sync.Transfer" title="dcm.sync.Transfer"><em>Transfer</em></a>[<em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="dcm.sync.SyncManager.sync">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.sync" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate and exec all transfers for <cite>query_res</cite></p>
@@ -1427,23 +775,194 @@ set to True.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">SyncQueriesReport</span></span><a class="headerlink" href="#dcm.sync.SyncQueriesReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p>
+<p>Report for queries being performed during sync</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncQueriesReport.__init__" title="dcm.sync.SyncQueriesReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncQueriesReport.init_src_qr_report" title="dcm.sync.SyncQueriesReport.init_src_qr_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_src_qr_report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.SyncQueriesReport.missing_dest_qr_reports" title="dcm.sync.SyncQueriesReport.missing_dest_qr_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">missing_dest_qr_reports</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncQueriesReport.missing_src_qr_reports" title="dcm.sync.SyncQueriesReport.missing_src_qr_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">missing_src_qr_reports</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.sync.SyncManager.close">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncManager.close" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncQueriesReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
+<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.init_src_qr_report">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_src_qr_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.init_src_qr_report" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.missing_dest_qr_reports">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_dest_qr_reports</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><span class="pre">MultiDictReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataRepo" title="dcm.store.base.DataRepo"><span class="pre">DataRepo</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.missing_dest_qr_reports" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.sync.SyncQueriesReport.missing_src_qr_reports">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_src_qr_reports</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.report.html#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><span class="pre">MultiListReport</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="dcm.net.html#dcm.net.DicomOpReport" title="dcm.net.DicomOpReport"><span class="pre">DicomOpReport</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.sync.SyncQueriesReport.missing_src_qr_reports" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.sync.SyncReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">SyncReport</span></span><a class="headerlink" href="#dcm.sync.SyncReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p>
+<p>Top level report from a sync operation</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncReport.__init__" title="dcm.sync.SyncReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.SyncReport.queries_report" title="dcm.sync.SyncReport.queries_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">queries_report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.sync.SyncReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.SyncReport.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
+<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="dcm.report.html#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.sync.SyncReport.queries_report">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queries_report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#dcm.sync.SyncQueriesReport" title="dcm.sync.SyncQueriesReport"><span class="pre">SyncQueriesReport</span></a></em><a class="headerlink" href="#dcm.sync.SyncReport.queries_report" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.sync.Transfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">Transfer</span></span><a class="headerlink" href="#dcm.sync.Transfer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T_report</span></code>]</p>
+<p>Generic base class for all transfers</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.Transfer.__init__" title="dcm.sync.Transfer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(chunk, report)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.sync.Transfer.chunk" title="dcm.sync.Transfer.chunk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chunk</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.sync.Transfer.report" title="dcm.sync.Transfer.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.sync.Transfer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.Transfer.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chunk</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><em>DataChunk</em></a>) – </p></li>
+<li><p><strong>report</strong> (<em>T_report</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.Transfer.chunk">
+<span class="sig-name descname"><span class="pre">chunk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataChunk" title="dcm.store.base.DataChunk"><span class="pre">DataChunk</span></a></em><a class="headerlink" href="#dcm.sync.Transfer.chunk" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.sync.Transfer.report">
+<span class="sig-name descname"><span class="pre">report</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">T_report</span></em><a class="headerlink" href="#dcm.sync.Transfer.report" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dcm.sync.make_basic_validator">
+<span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">make_basic_validator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diff_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.make_basic_validator" title="Permalink to this definition">#</a></dt>
+<dd><p>Create validator that logs a warning on any differing elements</p>
+<p>List of filter functions can be supplied to modify/delete the diffs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>diff_filters</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="dcm.diff.html#dcm.diff.DataDiff" title="dcm.diff.DataDiff"><em>DataDiff</em></a><em>]</em><em>, </em><em>Optional</em><em>[</em><a class="reference internal" href="dcm.diff.html#dcm.diff.DataDiff" title="dcm.diff.DataDiff"><em>DataDiff</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Callable</em>[[<em>Dataset</em>, <em>Dataset</em>], None]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.sync.sync_data">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.sync.</span></span><span class="sig-name descname"><span class="pre">sync_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_reports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sm_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.sync.sync_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Sync data from one or more sources to one or more destinations</p>
-<p>The <cite>query</cite> paramater can be a single item that applies to all sources or
+<p>The <code class="docutils literal notranslate"><span class="pre">query</span></code> paramater can be a single item that applies to all sources or
 a list of items (one for each source).</p>
 <p>The data from each source if forwarded to all destinations (unless those
 dests filter it).</p>

@@ -198,283 +198,88 @@ sub-operations. In is not uncommon for these sub-operations to produces errors o
 warning statuses that shouldn’t interrupt the whole batch operation. We use a
 variety of “report” classes to capture this kind of information and provide
 real-time insight into an ongoing async operation.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressTaskBase</span></span><a class="headerlink" href="#dcm.report.ProgressTaskBase" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>ProgressTaskBase(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.description">
-<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.total">
-<span class="sig-name descname"><span class="pre">total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.total" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.start_time">
-<span class="sig-name descname"><span class="pre">start_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.start_time" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.min_seconds">
-<span class="sig-name descname"><span class="pre">min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.min_seconds" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.show_indeterminate">
-<span class="sig-name descname"><span class="pre">show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.show_indeterminate" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<p><strong>Exceptions:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiError" title="dcm.report.MultiError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiError</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiKeyedError" title="dcm.report.MultiKeyedError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiKeyedError</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Classes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p></td>
+<td><p>Abstract base class for all reports</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountableReport</span></code></a></p></td>
+<td><p>Abstract base class for reports with single &quot;count&quot;</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiAttrReport" title="dcm.report.MultiAttrReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiAttrReport</span></code></a></p></td>
+<td><p>Abstract base class combining a few sub-reports as attrs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport" title="dcm.report.MultiDictReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiDictReport</span></code></a></p></td>
+<td><p>Collection of related reports, each identified with a unique key</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiListReport" title="dcm.report.MultiListReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiListReport</span></code></a></p></td>
+<td><p>Sequence of reports of the same type</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiReport</span></code></a></p></td>
+<td><p>Abstract base class for reports that contain other sub-reports</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProgressHookBase</span></code></a></p></td>
+<td><p>Base class for hooking in to progress updates from a report</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase" title="dcm.report.ProgressTaskBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProgressTaskBase</span></code></a></p></td>
+<td><p>ProgressTaskBase(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook" title="dcm.report.RichProgressHook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RichProgressHook</span></code></a></p></td>
+<td><p>Hook for console progress bar provided by <cite>rich</cite> package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RichProgressTask</span></code></a></p></td>
+<td><p>RichProgressTask(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SummaryReport</span></code></a></p></td>
+<td><p>Abstract base class for all SummaryReports</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.report.MultiError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiError</span></span><a class="headerlink" href="#dcm.report.MultiError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_indeterminate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressTaskBase.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>str</em>) – </p></li>
-<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>start_time</strong> (<em>datetime</em>) – </p></li>
-<li><p><strong>min_seconds</strong> (<em>float</em>) – </p></li>
-<li><p><strong>show_indeterminate</strong> (<em>bool</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>errors</strong> (<em>List</em><em>[</em><em>Exception</em><em>]</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressHookBase</span></span><a class="headerlink" href="#dcm.report.ProgressHookBase" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
-<p>Base class for hooking in to progress updates from a report</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.def_min_seconds">
-<span class="sig-name descname"><span class="pre">def_min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3.0</span></em><a class="headerlink" href="#dcm.report.ProgressHookBase.def_min_seconds" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.def_show_indeterminate">
-<span class="sig-name descname"><span class="pre">def_show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#dcm.report.ProgressHookBase.def_show_indeterminate" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dl class="py exception">
+<dt class="sig sig-object py" id="dcm.report.MultiKeyedError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiKeyedError</span></span><a class="headerlink" href="#dcm.report.MultiKeyedError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.create_task">
-<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.create_task" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiKeyedError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiKeyedError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>str</em>) – </p></li>
-<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>T</em></p>
+<dd class="field-odd"><p><strong>errors</strong> (<em>Dict</em><em>[</em><em>Any</em><em>, </em><em>Exception</em><em>]</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.set_total">
-<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.set_total" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> (<em>T</em>) – </p></li>
-<li><p><strong>total</strong> (<em>int</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.advance">
-<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.advance" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> (<em>T</em>) – </p></li>
-<li><p><strong>amount</strong> (<em>float</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.end">
-<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.end" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>task</strong> (<em>T</em>) – </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressTask</span></span><a class="headerlink" href="#dcm.report.RichProgressTask" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressTaskBase" title="dcm.report.ProgressTaskBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressTaskBase</span></code></a></p>
-<p>RichProgressTask(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_indeterminate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressTask.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>str</em>) – </p></li>
-<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>start_time</strong> (<em>datetime</em>) – </p></li>
-<li><p><strong>min_seconds</strong> (<em>float</em>) – </p></li>
-<li><p><strong>show_indeterminate</strong> (<em>bool</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.description">
-<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.RichProgressTask.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.total">
-<span class="sig-name descname"><span class="pre">total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.RichProgressTask.total" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.start_time">
-<span class="sig-name descname"><span class="pre">start_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><a class="headerlink" href="#dcm.report.RichProgressTask.start_time" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.min_seconds">
-<span class="sig-name descname"><span class="pre">min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#dcm.report.RichProgressTask.min_seconds" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressTask.show_indeterminate">
-<span class="sig-name descname"><span class="pre">show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.RichProgressTask.show_indeterminate" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressHook</span></span><a class="headerlink" href="#dcm.report.RichProgressHook" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressHookBase</span></code></a>[<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RichProgressTask</span></code></a>]</p>
-<p>Hook for console progress bar provided by <cite>rich</cite> package</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>progress</strong> (<em>Progress</em>) – </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.create_task">
-<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.create_task" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>str</em>) – </p></li>
-<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.set_total">
-<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.set_total" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p></li>
-<li><p><strong>total</strong> (<em>int</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.advance">
-<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.advance" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p></li>
-<li><p><strong>amount</strong> (<em>float</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.end">
-<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.end" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.def_min_seconds">
-<span class="sig-name descname"><span class="pre">def_min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3.0</span></em><a class="headerlink" href="#dcm.report.RichProgressHook.def_min_seconds" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.RichProgressHook.def_show_indeterminate">
-<span class="sig-name descname"><span class="pre">def_show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#dcm.report.RichProgressHook.def_show_indeterminate" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -483,6 +288,53 @@ real-time insight into an ongoing async operation.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">BaseReport</span></span><a class="headerlink" href="#dcm.report.BaseReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Abstract base class for all reports</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.__init__" title="dcm.report.BaseReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.BaseReport.check_errors" title="dcm.report.BaseReport.check_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_errors</span></code></a>()</p></td>
+<td><p>Raise an exception if any errors occured</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.clear" title="dcm.report.BaseReport.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.BaseReport.log_issues" title="dcm.report.BaseReport.log_issues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_issues</span></code></a>()</p></td>
+<td><p>Log a summary of error/warning statuses</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.all_success" title="dcm.report.BaseReport.all_success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_success</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.BaseReport.depth" title="dcm.report.BaseReport.depth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">depth</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.description" title="dcm.report.BaseReport.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.BaseReport.done" title="dcm.report.BaseReport.done"><code class="xref py py-obj docutils literal notranslate"><span class="pre">done</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.has_errors" title="dcm.report.BaseReport.has_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_errors</span></code></a></p></td>
+<td><p>True if any errors were reported</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.BaseReport.has_warnings" title="dcm.report.BaseReport.has_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_warnings</span></code></a></p></td>
+<td><p>True if any warnings were reported</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.BaseReport.prog_hook" title="dcm.report.BaseReport.prog_hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prog_hook</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.BaseReport.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.__init__" title="Permalink to this definition">#</a></dt>
@@ -494,54 +346,6 @@ real-time insight into an ongoing async operation.</p>
 <li><p><strong>depth</strong> (<em>int</em>) – </p></li>
 <li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.BaseReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.BaseReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.BaseReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.BaseReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -567,230 +371,9 @@ real-time insight into an ongoing async operation.</p>
 </dl>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dcm.report.MultiError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiError</span></span><a class="headerlink" href="#dcm.report.MultiError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiError.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>errors</strong> (<em>List</em><em>[</em><em>Exception</em><em>]</em>) – </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiError.__new__">
-<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiError.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.MultiError.args">
-<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.report.MultiError.args" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiError.with_traceback">
-<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiError.with_traceback" title="Permalink to this definition">#</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.MultiReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiReport</span></span><a class="headerlink" href="#dcm.report.MultiReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p>
-<p>Abstract base class for reports that contain other sub-reports</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.MultiReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiAttrReport</span></span><a class="headerlink" href="#dcm.report.MultiAttrReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a></p>
-<p>Abstract base class combining a few sub-reports as attrs</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>meta_data</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>depth</strong> (<em>int</em>) – </p></li>
-<li><p><strong>prog_hook</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><em>ProgressHookBase</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.log_issues" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.BaseReport.log_issues">
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log a summary of error/warning statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -800,8 +383,40 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiAttrReport.prog_hook" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.BaseReport.all_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.all_success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.BaseReport.depth" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.BaseReport.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.done">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.done" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.has_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.has_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any errors were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.has_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.BaseReport.has_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any warnings were reported</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.BaseReport.prog_hook">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.BaseReport.prog_hook" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -811,6 +426,47 @@ set self.__traceback__ to tb and return self.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">CountableReport</span></span><a class="headerlink" href="#dcm.report.CountableReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p>
 <p>Abstract base class for reports with single “count”</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.CountableReport.__init__" title="dcm.report.CountableReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.CountableReport.count_input" title="dcm.report.CountableReport.count_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_input</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.CountableReport.has_errors" title="dcm.report.CountableReport.has_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_errors</span></code></a></p></td>
+<td><p>True if any errors were reported</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.CountableReport.has_warnings" title="dcm.report.CountableReport.has_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_warnings</span></code></a></p></td>
+<td><p>True if any warnings were reported</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.CountableReport.n_errors" title="dcm.report.CountableReport.n_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_errors</span></code></a></p></td>
+<td><p>Number of errors, where a single input can cause multiple errors</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.CountableReport.n_expected" title="dcm.report.CountableReport.n_expected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_expected</span></code></a></p></td>
+<td><p>Number of expected inputs, or None if unknown</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.CountableReport.n_input" title="dcm.report.CountableReport.n_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_input</span></code></a></p></td>
+<td><p>Number of inputs seen so far</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.CountableReport.n_success" title="dcm.report.CountableReport.n_success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_success</span></code></a></p></td>
+<td><p>Number of successfully handled inputs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.CountableReport.n_warnings" title="dcm.report.CountableReport.n_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_warnings</span></code></a></p></td>
+<td><p>Number of warnings, where a single input can cause multiple warnings</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.CountableReport.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.__init__" title="Permalink to this definition">#</a></dt>
@@ -827,18 +483,6 @@ set self.__traceback__ to tb and return self.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.CountableReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.CountableReport.count_input">
 <span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.count_input" title="Permalink to this definition">#</a></dt>
@@ -847,24 +491,6 @@ set self.__traceback__ to tb and return self.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
 </dd></dl>
 
 <dl class="py property">
@@ -880,72 +506,101 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.CountableReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="dcm.report.CountableReport.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of errors, where a single input can cause multiple errors</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.CountableReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.CountableReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="dcm.report.CountableReport.n_expected">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.CountableReport.n_expected" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of expected inputs, or None if unknown</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.CountableReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.CountableReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="dcm.report.CountableReport.n_input">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_input" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of inputs seen so far</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.CountableReport.n_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_success" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of successfully handled inputs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.CountableReport.n_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.CountableReport.n_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">SummaryReport</span></span><a class="headerlink" href="#dcm.report.SummaryReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a>, <a class="reference internal" href="#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
-<p>Abstract base class for all SummaryReports</p>
+<dt class="sig sig-object py" id="dcm.report.MultiAttrReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiAttrReport</span></span><a class="headerlink" href="#dcm.report.MultiAttrReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a></p>
+<p>Abstract base class combining a few sub-reports as attrs</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiAttrReport.gen_reports" title="dcm.report.MultiAttrReport.gen_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_reports</span></code></a>()</p></td>
+<td><p>Base classes must provide this</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiAttrReport.gen_reports">
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<dd><p>Base classes must provide this</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiDictReport</span></span><a class="headerlink" href="#dcm.report.MultiDictReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">SummaryReport</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">K</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
+<p>Collection of related reports, each identified with a unique key</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.__init__" title="dcm.report.MultiDictReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.check_errors" title="dcm.report.MultiDictReport.check_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_errors</span></code></a>()</p></td>
+<td><p>Raise an exception if any errors have occured so far</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.clear" title="dcm.report.MultiDictReport.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.gen_reports" title="dcm.report.MultiDictReport.gen_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_reports</span></code></a>()</p></td>
+<td><p>Base classes must provide this</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.items" title="dcm.report.MultiDictReport.items"><code class="xref py py-obj docutils literal notranslate"><span class="pre">items</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.keys" title="dcm.report.MultiDictReport.keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keys</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiDictReport.values" title="dcm.report.MultiDictReport.values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -960,8 +615,29 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.check_errors">
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.check_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Raise an exception if any errors have occured so far</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.clear" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.gen_reports">
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -970,134 +646,35 @@ set self.__traceback__ to tb and return self.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.SummaryReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors occured</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.clear" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.items" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dd class="field-odd"><p><em>ItemsView</em>[<em>K</em>, <em>R</em>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.count_input" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.keys" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dd class="field-odd"><p><em>KeysView</em>[<em>K</em>]</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.SummaryReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.SummaryReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.SummaryReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.SummaryReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
+<dt class="sig sig-object py" id="dcm.report.MultiDictReport.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.values" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dd class="field-odd"><p><em>ValuesView</em>[<em>R</em>]</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.SummaryReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.SummaryReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -1106,6 +683,25 @@ set self.__traceback__ to tb and return self.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiListReport</span></span><a class="headerlink" href="#dcm.report.MultiListReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">SummaryReport</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
 <p>Sequence of reports of the same type</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiListReport.__init__" title="dcm.report.MultiListReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiListReport.append" title="dcm.report.MultiListReport.append"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code></a>(sub_report)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiListReport.clear" title="dcm.report.MultiListReport.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiListReport.gen_reports" title="dcm.report.MultiListReport.gen_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_reports</span></code></a>()</p></td>
+<td><p>Base classes must provide this</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.__init__" title="Permalink to this definition">#</a></dt>
@@ -1136,17 +732,6 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.gen_reports" title="Permalink to this definition">#</a></dt>
-<dd><p>Base classes must provide this</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Iterator</em>[<em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1157,18 +742,55 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="dcm.report.MultiListReport.gen_reports">
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<dd><p>Base classes must provide this</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[<em>R</em>]</p>
+</dd>
+</dl>
+</dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiListReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+</dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.MultiReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiReport</span></span><a class="headerlink" href="#dcm.report.MultiReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p>
+<p>Abstract base class for reports that contain other sub-reports</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiReport.check_errors" title="dcm.report.MultiReport.check_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_errors</span></code></a>()</p></td>
+<td><p>Raise an exception if any errors occured</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiReport.gen_reports" title="dcm.report.MultiReport.gen_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_reports</span></code></a>()</p></td>
+<td><p>Base classes must provide this</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiReport.log_issues" title="dcm.report.MultiReport.log_issues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_issues</span></code></a>()</p></td>
+<td><p>Log a summary of error/warning statuses</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.MultiReport.has_errors" title="dcm.report.MultiReport.has_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_errors</span></code></a></p></td>
+<td><p>True if any errors were reported</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.MultiReport.has_warnings" title="dcm.report.MultiReport.has_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_warnings</span></code></a></p></td>
+<td><p>True if any warnings were reported</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.check_errors" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiReport.check_errors">
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1178,45 +800,19 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.count_input" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dt class="sig sig-object py" id="dcm.report.MultiReport.gen_reports">
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<dd><p>Base classes must provide this</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dd class="field-odd"><p><em>Iterator</em>[<a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><em>BaseReport</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.MultiListReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiListReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiListReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiListReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.log_issues" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.MultiReport.log_issues">
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log a summary of error/warning statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1226,98 +822,396 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
+<dt class="sig sig-object py" id="dcm.report.MultiReport.has_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.has_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any errors were reported</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_sub_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_sub_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_sub_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_sub_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiListReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiListReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiListReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dcm.report.MultiKeyedError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiKeyedError</span></span><a class="headerlink" href="#dcm.report.MultiKeyedError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiKeyedError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiKeyedError.__init__" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>errors</strong> (<em>Dict</em><em>[</em><em>Any</em><em>, </em><em>Exception</em><em>]</em>) – </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiKeyedError.__new__">
-<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiKeyedError.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dcm.report.MultiKeyedError.args">
-<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#dcm.report.MultiKeyedError.args" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiKeyedError.with_traceback">
-<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiKeyedError.with_traceback" title="Permalink to this definition">#</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
+<dt class="sig sig-object py" id="dcm.report.MultiReport.has_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiReport.has_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>True if any warnings were reported</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiDictReport</span></span><a class="headerlink" href="#dcm.report.MultiDictReport" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">SummaryReport</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">K</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
-<p>Collection of related reports, each identified with a unique key</p>
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressHookBase</span></span><a class="headerlink" href="#dcm.report.ProgressHookBase" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
+<p>Base class for hooking in to progress updates from a report</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.advance" title="dcm.report.ProgressHookBase.advance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">advance</span></code></a>(task[, amount])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.create_task" title="dcm.report.ProgressHookBase.create_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_task</span></code></a>(description[, total])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.end" title="dcm.report.ProgressHookBase.end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">end</span></code></a>(task)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.set_total" title="dcm.report.ProgressHookBase.set_total"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_total</span></code></a>(task, total)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.def_min_seconds" title="dcm.report.ProgressHookBase.def_min_seconds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">def_min_seconds</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressHookBase.def_show_indeterminate" title="dcm.report.ProgressHookBase.def_show_indeterminate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">def_show_indeterminate</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.advance">
+<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.advance" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<em>T</em>) – </p></li>
+<li><p><strong>amount</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.create_task">
+<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.create_task" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>str</em>) – </p></li>
+<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>T</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.end">
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.end" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> (<em>T</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.set_total">
+<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.set_total" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<em>T</em>) – </p></li>
+<li><p><strong>total</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.def_min_seconds">
+<span class="sig-name descname"><span class="pre">def_min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3.0</span></em><a class="headerlink" href="#dcm.report.ProgressHookBase.def_min_seconds" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressHookBase.def_show_indeterminate">
+<span class="sig-name descname"><span class="pre">def_show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#dcm.report.ProgressHookBase.def_show_indeterminate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressTaskBase</span></span><a class="headerlink" href="#dcm.report.ProgressTaskBase" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>ProgressTaskBase(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.__init__" title="dcm.report.ProgressTaskBase.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(description, total, start_time, ...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.description" title="dcm.report.ProgressTaskBase.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.min_seconds" title="dcm.report.ProgressTaskBase.min_seconds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_seconds</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.show_indeterminate" title="dcm.report.ProgressTaskBase.show_indeterminate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_indeterminate</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.start_time" title="dcm.report.ProgressTaskBase.start_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_time</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.ProgressTaskBase.total" title="dcm.report.ProgressTaskBase.total"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_indeterminate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressTaskBase.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>str</em>) – </p></li>
+<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>start_time</strong> (<em>datetime</em>) – </p></li>
+<li><p><strong>min_seconds</strong> (<em>float</em>) – </p></li>
+<li><p><strong>show_indeterminate</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.min_seconds">
+<span class="sig-name descname"><span class="pre">min_seconds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.min_seconds" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.show_indeterminate">
+<span class="sig-name descname"><span class="pre">show_indeterminate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.show_indeterminate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.start_time">
+<span class="sig-name descname"><span class="pre">start_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.start_time" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcm.report.ProgressTaskBase.total">
+<span class="sig-name descname"><span class="pre">total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.ProgressTaskBase.total" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressHook</span></span><a class="headerlink" href="#dcm.report.RichProgressHook" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressHookBase</span></code></a>[<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RichProgressTask</span></code></a>]</p>
+<p>Hook for console progress bar provided by <cite>rich</cite> package</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook.__init__" title="dcm.report.RichProgressHook.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(progress)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook.advance" title="dcm.report.RichProgressHook.advance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">advance</span></code></a>(task[, amount])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook.create_task" title="dcm.report.RichProgressHook.create_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_task</span></code></a>(description[, total])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook.end" title="dcm.report.RichProgressHook.end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">end</span></code></a>(task)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.RichProgressHook.set_total" title="dcm.report.RichProgressHook.set_total"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_total</span></code></a>(task, total)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>progress</strong> (<em>Progress</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook.advance">
+<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.advance" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p></li>
+<li><p><strong>amount</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook.create_task">
+<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.create_task" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>str</em>) – </p></li>
+<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook.end">
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.end" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressHook.set_total">
+<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.set_total" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p></li>
+<li><p><strong>total</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.RichProgressTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressTask</span></span><a class="headerlink" href="#dcm.report.RichProgressTask" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressTaskBase" title="dcm.report.ProgressTaskBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressTaskBase</span></code></a></p>
+<p>RichProgressTask(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.RichProgressTask.__init__" title="dcm.report.RichProgressTask.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(description, total, start_time, ...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.RichProgressTask.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_indeterminate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressTask.__init__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>str</em>) – </p></li>
+<li><p><strong>total</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>start_time</strong> (<em>datetime</em>) – </p></li>
+<li><p><strong>min_seconds</strong> (<em>float</em>) – </p></li>
+<li><p><strong>show_indeterminate</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">SummaryReport</span></span><a class="headerlink" href="#dcm.report.SummaryReport" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a>, <a class="reference internal" href="#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
+<p>Abstract base class for all SummaryReports</p>
+<p><strong>Methods:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.__init__" title="dcm.report.SummaryReport.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([description, meta_data, depth, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.gen_reports" title="dcm.report.SummaryReport.gen_reports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_reports</span></code></a>()</p></td>
+<td><p>Base classes must provide this</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Attributes:</strong></p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_errors" title="dcm.report.SummaryReport.n_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_errors</span></code></a></p></td>
+<td><p>Number of errors, where a single input can cause multiple errors</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_sub_errors" title="dcm.report.SummaryReport.n_sub_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_sub_errors</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_sub_success" title="dcm.report.SummaryReport.n_sub_success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_sub_success</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_sub_warnings" title="dcm.report.SummaryReport.n_sub_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_sub_warnings</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_success" title="dcm.report.SummaryReport.n_success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_success</span></code></a></p></td>
+<td><p>Number of successfully handled inputs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#dcm.report.SummaryReport.n_warnings" title="dcm.report.SummaryReport.n_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_warnings</span></code></a></p></td>
+<td><p>Number of warnings, where a single input can cause multiple warnings</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1332,146 +1226,8 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.keys" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>KeysView</em>[<em>K</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.__new__">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.__new__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.all_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.all_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.count_input" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.depth" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.description" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.done">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.done" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.has_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.has_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any errors were reported</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.has_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.has_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>True if any warnings were reported</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.log_issues" title="Permalink to this definition">#</a></dt>
-<dd><p>Log a summary of error/warning statuses</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of errors, where a single input can cause multiple errors</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_expected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_expected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_expected" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of expected inputs, or None if unknown</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_input" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of inputs seen so far</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_sub_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_sub_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_sub_success" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_sub_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_success" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of successfully handled inputs</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.n_warnings">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.MultiDictReport.n_warnings" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.prog_hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prog_hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><span class="pre">ProgressHookBase</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dcm.report.MultiDictReport.prog_hook" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.values">
-<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.values" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ValuesView</em>[<em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.items">
-<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.items" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ItemsView</em>[<em>K</em>, <em>R</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.gen_reports">
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1480,25 +1236,37 @@ set self.__traceback__ to tb and return self.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.check_errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Raise an exception if any errors have occured so far</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_errors" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of errors, where a single input can cause multiple errors</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="dcm.report.MultiDictReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.clear" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_sub_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_sub_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_sub_warnings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_success" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of successfully handled inputs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcm.report.SummaryReport.n_warnings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#dcm.report.SummaryReport.n_warnings" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of warnings, where a single input can cause multiple warnings</p>
 </dd></dl>
 
 </dd></dl>

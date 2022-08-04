@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
+    "autodocsumm",
 ]
 
 templates_path = ["_templates"]
@@ -27,7 +28,7 @@ language = "en"
 
 autodoc_default_options = {"inherited-members": True}
 autodoc_typehints_format = "short"
-autodoc_member_order = "bysource"
+autodoc_member_order = "groupwise"
 autodoc_preserve_defaults = True
 napoleon_attr_annotations = True
 # Automatically extract typehints when specified and place them in
@@ -36,6 +37,10 @@ autodoc_typehints = "description"
 
 # Don't show class signature with the class' name.
 autodoc_class_signature = "separated"
+
+autodoc_default_options = {
+    "autosummary": True,
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
