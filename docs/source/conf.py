@@ -47,11 +47,11 @@ html_static_path = ["_static"]
 def run_apidoc(_):
     from sphinx.ext.apidoc import main
     import os
+    import sys
 
-    # import sys
     doc_src = os.path.abspath(os.path.dirname(__file__))
     code_src = os.path.abspath(os.path.join(doc_src, "../../dcm"))
-    # sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(code_src)
     ignore_pattern = os.path.join(code_src, "tests", "**")
     main(["--force", "--separate", "-o", doc_src, code_src, ignore_pattern])
 
