@@ -10,7 +10,7 @@ Welcome to dcm's documentation!
    :maxdepth: 2
    :caption: Contents:
    
-   readme
+   README<readme>
 
 
 Indices and tables
