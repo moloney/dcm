@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="dcm.cli module" href="dcm.cli.html" /><link rel="prev" title="dcm.store.local_dir module" href="dcm.store.local_dir.html" />
 
     <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.store.net_repo module - dcm 0.1.0-dev documentation</title>
@@ -155,8 +155,33 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="dcm.html">dcm package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="dcm.store.html">dcm.store package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
 </div>
@@ -205,7 +230,7 @@
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.net_repo.</span></span><span class="sig-name descname"><span class="pre">NetRepo</span></span><a class="headerlink" href="#dcm.store.net_repo.NetRepo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.store.net_repo.</span></span><span class="sig-name descname"><span class="pre">NetRepo</span></span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.store.base.html#dcm.store.base.DcmRepo" title="dcm.store.base.DcmRepo"><code class="xref py py-class docutils literal notranslate"><span class="pre">DcmRepo</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.store.net_repo.NetRepo" title="dcm.store.net_repo.NetRepo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NetRepo</span></code></a>]</p>
 <p>Smart data store corresponding to a DICOM network entity</p>
 <p><strong>Methods:</strong></p>
@@ -260,7 +285,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -276,7 +301,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.from_toml_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.from_toml_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.from_toml_dict" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
@@ -289,7 +314,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.gen_chunks">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_chunks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_chunks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_chunks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.gen_chunks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_chunks" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate the data in this bucket, one chunk at a time</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -300,7 +325,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.gen_query_chunks">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_query_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_query_chunks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_query_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.gen_query_chunks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.gen_query_chunks" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate chunks of data corresponding to <cite>query_res</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -314,7 +339,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.oob_transfer">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.oob_transfer" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oob_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.oob_transfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.oob_transfer" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform out-of-band transfer instead of proxying data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -332,7 +357,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.queries">
-<span class="sig-name descname"><span class="pre">queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.queries" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.queries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.queries" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns async generator that produces partial QueryResult objects</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -351,7 +376,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.query">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.query" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.query" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform a query against the data repo</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -370,7 +395,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.retrieve">
-<span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.retrieve" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.retrieve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.retrieve" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns an async generator that will produce datasets</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -387,7 +412,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.store.net_repo.NetRepo.send">
-<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.store.net_repo.NetRepo.send" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/store/net_repo.html#NetRepo.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.store.net_repo.NetRepo.send" title="Permalink to this definition">#</a></dt>
 <dd><p>Produces a Queue that you can put data sets into for storage</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -423,8 +448,26 @@
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="dcm.cli.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">dcm.cli module</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dcm.store.local_dir.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">dcm.store.local_dir module</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

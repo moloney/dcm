@@ -1,0 +1,799 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>dcm.store.base - dcm 0.1.0-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">dcm 0.1.0-dev documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  
+  <span class="sidebar-brand-text">dcm 0.1.0-dev documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">README</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../dcm.html">dcm package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for dcm.store.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">enum</span><span class="o">,</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">asynccontextmanager</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AsyncGenerator</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">AsyncIterator</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+
+<span class="kn">import</span> <span class="nn">janus</span>
+<span class="kn">import</span> <span class="nn">pydicom</span>
+<span class="kn">from</span> <span class="nn">pydicom</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">..query</span> <span class="kn">import</span> <span class="n">QueryLevel</span><span class="p">,</span> <span class="n">QueryResult</span><span class="p">,</span> <span class="n">uid_elems</span>
+<span class="kn">from</span> <span class="nn">..net</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DcmNode</span><span class="p">,</span>
+    <span class="n">DicomOpReport</span><span class="p">,</span>
+    <span class="n">IncomingDataReport</span><span class="p">,</span>
+    <span class="n">IncomingDataError</span><span class="p">,</span>
+    <span class="n">IncomingErrorType</span><span class="p">,</span>
+    <span class="n">RetrieveReport</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..report</span> <span class="kn">import</span> <span class="n">CountableReport</span><span class="p">,</span> <span class="n">SummaryReport</span><span class="p">,</span> <span class="n">MultiListReport</span><span class="p">,</span> <span class="n">ProgressHookBase</span>
+<span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">aclosing</span><span class="p">,</span> <span class="n">PathInputType</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TransferMethod"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.TransferMethod">[docs]</a><span class="k">class</span> <span class="nc">TransferMethod</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enmerate different methods of transferring data&quot;&quot;&quot;</span>
+
+    <span class="n">PROXY</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is read into memory and then forwarded to any dests</span>
+
+<span class="sd">    This is the required transfer method for any filtering/validation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">REMOTE_COPY</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is remotely copied from the src directly to the dest</span>
+
+<span class="sd">    This includes the DICOM &#39;Move-SCU&#39; operation which is a misnomer as it</span>
+<span class="sd">    really copies the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">LOCAL_COPY</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is locally copied from src directly to dest&quot;&quot;&quot;</span>
+
+    <span class="n">MOVE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is locally moved so it no longer exists on the src&quot;&quot;&quot;</span>
+
+    <span class="n">LINK</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is locally hard linked from the src to the dest&quot;&quot;&quot;</span>
+
+    <span class="n">SYMLINK</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Data is locally symlinked from the src to the dest&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NoValidTransferMethodError"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.NoValidTransferMethodError">[docs]</a><span class="k">class</span> <span class="nc">NoValidTransferMethodError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error raised when we are unable to select a valid transfer method&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="DataChunk"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataChunk">[docs]</a><span class="k">class</span> <span class="nc">DataChunk</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Most basic protocol for a naive chunk of data</span>
+
+<span class="sd">    Can just provide a sequence of data sets&quot;&quot;&quot;</span>
+
+    <span class="n">report</span><span class="p">:</span> <span class="n">IncomingDataReport</span>
+
+    <span class="n">keep_errors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IncomingErrorType</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_expected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="DataChunk.gen_data"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataChunk.gen_data">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generator produces the data sets in this chunk&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div></div>
+
+
+<div class="viewcode-block" id="RepoChunk"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.RepoChunk">[docs]</a><span class="k">class</span> <span class="nc">RepoChunk</span><span class="p">(</span><span class="n">DataChunk</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Smarter chunk of data referencing a DataRepo/QueryResult combo&quot;&quot;&quot;</span>
+
+    <span class="n">repo</span><span class="p">:</span> <span class="s2">&quot;DataRepo[Any, Any, Any, Any]&quot;</span>
+
+    <span class="n">qr</span><span class="p">:</span> <span class="n">QueryResult</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_expected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">qr</span><span class="o">.</span><span class="n">n_instances</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RepoChunk.gen_data"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.RepoChunk.gen_data">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">keep_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_errors</span>
+        <span class="n">oiter</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qr</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">aclosing</span><span class="p">(</span><span class="n">oiter</span><span class="p">)</span> <span class="k">as</span> <span class="n">rgen</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">data_set</span> <span class="ow">in</span> <span class="n">rgen</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">data_set</span></div></div>
+
+
+<div class="viewcode-block" id="DcmNetChunk"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmNetChunk">[docs]</a><span class="k">class</span> <span class="nc">DcmNetChunk</span><span class="p">(</span><span class="n">RepoChunk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Repo chunk from a DICOM network node&quot;&quot;&quot;</span>
+
+    <span class="n">report</span><span class="p">:</span> <span class="n">RetrieveReport</span>
+
+<div class="viewcode-block" id="DcmNetChunk.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmNetChunk.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="s2">&quot;DcmRepo&quot;</span><span class="p">,</span> <span class="n">qr</span><span class="p">:</span> <span class="n">QueryResult</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qr</span> <span class="o">=</span> <span class="n">qr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rep_descr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rep_descr</span> <span class="o">=</span> <span class="n">description</span> <span class="o">+</span> <span class="s2">&quot;-retrieve&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report</span> <span class="o">=</span> <span class="n">RetrieveReport</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">rep_descr</span><span class="p">,</span> <span class="n">n_expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_expected</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;DcmNetChunk(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">qr</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">qr</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="LocalIncomingDataError"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingDataError">[docs]</a><span class="k">class</span> <span class="nc">LocalIncomingDataError</span><span class="p">(</span><span class="n">IncomingDataError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Captures errors detected in incoming data stream&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LocalIncomingDataError.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingDataError.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inconsistent</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">duplicate</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">invalid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">invalid_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inconsistent</span> <span class="o">=</span> <span class="n">inconsistent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate</span> <span class="o">=</span> <span class="n">duplicate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid</span> <span class="o">=</span> <span class="n">invalid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span> <span class="o">=</span> <span class="n">invalid_paths</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LocalIncomingDataError:&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">err_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;inconsistent&quot;</span><span class="p">,</span> <span class="s2">&quot;duplicate&quot;</span><span class="p">,</span> <span class="s2">&quot;invalid&quot;</span><span class="p">,</span> <span class="s2">&quot;invalid_paths&quot;</span><span class="p">):</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">err_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">errors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">n_errors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_errors</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n_errors</span><span class="p">,</span> <span class="n">err_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalIncomingReport"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport">[docs]</a><span class="k">class</span> <span class="nc">LocalIncomingReport</span><span class="p">(</span><span class="n">IncomingDataReport</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Track incoming data from a local filesystem&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LocalIncomingReport.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">meta_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">prog_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProgressHookBase</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_expected</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">keep_errors</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IncomingErrorType</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">description</span><span class="p">,</span> <span class="n">meta_data</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">prog_hook</span><span class="p">,</span> <span class="n">n_expected</span><span class="p">,</span> <span class="n">keep_errors</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">n_input</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">n_errors</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LocalIncomingReport.add_invalid"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport.add_invalid">[docs]</a>    <span class="k">def</span> <span class="nf">add_invalid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">PathInputType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count_input</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalIncomingReport.log_issues"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport.log_issues">[docs]</a>    <span class="k">def</span> <span class="nf">log_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Log any warnings and errors&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log_issues</span><span class="p">()</span>
+        <span class="n">n_invalid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_invalid</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Incoming data issues: </span><span class="si">{n_invalid}</span><span class="s2"> invalid files&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalIncomingReport.check_errors"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport.check_errors">[docs]</a>    <span class="k">def</span> <span class="nf">check_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_errors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LocalIncomingDataError</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inconsistent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">duplicate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalIncomingReport.clear"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalIncomingReport.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_paths</span> <span class="o">=</span> <span class="p">[]</span></div></div>
+
+
+<span class="n">_read_f</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">pydicom</span><span class="o">.</span><span class="n">dcmread</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">defer_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="is_valid_dicom"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.is_valid_dicom">[docs]</a><span class="k">def</span> <span class="nf">is_valid_dicom</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">uid_elem</span> <span class="ow">in</span> <span class="n">uid_elems</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">uid_elem</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="LocalChunk"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalChunk">[docs]</a><span class="k">class</span> <span class="nc">LocalChunk</span><span class="p">(</span><span class="n">DataChunk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mostly naive data chunk corresponding to list of local files&quot;&quot;&quot;</span>
+
+    <span class="n">report</span><span class="p">:</span> <span class="n">LocalIncomingReport</span>
+
+<div class="viewcode-block" id="LocalChunk.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalChunk.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rep_descr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="s2">&quot; ...&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rep_descr</span> <span class="o">=</span> <span class="n">description</span> <span class="o">+</span> <span class="s2">&quot;-incoming&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report</span> <span class="o">=</span> <span class="n">LocalIncomingReport</span><span class="p">(</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">rep_descr</span><span class="p">,</span>
+            <span class="n">meta_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;first_file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;last_file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]},</span>
+            <span class="n">n_expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_expected</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_expected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;LocalDataChunk([</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2">,...,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">!r}</span><span class="s2">])&quot;</span>
+
+<div class="viewcode-block" id="LocalChunk.gen_data"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalChunk.gen_data">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_paths_and_data</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">ds</span></div>
+
+<div class="viewcode-block" id="LocalChunk.gen_paths_and_data"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalChunk.gen_paths_and_data">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_paths_and_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate both the paths and the corresponding data sets&quot;&quot;&quot;</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">_read_f</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">fspath</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_dicom</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Skipping invalid dicom file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">add_invalid</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">yield</span> <span class="n">f</span><span class="p">,</span> <span class="n">ds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">True</span></div></div>
+
+
+<span class="n">T_chunk</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_chunk&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">DataChunk</span><span class="p">,</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">T_qreport</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span>
+    <span class="s2">&quot;T_qreport&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">CountableReport</span><span class="p">,</span> <span class="n">SummaryReport</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">contravariant</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">T_rreport</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_rreport&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">CountableReport</span><span class="p">,</span> <span class="n">contravariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">T_sreport</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span>
+    <span class="s2">&quot;T_sreport&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">CountableReport</span><span class="p">,</span> <span class="n">SummaryReport</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">T_oob_chunk</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_oob_chunk&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">DataChunk</span><span class="p">,</span> <span class="n">contravariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">T_oob_report</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_oob_report&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">CountableReport</span><span class="p">,</span> <span class="n">SummaryReport</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span>
+
+
+<div class="viewcode-block" id="DataBucket"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataBucket">[docs]</a><span class="k">class</span> <span class="nc">DataBucket</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_chunk</span><span class="p">,</span> <span class="n">T_sreport</span><span class="p">],</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for most basic data stores</span>
+
+<span class="sd">    Can just produce one or more DataChunk instances with the</span>
+<span class="sd">    `gen_data` method, or store data sets through the `send` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">_supported_methods</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TransferMethod</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">TransferMethod</span><span class="o">.</span><span class="n">PROXY</span><span class="p">,)</span>
+
+    <span class="n">_streaming_methods</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TransferMethod</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">TransferMethod</span><span class="o">.</span><span class="n">PROXY</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses can return an int if they know how many chunks to expect&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DataBucket.gen_chunks"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataBucket.gen_chunks">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">T_chunk</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate the data in this bucket, one chunk at a time&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="DataBucket.send"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataBucket.send">[docs]</a>    <span class="nd">@asynccontextmanager</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">T_sreport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="s2">&quot;janus._AsyncQueueProxy[Dataset]&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Produces a Queue that you can put data sets into for storage&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="DataBucket.get_empty_send_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataBucket.get_empty_send_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_send_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_sreport</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses must define this.</span>
+
+<span class="sd">        If result doesn&#39;t mirror equality/hashing properties, subclasses</span>
+<span class="sd">        must override those too.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DataRepo"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataRepo">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">DataRepo</span><span class="p">(</span>
+    <span class="n">Generic</span><span class="p">[</span><span class="n">T_chunk</span><span class="p">,</span> <span class="n">T_qreport</span><span class="p">,</span> <span class="n">T_sreport</span><span class="p">,</span> <span class="n">T_rreport</span><span class="p">],</span>
+    <span class="n">DataBucket</span><span class="p">[</span><span class="n">T_chunk</span><span class="p">,</span> <span class="n">T_sreport</span><span class="p">],</span>
+    <span class="n">Protocol</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for stores with query/retrieve functionality&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DataRepo.queries"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataRepo.queries">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">queries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QueryLevel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">query_res</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QueryResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">T_qreport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">QueryResult</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns async generator that produces partial QueryResult objects&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="DataRepo.query"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataRepo.query">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QueryLevel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">query_res</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QueryResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">T_qreport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QueryResult</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Perform a query against the data repo&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="DataRepo.retrieve"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataRepo.retrieve">[docs]</a>    <span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">query_res</span><span class="p">:</span> <span class="n">QueryResult</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">T_rreport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns an async generator that will produce datasets&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="DataRepo.gen_query_chunks"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DataRepo.gen_query_chunks">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_query_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_res</span><span class="p">:</span> <span class="n">QueryResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">T_chunk</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div></div>
+
+
+<div class="viewcode-block" id="OobCapable"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.OobCapable">[docs]</a><span class="k">class</span> <span class="nc">OobCapable</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_oob_chunk</span><span class="p">,</span> <span class="n">T_oob_report</span><span class="p">],</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for stores that are capable of doing out-of-band transfers&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="OobCapable.oob_transfer"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.OobCapable.oob_transfer">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">oob_transfer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">TransferMethod</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">T_oob_chunk</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">T_oob_report</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Perform out-of-band transfer instead of proxying data&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="OobCapable.oob_send"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.OobCapable.oob_send">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">oob_send</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">TransferMethod</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">T_oob_chunk</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">T_oob_report</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="s2">&quot;janus._AsyncQueueProxy[Dataset]&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Produce queue for streaming out-of-band transfer&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="OobCapable.get_empty_oob_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.OobCapable.get_empty_oob_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_oob_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_oob_report</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="DcmRepo"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmRepo">[docs]</a><span class="k">class</span> <span class="nc">DcmRepo</span><span class="p">(</span>
+    <span class="n">DataRepo</span><span class="p">[</span>
+        <span class="n">DcmNetChunk</span><span class="p">,</span> <span class="n">MultiListReport</span><span class="p">[</span><span class="n">DicomOpReport</span><span class="p">],</span> <span class="n">DicomOpReport</span><span class="p">,</span> <span class="n">RetrieveReport</span>
+    <span class="p">],</span>
+    <span class="n">OobCapable</span><span class="p">[</span><span class="n">DcmNetChunk</span><span class="p">,</span> <span class="n">MultiListReport</span><span class="p">[</span><span class="n">DicomOpReport</span><span class="p">]],</span>
+    <span class="n">Protocol</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for repos that are DICOM network nodes&quot;&quot;&quot;</span>
+
+    <span class="n">_supported_methods</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TransferMethod</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">PROXY</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">REMOTE_COPY</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">remote</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DcmNode</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="DcmRepo.send"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmRepo.send">[docs]</a>    <span class="nd">@asynccontextmanager</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DicomOpReport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="s2">&quot;janus._AsyncQueueProxy[Dataset]&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Produces a Queue that you can put data sets into for storage&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="DcmRepo.get_empty_send_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmRepo.get_empty_send_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_send_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DicomOpReport</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DicomOpReport</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DcmRepo.get_empty_oob_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.DcmRepo.get_empty_oob_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_oob_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiListReport</span><span class="p">[</span><span class="n">DicomOpReport</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">MultiListReport</span><span class="p">(</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;OutOfBandTransfer&quot;</span><span class="p">,</span> <span class="n">meta_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;remote&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">remote</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;DcmRepo(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">remote</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="LocalWriteError"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteError">[docs]</a><span class="k">class</span> <span class="nc">LocalWriteError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="LocalWriteError.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteError.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">write_errors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">]]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span> <span class="o">=</span> <span class="n">write_errors</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Local write error:&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">exc</span><span class="p">,</span> <span class="n">paths</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> errors,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalWriteReport"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport">[docs]</a><span class="k">class</span> <span class="nc">LocalWriteReport</span><span class="p">(</span><span class="n">CountableReport</span><span class="p">):</span>
+<div class="viewcode-block" id="LocalWriteReport.__init__"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">meta_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">prog_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProgressHookBase</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_expected</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successful</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PathInputType</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">meta_data</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">prog_hook</span><span class="p">,</span> <span class="n">n_expected</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_success</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">successful</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LocalWriteReport.add_success"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.add_success">[docs]</a>    <span class="k">def</span> <span class="nf">add_success</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">PathInputType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count_input</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successful</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalWriteReport.add_error"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.add_error">[docs]</a>    <span class="k">def</span> <span class="nf">add_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">PathInputType</span><span class="p">,</span> <span class="n">exception</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count_input</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">exception</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">[</span><span class="n">exception</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">[</span><span class="n">exception</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalWriteReport.add_skipped"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.add_skipped">[docs]</a>    <span class="k">def</span> <span class="nf">add_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">PathInputType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count_input</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalWriteReport.log_issues"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.log_issues">[docs]</a>    <span class="k">def</span> <span class="nf">log_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Log a summary of error/warning statuses&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_warnings</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Skipped </span><span class="si">%d</span><span class="s2"> existing files&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_errors</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There were </span><span class="si">%d</span><span class="s2"> write errors&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_errors</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalWriteReport.check_errors"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.check_errors">[docs]</a>    <span class="k">def</span> <span class="nf">check_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Raise an exception if any errors occured&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_errors</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LocalWriteError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LocalWriteReport.clear"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalWriteReport.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successful</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_errors</span> <span class="o">=</span> <span class="p">{}</span></div></div>
+
+
+<div class="viewcode-block" id="LocalBucket"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalBucket">[docs]</a><span class="k">class</span> <span class="nc">LocalBucket</span><span class="p">(</span>
+    <span class="n">DataBucket</span><span class="p">[</span><span class="n">LocalChunk</span><span class="p">,</span> <span class="n">LocalWriteReport</span><span class="p">],</span>
+    <span class="n">OobCapable</span><span class="p">[</span><span class="n">LocalChunk</span><span class="p">,</span> <span class="n">LocalWriteReport</span><span class="p">],</span>
+    <span class="n">Protocol</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for buckets with local filesystem storage&quot;&quot;&quot;</span>
+
+    <span class="n">_supported_methods</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TransferMethod</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">PROXY</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">LINK</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">SYMLINK</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">_streaming_methods</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TransferMethod</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">PROXY</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">LINK</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">SYMLINK</span><span class="p">,</span>
+        <span class="n">TransferMethod</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">root_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="LocalBucket.send"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalBucket.send">[docs]</a>    <span class="nd">@asynccontextmanager</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LocalWriteReport</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="s2">&quot;janus._AsyncQueueProxy[Dataset]&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Produces a Queue that you can put data sets into for storage&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="LocalBucket.get_empty_send_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalBucket.get_empty_send_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_send_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalWriteReport</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalWriteReport</span><span class="p">(</span><span class="n">meta_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;root_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_path</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="LocalBucket.get_empty_oob_report"><a class="viewcode-back" href="../../../dcm.store.base.html#dcm.store.LocalBucket.get_empty_oob_report">[docs]</a>    <span class="k">def</span> <span class="nf">get_empty_oob_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalWriteReport</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalWriteReport</span><span class="p">(</span><span class="n">meta_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;root_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_path</span><span class="p">})</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;LocalDir(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">root_path</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Brendan Moloney
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    </body>
+</html>

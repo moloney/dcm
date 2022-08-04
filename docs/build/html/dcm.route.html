@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="dcm.sync module" href="dcm.sync.html" /><link rel="prev" title="dcm.report module" href="dcm.report.html" />
 
     <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.route module - dcm 0.1.0-dev documentation</title>
@@ -155,8 +155,33 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="dcm.html">dcm package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
 </div>
@@ -242,19 +267,19 @@
 </div>
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.route.InsufficientElemsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">InsufficientElemsError</span></span><a class="headerlink" href="#dcm.route.InsufficientElemsError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">InsufficientElemsError</span></span><a class="reference internal" href="_modules/dcm/route.html#InsufficientElemsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.InsufficientElemsError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>We don’t have the required DICOM elements for the operation</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">NoValidTransferMethodError</span></span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">NoValidTransferMethodError</span></span><a class="reference internal" href="_modules/dcm/route.html#NoValidTransferMethodError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.NoValidTransferMethodError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Error raised when we are unable to select a valid transfer method</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.NoValidTransferMethodError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dest_pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dest_pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#NoValidTransferMethodError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.NoValidTransferMethodError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>src_dest_pair</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>, </em><a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p>
@@ -266,11 +291,11 @@
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.route.ProxyTransferError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyTransferError</span></span><a class="headerlink" href="#dcm.route.ProxyTransferError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyTransferError</span></span><a class="reference internal" href="_modules/dcm/route.html#ProxyTransferError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyTransferError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyTransferError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyTransferError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyTransferError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyTransferError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -287,7 +312,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.DynamicRoute">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicRoute</span></span><a class="headerlink" href="#dcm.route.DynamicRoute" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicRoute</span></span><a class="reference internal" href="_modules/dcm/route.html#DynamicRoute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicRoute" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.route.Route" title="dcm.route.Route"><code class="xref py py-class docutils literal notranslate"><span class="pre">Route</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_DynamicBase</span></code></p>
 <p>Dynamic route which determines destinations based on the data.</p>
 <p>Routing decisions are made before applying the filter to the data.</p>
@@ -328,7 +353,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicRoute.get_dests">
-<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.get_dests" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicRoute.get_dests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicRoute.get_dests" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the destintations for the <cite>data set</cite></p>
 <p>Must be implemented by all subclasses.</p>
 <dl class="field-list simple">
@@ -343,7 +368,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicRoute.get_static_routes">
-<span class="sig-name descname"><span class="pre">get_static_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicRoute.get_static_routes" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_static_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicRoute.get_static_routes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicRoute.get_static_routes" title="Permalink to this definition">#</a></dt>
 <dd><p>Resolve this dynamic route into one or more static routes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -359,7 +384,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicTransferReport</span></span><a class="headerlink" href="#dcm.route.DynamicTransferReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">DynamicTransferReport</span></span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.route.ProxyReport" title="dcm.route.ProxyReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProxyReport</span></code></a></p>
 <p>Track what data is being routed where and any store results</p>
 <p><strong>Methods:</strong></p>
@@ -405,7 +430,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -422,7 +447,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.add_store_report">
-<span class="sig-name descname"><span class="pre">add_store_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.add_store_report" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_store_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_report</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport.add_store_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport.add_store_report" title="Permalink to this definition">#</a></dt>
 <dd><p>Add a DicomOpReport to keep track of</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -439,7 +464,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors have occured so far</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -450,7 +475,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><p>Clear current info about data sets we have results for</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -461,7 +486,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.DynamicTransferReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.DynamicTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#DynamicTransferReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.DynamicTransferReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Produce log messages for any warning/error statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -498,7 +523,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyReport</span></span><a class="headerlink" href="#dcm.route.ProxyReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">ProxyReport</span></span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a></p>
 <p>Abstract base class for reports on proxy transfers</p>
 <p><strong>Methods:</strong></p>
@@ -559,7 +584,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -576,7 +601,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.add" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport.add" title="Permalink to this definition">#</a></dt>
 <dd><p>Add the route with pre/post filtering dataset to the report</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -594,7 +619,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors have occured so far</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -605,7 +630,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -615,7 +640,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.ProxyReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.ProxyReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#ProxyReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.ProxyReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Produce log messages for any warning/error statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -680,7 +705,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.Route">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Route</span></span><a class="headerlink" href="#dcm.route.Route" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Route</span></span><a class="reference internal" href="_modules/dcm/route.html#Route"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Route" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Abstract base class for all Routes</p>
 <p>The main functionality of routes is to map datasets to destinations.</p>
@@ -728,7 +753,7 @@ returned to reject the dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Route.get_dests">
-<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Route.get_dests" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Route.get_dests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Route.get_dests" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the destintations for the <cite>data set</cite></p>
 <p>Must be implemented by all subclasses.</p>
 <dl class="field-list simple">
@@ -743,7 +768,7 @@ returned to reject the dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Route.get_filtered">
-<span class="sig-name descname"><span class="pre">get_filtered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Route.get_filtered" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_filtered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Route.get_filtered"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Route.get_filtered" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>data_set</strong> (<em>Dataset</em>) – </p>
@@ -764,7 +789,7 @@ returned to reject the dataset.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.Router">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Router</span></span><a class="headerlink" href="#dcm.route.Router" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">Router</span></span><a class="reference internal" href="_modules/dcm/route.html#Router"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Router" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Work with multiple dynamic/static routes</p>
 <p><strong>Methods:</strong></p>
@@ -807,7 +832,7 @@ returned to reject the dataset.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Router.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_cache_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_cache_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Router.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Router.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -820,7 +845,7 @@ returned to reject the dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Router.get_filter_dest_map">
-<span class="sig-name descname"><span class="pre">get_filter_dest_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.get_filter_dest_map" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_filter_dest_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Router.get_filter_dest_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Router.get_filter_dest_map" title="Permalink to this definition">#</a></dt>
 <dd><p>Get dict mapping filters to lists of destinations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -834,7 +859,7 @@ returned to reject the dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Router.pre_route">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.pre_route" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Router.pre_route"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Router.pre_route" title="Permalink to this definition">#</a></dt>
 <dd><p>Pre-calculate any dynamic routing for data on <cite>src</cite></p>
 <p>If DICOM elements needed for routing decisions can’t be queried for, we
 will retrieve an example data set for that study.</p>
@@ -858,7 +883,7 @@ the data that should be sent to those routes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.Router.route">
-<span class="sig-name descname"><span class="pre">route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.Router.route" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#Router.route"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.Router.route" title="Permalink to this definition">#</a></dt>
 <dd><p>Produces queue where datasets can be put for dynamic routing</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -900,7 +925,7 @@ the data that should be sent to those routes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.SelectorDestMap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SelectorDestMap</span></span><a class="headerlink" href="#dcm.route.SelectorDestMap" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SelectorDestMap</span></span><a class="reference internal" href="_modules/dcm/route.html#SelectorDestMap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SelectorDestMap" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.route.SelectorDestMap" title="dcm.route.SelectorDestMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorDestMap</span></code></a>]</p>
 <p>Allow construction of dynamic routes from static config</p>
 <p><strong>Methods:</strong></p>
@@ -973,7 +998,7 @@ the data that should be sent to those routes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SelectorDestMap.from_toml_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SelectorDestMap.from_toml_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SelectorDestMap.from_toml_dict" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
@@ -986,7 +1011,7 @@ the data that should be sent to those routes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SelectorDestMap.get_dynamic_route">
-<span class="sig-name descname"><span class="pre">get_dynamic_route</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SelectorDestMap.get_dynamic_route" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_dynamic_route</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SelectorDestMap.get_dynamic_route"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SelectorDestMap.get_dynamic_route" title="Permalink to this definition">#</a></dt>
 <dd><p>Return equivalent DynamicRoute object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1050,7 +1075,7 @@ not explicitly listed.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.SendAssociationCache">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SendAssociationCache</span></span><a class="headerlink" href="#dcm.route.SendAssociationCache" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">SendAssociationCache</span></span><a class="reference internal" href="_modules/dcm/route.html#SendAssociationCache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SendAssociationCache" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p><strong>Methods:</strong></p>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -1083,7 +1108,7 @@ not explicitly listed.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SendAssociationCache.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SendAssociationCache.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SendAssociationCache.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Keeps cache of recent associations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1094,7 +1119,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SendAssociationCache.empty_cache">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.empty_cache" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SendAssociationCache.empty_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SendAssociationCache.empty_cache" title="Permalink to this definition">#</a></dt>
 <dd><p>Close all associations</p>
 <p>Returns dict of dest/op_report for all closed associations.</p>
 <dl class="field-list simple">
@@ -1106,7 +1131,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SendAssociationCache.send">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.send" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SendAssociationCache.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SendAssociationCache.send" title="Permalink to this definition">#</a></dt>
 <dd><p>Send a data set to dests, utilizing the cache of active associations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1123,7 +1148,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.SendAssociationCache.update_cache">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.SendAssociationCache.update_cache" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#SendAssociationCache.update_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.SendAssociationCache.update_cache" title="Permalink to this definition">#</a></dt>
 <dd><p>Close associations that haven’t been used in a while</p>
 <p>Returns reports for all closed associations.</p>
 <dl class="field-list simple">
@@ -1143,7 +1168,7 @@ not explicitly listed.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.route.StaticRoute">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">StaticRoute</span></span><a class="headerlink" href="#dcm.route.StaticRoute" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.route.</span></span><span class="sig-name descname"><span class="pre">StaticRoute</span></span><a class="reference internal" href="_modules/dcm/route.html#StaticRoute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.StaticRoute" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.route.Route" title="dcm.route.Route"><code class="xref py py-class docutils literal notranslate"><span class="pre">Route</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_StaticBase</span></code>, <a class="reference internal" href="dcm.util.html#dcm.util.TomlConfigurable" title="dcm.util.TomlConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TomlConfigurable</span></code></a>[<a class="reference internal" href="#dcm.route.StaticRoute" title="dcm.route.StaticRoute"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticRoute</span></code></a>]</p>
 <p>Static route that sends all (unfiltered) data to same dests</p>
 <p><strong>Methods:</strong></p>
@@ -1184,7 +1209,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.StaticRoute.from_toml_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.from_toml_dict" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_toml_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toml_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#StaticRoute.from_toml_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.StaticRoute.from_toml_dict" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>toml_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
@@ -1197,7 +1222,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.StaticRoute.get_dests">
-<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.get_dests" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_dests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#StaticRoute.get_dests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.StaticRoute.get_dests" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the destintations for the <cite>data set</cite></p>
 <p>Must be implemented by all subclasses.</p>
 <dl class="field-list simple">
@@ -1212,7 +1237,7 @@ not explicitly listed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.route.StaticRoute.get_method">
-<span class="sig-name descname"><span class="pre">get_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.route.StaticRoute.get_method" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/route.html#StaticRoute.get_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.route.StaticRoute.get_method" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>src</strong> (<a class="reference internal" href="dcm.store.base.html#dcm.store.base.DataBucket" title="dcm.store.base.DataBucket"><em>DataBucket</em></a><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em>) – </p>
@@ -1232,8 +1257,26 @@ not explicitly listed.</p>
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="dcm.sync.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">dcm.sync module</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dcm.report.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">dcm.report module</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

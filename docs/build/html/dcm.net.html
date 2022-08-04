@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="dcm.normalize module" href="dcm.normalize.html" /><link rel="prev" title="dcm.lazyset module" href="dcm.lazyset.html" />
 
     <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.net module - dcm 0.1.0-dev documentation</title>
@@ -155,8 +155,33 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="dcm.html">dcm package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
 </div>
@@ -280,12 +305,12 @@
 </div>
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.net.BatchDicomOperationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">BatchDicomOperationError</span></span><a class="headerlink" href="#dcm.net.BatchDicomOperationError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">BatchDicomOperationError</span></span><a class="reference internal" href="_modules/dcm/net.html#BatchDicomOperationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.BatchDicomOperationError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Base class for errors from DICOM batch network operations</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.BatchDicomOperationError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_remote_errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.BatchDicomOperationError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_remote_errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#BatchDicomOperationError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.BatchDicomOperationError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -300,19 +325,19 @@
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.net.FailedAssociationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">FailedAssociationError</span></span><a class="headerlink" href="#dcm.net.FailedAssociationError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">FailedAssociationError</span></span><a class="reference internal" href="_modules/dcm/net.html#FailedAssociationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.FailedAssociationError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>We were unable to associate with a remote network node</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingDataError</span></span><a class="headerlink" href="#dcm.net.IncomingDataError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingDataError</span></span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Captures errors detected in incoming data stream</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -328,12 +353,12 @@
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.net.RetrieveError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">RetrieveError</span></span><a class="headerlink" href="#dcm.net.RetrieveError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">RetrieveError</span></span><a class="reference internal" href="_modules/dcm/net.html#RetrieveError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.net.IncomingDataError" title="dcm.net.IncomingDataError"><code class="xref py py-class docutils literal notranslate"><span class="pre">IncomingDataError</span></code></a></p>
 <p>Capture errors that happened during a retrieve operation</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unexpected</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inconsistent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unexpected</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -352,14 +377,14 @@
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.net.UnsupportedQueryModelError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">UnsupportedQueryModelError</span></span><a class="headerlink" href="#dcm.net.UnsupportedQueryModelError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">UnsupportedQueryModelError</span></span><a class="reference internal" href="_modules/dcm/net.html#UnsupportedQueryModelError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.UnsupportedQueryModelError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>The requested query model isn’t supported by the remote entity</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.DcmNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DcmNode</span></span><a class="headerlink" href="#dcm.net.DcmNode" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DcmNode</span></span><a class="reference internal" href="_modules/dcm/net.html#DcmNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DcmNode" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.util.html#dcm.util.JsonSerializable" title="dcm.util.JsonSerializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonSerializable</span></code></a>, <a class="reference internal" href="dcm.util.html#dcm.util.InlineConfigurable" title="dcm.util.InlineConfigurable"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineConfigurable</span></code></a>[<a class="reference internal" href="#dcm.net.DcmNode" title="dcm.net.DcmNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">DcmNode</span></code></a>]</p>
 <p>DICOM network entity info</p>
 <p><strong>Methods:</strong></p>
@@ -414,7 +439,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DcmNode.inline_to_dict">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inline_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DcmNode.inline_to_dict" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inline_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DcmNode.inline_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DcmNode.inline_to_dict" title="Permalink to this definition">#</a></dt>
 <dd><p>Parse inline string format ‘host[:ae_title][:port]’</p>
 <p>Both the second components are optional</p>
 <dl class="field-list simple">
@@ -455,7 +480,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.DicomOp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DicomOp</span></span><a class="headerlink" href="#dcm.net.DicomOp" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DicomOp</span></span><a class="reference internal" href="_modules/dcm/net.html#DicomOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOp" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Describes a DICOM network operation</p>
 <p><strong>Methods:</strong></p>
@@ -533,7 +558,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DicomOpReport</span></span><a class="headerlink" href="#dcm.net.DicomOpReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">DicomOpReport</span></span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a></p>
 <p>Track status results from DICOM operations</p>
 <p><strong>Methods:</strong></p>
@@ -576,7 +601,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dicom_op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DicomOpReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dicom_op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -592,7 +617,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DicomOpReport.add" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport.add" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -608,7 +633,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DicomOpReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -619,7 +644,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DicomOpReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><p>Clear out all current operation results</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -630,7 +655,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.DicomOpReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.DicomOpReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#DicomOpReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.DicomOpReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log a summary of error/warning statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -661,7 +686,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.EventFilter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">EventFilter</span></span><a class="headerlink" href="#dcm.net.EventFilter" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">EventFilter</span></span><a class="reference internal" href="_modules/dcm/net.html#EventFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.EventFilter" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Define a filter that matches a subset of pynetdicom events</p>
 <p><strong>Methods:</strong></p>
@@ -711,7 +736,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.EventFilter.collides">
-<span class="sig-name descname"><span class="pre">collides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.EventFilter.collides" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">collides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#EventFilter.collides"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.EventFilter.collides" title="Permalink to this definition">#</a></dt>
 <dd><p>Test if this filter collides with the <cite>other</cite> filter</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -725,7 +750,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.EventFilter.matches">
-<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.EventFilter.matches" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#EventFilter.matches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.EventFilter.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Test if the <cite>event</cite> matches the filter</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -753,7 +778,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.FilteredListenerLockBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">FilteredListenerLockBase</span></span><a class="headerlink" href="#dcm.net.FilteredListenerLockBase" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">FilteredListenerLockBase</span></span><a class="reference internal" href="_modules/dcm/net.html#FilteredListenerLockBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.FilteredListenerLockBase" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></p>
 <p>Base class for creating event filter aware lock types with fifolock</p>
 <p><strong>Methods:</strong></p>
@@ -778,7 +803,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.FilteredListenerLockBase.is_compatible">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">holds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.FilteredListenerLockBase.is_compatible" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">holds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#FilteredListenerLockBase.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.FilteredListenerLockBase.is_compatible" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>holds</strong> (<em>Dict</em><em>[</em><em>Type</em><em>[</em><a class="reference internal" href="#dcm.net.FilteredListenerLockBase" title="dcm.net.FilteredListenerLockBase"><em>FilteredListenerLockBase</em></a><em>]</em><em>, </em><em>int</em><em>]</em>) – </p>
@@ -798,7 +823,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingDataReport</span></span><a class="headerlink" href="#dcm.net.IncomingDataReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingDataReport</span></span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="dcm.report.html#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a></p>
 <p>Generic incoming data report</p>
 <p><strong>Methods:</strong></p>
@@ -844,7 +869,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -861,7 +886,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataReport.add" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport.add" title="Permalink to this definition">#</a></dt>
 <dd><p>Add an incoming data set, returns True if it should should be used</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -875,7 +900,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -886,7 +911,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -896,7 +921,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.IncomingDataReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.IncomingDataReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#IncomingDataReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingDataReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log any warnings and errors</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -933,7 +958,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.IncomingErrorType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingErrorType</span></span><a class="headerlink" href="#dcm.net.IncomingErrorType" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">IncomingErrorType</span></span><a class="reference internal" href="_modules/dcm/net.html#IncomingErrorType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.IncomingErrorType" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>An enumeration.</p>
 <p><strong>Attributes:</strong></p>
@@ -979,7 +1004,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">LocalEntity</span></span><a class="headerlink" href="#dcm.net.LocalEntity" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">LocalEntity</span></span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Low level interface to DICOM networking functionality</p>
 <dl class="field-list simple">
@@ -1040,7 +1065,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntaxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntaxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1054,7 +1079,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.download">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.download" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.download" title="Permalink to this definition">#</a></dt>
 <dd><p>Uses <cite>retrieve</cite> method to download data and saves it to <cite>dest_dir</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1073,7 +1098,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.echo">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">echo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.echo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">echo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.echo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.echo" title="Permalink to this definition">#</a></dt>
 <dd><p>Perfrom an “echo” against <cite>remote</cite> to test connectivity</p>
 <p>Returns True if successful, else False. Throws FailedAssociationError if the
 initial association with the <cite>remote</cite> fails.</p>
@@ -1089,7 +1114,7 @@ initial association with the <cite>remote</cite> fails.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.listen">
-<span class="sig-name descname"><span class="pre">listen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">presentation_contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.listen" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">listen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">presentation_contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.listen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.listen" title="Permalink to this definition">#</a></dt>
 <dd><p>Listen for incoming DICOM network events</p>
 <p>The async callback <cite>handler</cite> will be called for each DICOM network
 event that matches the <cite>event_filter</cite>. The default filter matches all
@@ -1113,7 +1138,7 @@ dependency loops must be handled at a higher level.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.move">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.move" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.move"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.move" title="Permalink to this definition">#</a></dt>
 <dd><p>Move DICOM files from one network entity to another</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1133,7 +1158,7 @@ dependency loops must be handled at a higher level.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.queries">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.queries" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.queries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.queries" title="Permalink to this definition">#</a></dt>
 <dd><p>Query the <cite>remote</cite> entity in an iterative manner</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1157,7 +1182,7 @@ using <cite>QueryLevel.STUDY</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.query">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.query" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.query" title="Permalink to this definition">#</a></dt>
 <dd><p>Query the <cite>remote</cite> entity all at once</p>
 <p>See documentation for the <cite>queries</cite> method for details</p>
 <dl class="field-list simple">
@@ -1178,7 +1203,7 @@ using <cite>QueryLevel.STUDY</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.retrieve">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.retrieve" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.retrieve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.retrieve" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate data sets from <cite>remote</cite> based on <cite>query_res</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1199,7 +1224,7 @@ using <cite>QueryLevel.STUDY</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.send">
-<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.send" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.send" title="Permalink to this definition">#</a></dt>
 <dd><p>Produces a queue where you can put data sets to be sent to <cite>remote</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1225,7 +1250,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.LocalEntity.upload">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.LocalEntity.upload" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_syntax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#LocalEntity.upload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.LocalEntity.upload" title="Permalink to this definition">#</a></dt>
 <dd><p>Uses <cite>send</cite> method to upload data from local <cite>src_paths</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1251,7 +1276,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">RetrieveReport</span></span><a class="headerlink" href="#dcm.net.RetrieveReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">RetrieveReport</span></span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.net.IncomingDataReport" title="dcm.net.IncomingDataReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">IncomingDataReport</span></code></a></p>
 <p>Track details about a retrieve operation</p>
 <p><strong>Methods:</strong></p>
@@ -1294,7 +1319,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1312,7 +1337,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveReport.add" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport.add" title="Permalink to this definition">#</a></dt>
 <dd><p>Add an incoming data set, returns True if it should should be used</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1326,7 +1351,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1337,7 +1362,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -1347,7 +1372,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.net.RetrieveReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.RetrieveReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#RetrieveReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.RetrieveReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log any warnings and errors</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1377,7 +1402,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.net.get_filt_sop_classes">
-<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">get_filt_sop_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_sop_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.get_filt_sop_classes" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">get_filt_sop_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_sop_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#get_filt_sop_classes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.get_filt_sop_classes" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1395,7 +1420,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.net.is_specified">
-<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">is_specified</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.is_specified" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">is_specified</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#is_specified"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.is_specified" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1411,7 +1436,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.net.make_queue_data_cb">
-<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">make_queue_data_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.make_queue_data_cb" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">make_queue_data_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_q</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#make_queue_data_cb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.make_queue_data_cb" title="Permalink to this definition">#</a></dt>
 <dd><p>Return callback that queues dataset/metadata from incoming events</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1425,7 +1450,7 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dcm.net.make_sync_to_async_cb">
-<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">make_sync_to_async_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">async_cb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.net.make_sync_to_async_cb" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">dcm.net.</span></span><span class="sig-name descname"><span class="pre">make_sync_to_async_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">async_cb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/net.html#make_sync_to_async_cb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.net.make_sync_to_async_cb" title="Permalink to this definition">#</a></dt>
 <dd><p>Return sync callback that bridges to an async callback</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1453,8 +1478,26 @@ calling the <cite>log_issues</cite> and <cite>check_errors</cite> methods on the
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="dcm.normalize.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">dcm.normalize module</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dcm.lazyset.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">dcm.lazyset module</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

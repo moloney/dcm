@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="dcm.route module" href="dcm.route.html" /><link rel="prev" title="dcm.query module" href="dcm.query.html" />
 
     <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>dcm.report module - dcm 0.1.0-dev documentation</title>
@@ -155,8 +155,33 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="dcm.html">dcm package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
 </div>
@@ -253,11 +278,11 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.report.MultiError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiError</span></span><a class="headerlink" href="#dcm.report.MultiError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiError</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>errors</strong> (<em>List</em><em>[</em><em>Exception</em><em>]</em>) – </p>
@@ -269,11 +294,11 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="dcm.report.MultiKeyedError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiKeyedError</span></span><a class="headerlink" href="#dcm.report.MultiKeyedError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiKeyedError</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiKeyedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiKeyedError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiKeyedError.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiKeyedError.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiKeyedError.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiKeyedError.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>errors</strong> (<em>Dict</em><em>[</em><em>Any</em><em>, </em><em>Exception</em><em>]</em>) – </p>
@@ -285,7 +310,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.BaseReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">BaseReport</span></span><a class="headerlink" href="#dcm.report.BaseReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">BaseReport</span></span><a class="reference internal" href="_modules/dcm/report.html#BaseReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.BaseReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Abstract base class for all reports</p>
 <p><strong>Methods:</strong></p>
@@ -337,7 +362,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.BaseReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#BaseReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.BaseReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -352,7 +377,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.BaseReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#BaseReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.BaseReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -363,7 +388,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.BaseReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#BaseReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.BaseReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -373,7 +398,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.BaseReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.BaseReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#BaseReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.BaseReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log a summary of error/warning statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -423,7 +448,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.CountableReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">CountableReport</span></span><a class="headerlink" href="#dcm.report.CountableReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">CountableReport</span></span><a class="reference internal" href="_modules/dcm/report.html#CountableReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.CountableReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p>
 <p>Abstract base class for reports with single “count”</p>
 <p><strong>Methods:</strong></p>
@@ -469,7 +494,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.CountableReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#CountableReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.CountableReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -485,7 +510,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.CountableReport.count_input">
-<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.CountableReport.count_input" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">count_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#CountableReport.count_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.CountableReport.count_input" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -539,7 +564,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.MultiAttrReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiAttrReport</span></span><a class="headerlink" href="#dcm.report.MultiAttrReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiAttrReport</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiAttrReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiAttrReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a></p>
 <p>Abstract base class combining a few sub-reports as attrs</p>
 <p><strong>Methods:</strong></p>
@@ -554,7 +579,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiAttrReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiAttrReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiAttrReport.gen_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiAttrReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -567,7 +592,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiDictReport</span></span><a class="headerlink" href="#dcm.report.MultiDictReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiDictReport</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">SummaryReport</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">K</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
 <p>Collection of related reports, each identified with a unique key</p>
 <p><strong>Methods:</strong></p>
@@ -600,7 +625,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -616,7 +641,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors have occured so far</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -627,7 +652,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -637,7 +662,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.gen_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -648,7 +673,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.items">
-<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.items" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.items" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>ItemsView</em>[<em>K</em>, <em>R</em>]</p>
@@ -658,7 +683,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.keys" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.keys" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>KeysView</em>[<em>K</em>]</p>
@@ -668,7 +693,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiDictReport.values">
-<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiDictReport.values" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiDictReport.values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiDictReport.values" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>ValuesView</em>[<em>R</em>]</p>
@@ -680,7 +705,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiListReport</span></span><a class="headerlink" href="#dcm.report.MultiListReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiListReport</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiListReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiListReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.SummaryReport" title="dcm.report.SummaryReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">SummaryReport</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
 <p>Sequence of reports of the same type</p>
 <p><strong>Methods:</strong></p>
@@ -704,7 +729,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiListReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiListReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -720,7 +745,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.append">
-<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.append" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_report</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiListReport.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiListReport.append" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>sub_report</strong> (<em>R</em>) – </p>
@@ -733,7 +758,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.clear" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiListReport.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiListReport.clear" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -743,7 +768,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiListReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiListReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiListReport.gen_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiListReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -756,7 +781,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.MultiReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiReport</span></span><a class="headerlink" href="#dcm.report.MultiReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">MultiReport</span></span><a class="reference internal" href="_modules/dcm/report.html#MultiReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.BaseReport" title="dcm.report.BaseReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReport</span></code></a></p>
 <p>Abstract base class for reports that contain other sub-reports</p>
 <p><strong>Methods:</strong></p>
@@ -790,7 +815,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiReport.check_errors">
-<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.check_errors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">check_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiReport.check_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiReport.check_errors" title="Permalink to this definition">#</a></dt>
 <dd><p>Raise an exception if any errors occured</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -801,7 +826,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiReport.gen_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -812,7 +837,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.MultiReport.log_issues">
-<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.MultiReport.log_issues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_issues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#MultiReport.log_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.MultiReport.log_issues" title="Permalink to this definition">#</a></dt>
 <dd><p>Log a summary of error/warning statuses</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -837,7 +862,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.ProgressHookBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressHookBase</span></span><a class="headerlink" href="#dcm.report.ProgressHookBase" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressHookBase</span></span><a class="reference internal" href="_modules/dcm/report.html#ProgressHookBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressHookBase" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
 <p>Base class for hooking in to progress updates from a report</p>
 <p><strong>Methods:</strong></p>
@@ -874,7 +899,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.ProgressHookBase.advance">
-<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.advance" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#ProgressHookBase.advance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressHookBase.advance" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -890,7 +915,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.ProgressHookBase.create_task">
-<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.create_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#ProgressHookBase.create_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressHookBase.create_task" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -907,7 +932,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.ProgressHookBase.end">
-<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.end" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#ProgressHookBase.end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressHookBase.end" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>task</strong> (<em>T</em>) – </p>
@@ -920,7 +945,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.ProgressHookBase.set_total">
-<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.ProgressHookBase.set_total" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#ProgressHookBase.set_total"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressHookBase.set_total" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -948,7 +973,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.ProgressTaskBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressTaskBase</span></span><a class="headerlink" href="#dcm.report.ProgressTaskBase" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">ProgressTaskBase</span></span><a class="reference internal" href="_modules/dcm/report.html#ProgressTaskBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.ProgressTaskBase" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>ProgressTaskBase(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
 <p><strong>Methods:</strong></p>
@@ -1031,7 +1056,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressHook</span></span><a class="headerlink" href="#dcm.report.RichProgressHook" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressHook</span></span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressHookBase" title="dcm.report.ProgressHookBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressHookBase</span></code></a>[<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RichProgressTask</span></code></a>]</p>
 <p>Hook for console progress bar provided by <cite>rich</cite> package</p>
 <p><strong>Methods:</strong></p>
@@ -1058,7 +1083,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>progress</strong> (<em>Progress</em>) – </p>
@@ -1068,7 +1093,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook.advance">
-<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.advance" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">advance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook.advance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook.advance" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1084,7 +1109,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook.create_task">
-<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.create_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook.create_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook.create_task" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1101,7 +1126,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook.end">
-<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.end" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook.end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook.end" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>task</strong> (<a class="reference internal" href="#dcm.report.RichProgressTask" title="dcm.report.RichProgressTask"><em>RichProgressTask</em></a>) – </p>
@@ -1114,7 +1139,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.RichProgressHook.set_total">
-<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.RichProgressHook.set_total" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_total</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#RichProgressHook.set_total"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressHook.set_total" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1132,7 +1157,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.RichProgressTask">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressTask</span></span><a class="headerlink" href="#dcm.report.RichProgressTask" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">RichProgressTask</span></span><a class="reference internal" href="_modules/dcm/report.html#RichProgressTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.RichProgressTask" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.ProgressTaskBase" title="dcm.report.ProgressTaskBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressTaskBase</span></code></a></p>
 <p>RichProgressTask(description: str, total: Union[int, NoneType], start_time: datetime.datetime, min_seconds: float, show_indeterminate: bool)</p>
 <p><strong>Methods:</strong></p>
@@ -1168,7 +1193,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="dcm.report.SummaryReport">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">SummaryReport</span></span><a class="headerlink" href="#dcm.report.SummaryReport" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcm.report.</span></span><span class="sig-name descname"><span class="pre">SummaryReport</span></span><a class="reference internal" href="_modules/dcm/report.html#SummaryReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.SummaryReport" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dcm.report.MultiReport" title="dcm.report.MultiReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiReport</span></code></a>, <a class="reference internal" href="#dcm.report.CountableReport" title="dcm.report.CountableReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountableReport</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code>]</p>
 <p>Abstract base class for all SummaryReports</p>
 <p><strong>Methods:</strong></p>
@@ -1211,7 +1236,7 @@ real-time insight into an ongoing async operation.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.SummaryReport.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prog_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#SummaryReport.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.SummaryReport.__init__" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1227,7 +1252,7 @@ real-time insight into an ongoing async operation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="dcm.report.SummaryReport.gen_reports">
-<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcm.report.SummaryReport.gen_reports" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gen_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dcm/report.html#SummaryReport.gen_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dcm.report.SummaryReport.gen_reports" title="Permalink to this definition">#</a></dt>
 <dd><p>Base classes must provide this</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1278,8 +1303,26 @@ real-time insight into an ongoing async operation.</p>
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="dcm.route.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">dcm.route module</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dcm.query.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">dcm.query module</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

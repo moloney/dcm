@@ -1,0 +1,1181 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>dcm.cli - dcm 0.1.0-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">dcm 0.1.0-dev documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  
+  <span class="sidebar-brand-text">dcm 0.1.0-dev documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../dcm.html">dcm package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for dcm.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Command line interface&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">ExitStack</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Awaitable</span>
+
+<span class="kn">import</span> <span class="nn">pydicom</span>
+<span class="kn">from</span> <span class="nn">pydicom.dataset</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">pydicom.datadict</span> <span class="kn">import</span> <span class="n">keyword_for_tag</span>
+<span class="kn">from</span> <span class="nn">pynetdicom</span> <span class="kn">import</span> <span class="n">evt</span>
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">toml</span>
+<span class="kn">from</span> <span class="nn">rich.console</span> <span class="kn">import</span> <span class="n">Console</span>
+<span class="kn">from</span> <span class="nn">rich.progress</span> <span class="kn">import</span> <span class="n">Progress</span>
+<span class="kn">from</span> <span class="nn">rich.logging</span> <span class="kn">import</span> <span class="n">RichHandler</span>
+<span class="kn">import</span> <span class="nn">dateparser</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">.conf</span> <span class="kn">import</span> <span class="n">DcmConfig</span><span class="p">,</span> <span class="n">_default_conf</span><span class="p">,</span> <span class="n">NoLocalNodeError</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">str_to_tag</span><span class="p">,</span> <span class="n">aclosing</span><span class="p">,</span> <span class="n">json_serializer</span>
+<span class="kn">from</span> <span class="nn">.lazyset</span> <span class="kn">import</span> <span class="n">AllElems</span><span class="p">,</span> <span class="n">LazySet</span>
+<span class="kn">from</span> <span class="nn">.report</span> <span class="kn">import</span> <span class="n">MultiListReport</span><span class="p">,</span> <span class="n">RichProgressHook</span>
+<span class="kn">from</span> <span class="nn">.net</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DcmNode</span><span class="p">,</span>
+    <span class="n">FailedAssociationError</span><span class="p">,</span>
+    <span class="n">LocalEntity</span><span class="p">,</span>
+    <span class="n">QueryLevel</span><span class="p">,</span>
+    <span class="n">EventFilter</span><span class="p">,</span>
+    <span class="n">make_queue_data_cb</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.filt</span> <span class="kn">import</span> <span class="n">make_edit_filter</span><span class="p">,</span> <span class="n">MultiFilter</span>
+<span class="kn">from</span> <span class="nn">.route</span> <span class="kn">import</span> <span class="n">StaticRoute</span><span class="p">,</span> <span class="n">DynamicTransferReport</span><span class="p">,</span> <span class="n">Router</span>
+<span class="kn">from</span> <span class="nn">.store.base</span> <span class="kn">import</span> <span class="n">TransferMethod</span>
+<span class="kn">from</span> <span class="nn">.store.local_dir</span> <span class="kn">import</span> <span class="n">LocalDir</span>
+<span class="kn">from</span> <span class="nn">.store.net_repo</span> <span class="kn">import</span> <span class="n">NetRepo</span>
+<span class="kn">from</span> <span class="nn">.sync</span> <span class="kn">import</span> <span class="n">SyncReport</span><span class="p">,</span> <span class="n">make_basic_validator</span><span class="p">,</span> <span class="n">sync_data</span>
+<span class="kn">from</span> <span class="nn">.normalize</span> <span class="kn">import</span> <span class="n">normalize</span>
+<span class="kn">from</span> <span class="nn">.diff</span> <span class="kn">import</span> <span class="n">diff_data_sets</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;dcm.cli&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Make sure we get SIGINT regardless of parent process mask</span>
+<span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">default_int_handler</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cli_error"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.cli_error">[docs]</a><span class="k">def</span> <span class="nf">cli_error</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">exit_code</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Print msg to stderr and exit with non-zero exit code&quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">exit_code</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QueryResponseFilter"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.QueryResponseFilter">[docs]</a><span class="k">class</span> <span class="nc">QueryResponseFilter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+<div class="viewcode-block" id="QueryResponseFilter.filter"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.QueryResponseFilter.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;dcm.net&quot;</span>
+            <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+            <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Got query response:&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="PerformedQueryFilter"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.PerformedQueryFilter">[docs]</a><span class="k">class</span> <span class="nc">PerformedQueryFilter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+<div class="viewcode-block" id="PerformedQueryFilter.filter"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.PerformedQueryFilter.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;dcm.net&quot;</span>
+            <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+            <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Performing query:&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<span class="n">debug_filters</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;query_responses&quot;</span><span class="p">:</span> <span class="n">QueryResponseFilter</span><span class="p">(),</span>
+    <span class="s2">&quot;performed_queries&quot;</span><span class="p">:</span> <span class="n">PerformedQueryFilter</span><span class="p">(),</span>
+<span class="p">}</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">dir_okay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">readable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resolve_path</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">envvar</span><span class="o">=</span><span class="s2">&quot;DCM_CONFIG_PATH&quot;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">get_app_dir</span><span class="p">(</span><span class="s2">&quot;dcm&quot;</span><span class="p">),</span> <span class="s2">&quot;dcm_conf.toml&quot;</span><span class="p">),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to TOML config file&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--log-path&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">dir_okay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">readable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">writable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resolve_path</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">envvar</span><span class="o">=</span><span class="s2">&quot;DCM_LOG_PATH&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save logging output to this file&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--file-log-level&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARN&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">],</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Log level to use when logging to a file&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print INFO log messages&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print DEBUG log messages&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--debug-filter&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Selectively filter debug log messages&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--quiet&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Hide WARNING and below log messages&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--pynetdicom-log-level&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARN&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">],</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;WARN&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Control log level for lower level pynetdicom package&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">cli</span><span class="p">(</span>
+    <span class="n">ctx</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">log_path</span><span class="p">,</span>
+    <span class="n">file_log_level</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">,</span>
+    <span class="n">debug</span><span class="p">,</span>
+    <span class="n">debug_filter</span><span class="p">,</span>
+    <span class="n">quiet</span><span class="p">,</span>
+    <span class="n">pynetdicom_log_level</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;High level DICOM file and network operations&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">quiet</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">or</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Can&#39;t mix --quiet with --verbose/--debug&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create Rich Console outputing to stderr for logging / progress bars</span>
+    <span class="n">rich_con</span> <span class="o">=</span> <span class="n">Console</span><span class="p">(</span><span class="n">stderr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Setup logging</span>
+    <span class="n">LOG_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> </span><span class="si">%(threadName)s</span><span class="s2"> </span><span class="si">%(name)s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+    <span class="n">def_formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="n">LOG_FORMAT</span><span class="p">)</span>
+    <span class="n">root_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">root_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">pynetdicom_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;pynetdicom&quot;</span><span class="p">)</span>
+    <span class="n">pynetdicom_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">pynetdicom_log_level</span><span class="p">))</span>
+    <span class="n">stream_formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(threadName)s</span><span class="s2"> </span><span class="si">%(name)s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">stream_handler</span> <span class="o">=</span> <span class="n">RichHandler</span><span class="p">(</span><span class="n">console</span><span class="o">=</span><span class="n">rich_con</span><span class="p">,</span> <span class="n">enable_link_path</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">stream_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">stream_formatter</span><span class="p">)</span>
+    <span class="c1"># logging.getLogger(&quot;asyncio&quot;).setLevel(logging.DEBUG)</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="n">stream_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">stream_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">quiet</span><span class="p">:</span>
+        <span class="n">stream_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stream_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARN</span><span class="p">)</span>
+    <span class="n">root_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">stream_handler</span><span class="p">)</span>
+    <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">stream_handler</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">log_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">file_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
+        <span class="n">file_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">def_formatter</span><span class="p">)</span>
+        <span class="n">file_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">file_log_level</span><span class="p">))</span>
+        <span class="n">root_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">file_handler</span><span class="p">)</span>
+        <span class="n">handlers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_handler</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">debug_filter</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">filter_name</span> <span class="ow">in</span> <span class="n">debug_filter</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">debug_filters</span><span class="p">:</span>
+                <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Unknown debug filter: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">filter_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">handlers</span><span class="p">:</span>
+                <span class="n">handler</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">debug_filters</span><span class="p">[</span><span class="n">filter_name</span><span class="p">])</span>
+
+    <span class="c1"># Create global param dict for subcommands to use</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;config_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DcmConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">create_if_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;rich_con&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rich_con</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Print the version and exit&quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--show&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Just print the current config contents&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--show-default&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Just print the default config contets&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--path&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Just print the current config path&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">conf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">show</span><span class="p">,</span> <span class="n">show_default</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Open the config file with your $EDITOR&quot;&quot;&quot;</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config_path&quot;</span><span class="p">]</span>
+    <span class="c1"># TODO: Make these mutually exclusive? Or sub-commands?</span>
+    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">show_default</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_default_conf</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">show</span> <span class="ow">or</span> <span class="n">show_default</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">config_path</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">toml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">toml</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">TomlDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;The config file contains an error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;The editor will be reopened so you can correct the error&quot;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Config file is now valid&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;remote&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--local&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Local DICOM network node properties&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">remote</span><span class="p">,</span> <span class="n">local</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test connectivity with remote node&quot;&quot;&quot;</span>
+    <span class="n">local</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_local_node</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="n">remote_node</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_remote_node</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+    <span class="n">net_ent</span> <span class="o">=</span> <span class="n">LocalEntity</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">net_ent</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">remote_node</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">FailedAssociationError</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Success&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Failed&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_hr_to_dcm_date</span><span class="p">(</span><span class="n">in_str</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">dateparser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">in_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to parse date &#39;</span><span class="si">{</span><span class="n">in_str</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_build_study_date</span><span class="p">(</span><span class="n">since</span><span class="p">,</span> <span class="n">before</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">since_str</span> <span class="o">=</span> <span class="n">_hr_to_dcm_date</span><span class="p">(</span><span class="n">since</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">since_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">before_str</span> <span class="o">=</span> <span class="n">_hr_to_dcm_date</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">before_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">since_str</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">before_str</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_build_query</span><span class="p">(</span><span class="n">query_strs</span><span class="p">,</span> <span class="n">since</span><span class="p">,</span> <span class="n">before</span><span class="p">):</span>
+    <span class="n">qdat</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">query_input</span> <span class="ow">in</span> <span class="n">query_strs</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">q_attr</span><span class="p">,</span> <span class="n">q_val</span> <span class="o">=</span> <span class="n">query_input</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid query input string: </span><span class="si">{</span><span class="n">query_input</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">qdat</span><span class="p">,</span> <span class="n">q_attr</span><span class="p">,</span> <span class="n">q_val</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">qdat</span><span class="p">,</span> <span class="s2">&quot;StudyDate&quot;</span><span class="p">):</span>
+            <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Do not specify &#39;StudyDate&#39; when using &#39;--since&#39; or &#39;--before&#39;&quot;</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">qdat</span><span class="p">,</span> <span class="s2">&quot;StudyDate&quot;</span><span class="p">,</span> <span class="n">_build_study_date</span><span class="p">(</span><span class="n">since</span><span class="p">,</span> <span class="n">before</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">qdat</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;remote&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--level&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Level of detail: patient/study/series/image&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--query-res&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A result from a previous query to refine&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--since&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only return studies since this date&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--before&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only return studies before this date&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--local&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Local DICOM network node properties&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--out-format&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output format: tree/json&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--assume-yes&quot;</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Automatically answer all prompts with &#39;y&#39;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--no-progress&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t display progress bars&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">query</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">,</span>
+    <span class="n">remote</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">,</span>
+    <span class="n">level</span><span class="p">,</span>
+    <span class="n">query_res</span><span class="p">,</span>
+    <span class="n">since</span><span class="p">,</span>
+    <span class="n">before</span><span class="p">,</span>
+    <span class="n">local</span><span class="p">,</span>
+    <span class="n">out_format</span><span class="p">,</span>
+    <span class="n">assume_yes</span><span class="p">,</span>
+    <span class="n">no_progress</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform a query against a network node&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">q_lvl</span> <span class="ow">in</span> <span class="n">QueryLevel</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">q_lvl</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">level</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">q_lvl</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Invalid level: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading query_res from stdin&quot;</span><span class="p">)</span>
+        <span class="n">query_res</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
+    <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">in_str</span> <span class="o">=</span> <span class="n">query_res</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">in_str</span><span class="p">:</span>
+            <span class="n">query_res</span> <span class="o">=</span> <span class="n">json_serializer</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">in_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">query_res</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">out_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out_format</span> <span class="o">=</span> <span class="s2">&quot;tree&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">no_progress</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">out_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out_format</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span>
+    <span class="k">if</span> <span class="n">out_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;tree&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">):</span>
+        <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Invalid out-format: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_format</span><span class="p">)</span>
+    <span class="n">local</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_local_node</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="n">remote_node</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_remote_node</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+    <span class="n">net_ent</span> <span class="o">=</span> <span class="n">LocalEntity</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="n">qdat</span> <span class="o">=</span> <span class="n">_build_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">since</span><span class="p">,</span> <span class="n">before</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qdat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">assume_yes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">click</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span>
+            <span class="s2">&quot;This query hasn&#39;t been limited in any &quot;</span>
+            <span class="s2">&quot;way and may generate a huge result, &quot;</span>
+            <span class="s2">&quot;continue?&quot;</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+    <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">estack</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_progress</span><span class="p">:</span>
+            <span class="n">prog</span> <span class="o">=</span> <span class="n">RichProgressHook</span><span class="p">(</span>
+                <span class="n">estack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span>
+                    <span class="n">Progress</span><span class="p">(</span><span class="n">console</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;rich_con&quot;</span><span class="p">],</span> <span class="n">transient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="n">MultiListReport</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="n">prog_hook</span><span class="o">=</span><span class="n">prog</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="n">MultiListReport</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;query&quot;</span><span class="p">)</span>
+
+        <span class="n">qr</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">net_ent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">remote_node</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">qdat</span><span class="p">,</span> <span class="n">query_res</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">out_format</span> <span class="o">==</span> <span class="s2">&quot;tree&quot;</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">qr</span><span class="o">.</span><span class="n">to_tree</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">out_format</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">json_serializer</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">qr</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">log_issues</span><span class="p">()</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;dests&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--source&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A data source&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--query&quot;</span><span class="p">,</span> <span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only sync data matching the query&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--query-res&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A result from a previous query to limit the data synced&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--since&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only return studies since this date&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--before&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only return studies before this date&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--edit&quot;</span><span class="p">,</span> <span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Modify DICOM attribute in the synced data&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--edit-json&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">),</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify attribute modifications as JSON&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--trust-level&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="n">q</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">QueryLevel</span><span class="p">],</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;IMAGE&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If sub-component counts match at this query level, assume &quot;</span>
+    <span class="s2">&quot;the data matches. Improves performance but sacrifices accuracy&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--force-all&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Force all data on the source to be transfered, even if it &quot;</span>
+    <span class="s2">&quot;appears to already exist on the dest&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--method&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Transfer method to use&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">TransferMethod</span><span class="p">],</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="c1"># Expose this when it is working</span>
+<span class="c1"># @click.option(&#39;--validate&#39;, is_flag=True, default=False,</span>
+<span class="c1">#              help=&quot;All synced data is retrieved back from the dests and &quot;</span>
+<span class="c1">#              &quot;compared to the original data. Differing elements produce &quot;</span>
+<span class="c1">#              &quot;warnings.&quot;)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--keep-errors&quot;</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t skip inconsistent/unexpected incoming data&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--dry-run&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;-n&quot;</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t actually do any transfers, just print them&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--local&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Local DICOM network node properties&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--dir-format&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output format for any local output directories&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--recurse/--no-recurse&quot;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t recurse into input directories&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--in-file-ext&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;File extension for local input directories&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--out-file-ext&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;File extension for local output directories&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--no-progress&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t display progress bars&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--no-report&quot;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Don&#39;t print report&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">sync</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">,</span>
+    <span class="n">dests</span><span class="p">,</span>
+    <span class="n">source</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">,</span>
+    <span class="n">query_res</span><span class="p">,</span>
+    <span class="n">since</span><span class="p">,</span>
+    <span class="n">before</span><span class="p">,</span>
+    <span class="n">edit</span><span class="p">,</span>
+    <span class="n">edit_json</span><span class="p">,</span>
+    <span class="n">trust_level</span><span class="p">,</span>
+    <span class="n">force_all</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">,</span>
+    <span class="n">keep_errors</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">,</span>
+    <span class="n">local</span><span class="p">,</span>
+    <span class="n">dir_format</span><span class="p">,</span>
+    <span class="n">recurse</span><span class="p">,</span>
+    <span class="n">in_file_ext</span><span class="p">,</span>
+    <span class="n">out_file_ext</span><span class="p">,</span>
+    <span class="n">no_progress</span><span class="p">,</span>
+    <span class="n">no_report</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sync DICOM data from a one or more sources to one or more destinations</span>
+
+<span class="sd">    The `dests` can be a local directory, a DICOM network entity (given as</span>
+<span class="sd">    &#39;hostname:aetitle:port&#39;), or a named remote/route from your config file.</span>
+
+<span class="sd">    Generally you will need to use `--source` to specify the data source, unless</span>
+<span class="sd">    you pass in a query result which contains a source (e.g. when doing</span>
+<span class="sd">    &#39;dcm query srcpacs ... | dcm sync destpacs&#39;). The `--source` can be given</span>
+<span class="sd">    in the same way `dests` are specified, except it cannot be a &#39;route&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check for incompatible options</span>
+    <span class="c1"># if validate and dry_run:</span>
+    <span class="c1">#    cli_error(&quot;Can&#39;t do validation on a dry run!&quot;)</span>
+
+    <span class="c1"># Disable progress for non-interactive output or dry runs</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">no_progress</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Build query dataset if needed</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">_build_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">since</span><span class="p">,</span> <span class="n">before</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Handle query-result options</span>
+    <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
+        <span class="n">query_res</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
+    <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">in_str</span> <span class="o">=</span> <span class="n">query_res</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">in_str</span><span class="p">:</span>
+            <span class="n">query_res</span> <span class="o">=</span> <span class="n">json_serializer</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">in_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">query_res</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Determine the local node being used</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">local</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_local_node</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">NoLocalNodeError</span><span class="p">:</span>
+        <span class="n">local</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Pass source options that override config through to the config parser</span>
+    <span class="n">local_dir_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;make_missing&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">recurse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">local_dir_kwargs</span><span class="p">[</span><span class="s2">&quot;recurse&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recurse</span>
+    <span class="k">if</span> <span class="n">in_file_ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">local_dir_kwargs</span><span class="p">[</span><span class="s2">&quot;file_ext&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">in_file_ext</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_local_dir_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">local_dir_kwargs</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_net_repo_kwargs</span><span class="p">(</span><span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">)</span>
+
+    <span class="c1"># Figure out source info</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">query_res</span><span class="o">.</span><span class="n">prov</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;No data source specified&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoLocalNodeError</span><span class="p">(</span><span class="s2">&quot;No local DICOM node configured&quot;</span><span class="p">)</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">NetRepo</span><span class="p">(</span><span class="n">local</span><span class="p">,</span> <span class="n">query_res</span><span class="o">.</span><span class="n">prov</span><span class="o">.</span><span class="n">source</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing source &#39;</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Pass dest options that override config through to the config parser</span>
+    <span class="n">local_dir_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">dir_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">local_dir_kwargs</span><span class="p">[</span><span class="s2">&quot;out_fmt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dir_format</span>
+    <span class="k">if</span> <span class="n">out_file_ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">local_dir_kwargs</span><span class="p">[</span><span class="s2">&quot;file_ext&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_file_ext</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_local_dir_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">local_dir_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Some command line options override route configuration</span>
+    <span class="n">static_route_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dynamic_route_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Handle edit options</span>
+    <span class="n">filt</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">edit_json</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">edit_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">edit_json</span><span class="p">)</span>
+        <span class="n">edit_json</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edit_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">edit</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">edit_str</span> <span class="ow">in</span> <span class="n">edit</span><span class="p">:</span>
+            <span class="n">attr</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">edit_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+            <span class="n">edit_dict</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">if</span> <span class="n">edit_dict</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">make_edit_filter</span><span class="p">(</span><span class="n">edit_dict</span><span class="p">)</span>
+        <span class="n">static_route_kwargs</span><span class="p">[</span><span class="s2">&quot;filt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span>
+        <span class="n">dynamic_route_kwargs</span><span class="p">[</span><span class="s2">&quot;filt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span>
+
+    <span class="c1"># Convert dests/filters to a StaticRoute</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">TransferMethod</span><span class="p">[</span><span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+        <span class="n">static_route_kwargs</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">method</span><span class="p">,)</span>
+        <span class="n">dynamic_route_kwargs</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">:</span> <span class="p">(</span><span class="n">method</span><span class="p">,)}</span>
+
+    <span class="c1"># Pass route options that override config through to the config parser</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_static_route_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">static_route_kwargs</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_dynamic_route_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">dynamic_route_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Do samity check that no sources are in dests. This is especially easy</span>
+    <span class="c1"># mistake as earlier versions took the first positional arg to be the</span>
+    <span class="c1"># source</span>
+    <span class="k">for</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">dests</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d_bucket</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">d_bucket</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">):</span>
+                <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The dest </span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2"> is also a source!&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">static_route</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_static_route</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">static_route</span><span class="o">.</span><span class="n">dests</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">d_bucket</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">):</span>
+                    <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The dest </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> is also a source!&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sel_dest_map</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_selector_dest_map</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s_dests</span> <span class="ow">in</span> <span class="n">sel_dest_map</span><span class="o">.</span><span class="n">routing_map</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s_dests</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">d_bucket</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">):</span>
+                        <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The dest </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> is also a source!&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">cli_error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown dest: </span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Convert dests to routes</span>
+    <span class="n">dests</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_routes</span><span class="p">(</span><span class="n">dests</span><span class="p">)</span>
+
+    <span class="c1"># Handle validate option</span>
+    <span class="c1"># if validate:</span>
+    <span class="c1">#    validators = [make_basic_validator()]</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#    validators = None</span>
+
+    <span class="c1"># Handle trust-level option</span>
+    <span class="n">trust_level</span> <span class="o">=</span> <span class="n">QueryLevel</span><span class="p">[</span><span class="n">trust_level</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+
+    <span class="c1"># Setup reporting/progress hooks and do the transfer</span>
+    <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">estack</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_progress</span><span class="p">:</span>
+            <span class="n">prog_hook</span> <span class="o">=</span> <span class="n">RichProgressHook</span><span class="p">(</span>
+                <span class="n">estack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span>
+                    <span class="n">Progress</span><span class="p">(</span><span class="n">console</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;rich_con&quot;</span><span class="p">],</span> <span class="n">transient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">qr_reports</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qr_reports</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">no_progress</span><span class="p">:</span>
+                    <span class="n">report</span> <span class="o">=</span> <span class="n">MultiListReport</span><span class="p">(</span>
+                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;init-query&quot;</span><span class="p">,</span> <span class="n">prog_hook</span><span class="o">=</span><span class="n">prog_hook</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">report</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">qr_reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">query_res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qrs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">query_res</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">]</span>
+
+        <span class="n">base_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;trust_level&quot;</span><span class="p">:</span> <span class="n">trust_level</span><span class="p">,</span>
+            <span class="s2">&quot;force_all&quot;</span><span class="p">:</span> <span class="n">force_all</span><span class="p">,</span>
+            <span class="s2">&quot;keep_errors&quot;</span><span class="p">:</span> <span class="n">keep_errors</span><span class="p">,</span>
+            <span class="c1">#&#39;validators&#39;: validators,</span>
+        <span class="p">}</span>
+        <span class="n">sm_kwargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sync_reports</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">no_progress</span><span class="p">:</span>
+                <span class="n">sync_report</span> <span class="o">=</span> <span class="n">SyncReport</span><span class="p">(</span><span class="n">prog_hook</span><span class="o">=</span><span class="n">prog_hook</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sync_report</span> <span class="o">=</span> <span class="n">SyncReport</span><span class="p">()</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">base_kwargs</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sync_report</span>
+            <span class="n">sm_kwargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sync_reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sync_report</span><span class="p">)</span>
+
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">sync_data</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">dests</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">qrs</span><span class="p">,</span> <span class="n">qr_reports</span><span class="p">,</span> <span class="n">sm_kwargs</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">sync_reports</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">log_issues</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_report</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_make_route_data_cb</span><span class="p">(</span>
+    <span class="n">res_q</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="n">Dataset</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">evt</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="n">Awaitable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Return callback that queues dataset/metadata from incoming events&quot;&quot;&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">evt</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># TODO: Do we need to embed the file_meta here?</span>
+        <span class="k">await</span> <span class="n">res_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mh">0x0</span>  <span class="c1"># Success</span>
+
+    <span class="k">return</span> <span class="n">callback</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">_do_route</span><span class="p">(</span>
+    <span class="n">local</span><span class="p">:</span> <span class="n">DcmNode</span><span class="p">,</span> <span class="n">router</span><span class="p">:</span> <span class="n">Router</span><span class="p">,</span> <span class="n">inactive_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">local_ent</span> <span class="o">=</span> <span class="n">LocalEntity</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+    <span class="n">event_filter</span> <span class="o">=</span> <span class="n">EventFilter</span><span class="p">(</span><span class="n">event_types</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">((</span><span class="n">evt</span><span class="o">.</span><span class="n">EVT_C_STORE</span><span class="p">,)))</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">DynamicTransferReport</span><span class="p">()</span>
+    <span class="n">last_update</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">inactive_timeout</span><span class="p">:</span>
+        <span class="n">last_update</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">last_reported</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">router</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">)</span> <span class="k">as</span> <span class="n">route_q</span><span class="p">:</span>
+        <span class="n">fwd_cb</span> <span class="o">=</span> <span class="n">_make_route_data_cb</span><span class="p">(</span><span class="n">route_q</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">local_ent</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="n">fwd_cb</span><span class="p">,</span> <span class="n">event_filter</span><span class="o">=</span><span class="n">event_filter</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Listener started, hit Ctrl-c to exit&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">last_update</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">n_reported</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">n_reported</span>
+                        <span class="k">if</span> <span class="n">n_reported</span> <span class="o">!=</span> <span class="n">last_reported</span><span class="p">:</span>
+                            <span class="n">last_update</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                            <span class="n">last_reported</span> <span class="o">=</span> <span class="n">n_reported</span>
+                        <span class="k">elif</span> <span class="n">inactive_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="p">(</span>
+                                <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">last_update</span>
+                            <span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">inactive_timeout</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Timeout due to inactivity&quot;</span><span class="p">)</span>
+                                <span class="k">break</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Listener shutting down&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;dests&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--edit&quot;</span><span class="p">,</span> <span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Modify DICOM attribute in the synced data&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--edit-json&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">),</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify attribute modifications as JSON&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--local&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Local DICOM network node properties&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--dir-format&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output format for any local output directories&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--out-file-ext&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;dcm&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;File extension for local output directories&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--inactive-timeout&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Stop listening after this many seconds of inactivity&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">,</span> <span class="n">dests</span><span class="p">,</span> <span class="n">edit</span><span class="p">,</span> <span class="n">edit_json</span><span class="p">,</span> <span class="n">local</span><span class="p">,</span> <span class="n">dir_format</span><span class="p">,</span> <span class="n">out_file_ext</span><span class="p">,</span> <span class="n">inactive_timeout</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Listen for incoming DICOM files on network and forward to dests&quot;&quot;&quot;</span>
+    <span class="n">local</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_local_node</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+
+    <span class="c1"># Pass dest options that override config through to the config parser</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_local_dir_kwargs</span><span class="p">(</span><span class="n">out_fmt</span><span class="o">=</span><span class="n">dir_format</span><span class="p">,</span> <span class="n">file_ext</span><span class="o">=</span><span class="n">out_file_ext</span><span class="p">)</span>
+
+    <span class="c1"># Some command line options override route configuration</span>
+    <span class="n">static_route_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dynamic_route_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Handle edit options</span>
+    <span class="n">filt</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">edit_json</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">edit_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">edit_json</span><span class="p">)</span>
+        <span class="n">edit_json</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edit_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">edit</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">edit_str</span> <span class="ow">in</span> <span class="n">edit</span><span class="p">:</span>
+            <span class="n">attr</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">edit_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+            <span class="n">edit_dict</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">if</span> <span class="n">edit_dict</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">make_edit_filter</span><span class="p">(</span><span class="n">edit_dict</span><span class="p">)</span>
+        <span class="n">static_route_kwargs</span><span class="p">[</span><span class="s2">&quot;filt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span>
+        <span class="n">dynamic_route_kwargs</span><span class="p">[</span><span class="s2">&quot;filt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span>
+
+    <span class="c1"># Pass route options that override config through to the config parser</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_static_route_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">static_route_kwargs</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_dynamic_route_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">dynamic_route_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Convert dests to routes</span>
+    <span class="n">dests</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_routes</span><span class="p">(</span><span class="n">dests</span><span class="p">)</span>
+
+    <span class="n">router</span> <span class="o">=</span> <span class="n">Router</span><span class="p">(</span><span class="n">dests</span><span class="p">)</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_do_route</span><span class="p">(</span><span class="n">local</span><span class="p">,</span> <span class="n">router</span><span class="p">,</span> <span class="n">inactive_timeout</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="make_print_cb"><a class="viewcode-back" href="../../dcm.cli.html#dcm.cli.make_print_cb">[docs]</a><span class="k">def</span> <span class="nf">make_print_cb</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">elem_filter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">print_cb</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">elem_filter</span><span class="p">:</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span>
+            <span class="n">keyword</span> <span class="o">=</span> <span class="n">keyword_for_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">elem_filter</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">keyword</span><span class="p">):</span>
+                <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="o">=</span><span class="n">elem</span><span class="p">,</span> <span class="n">ds</span><span class="o">=</span><span class="n">ds</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t apply format to elem: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">print_cb</span></div>
+
+
+<span class="k">def</span> <span class="nf">_make_elem_filter</span><span class="p">(</span><span class="n">include</span><span class="p">,</span> <span class="n">exclude</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">kw_regex</span><span class="p">,</span> <span class="n">exclude_private</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">include</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">include_tags</span> <span class="o">=</span> <span class="n">LazySet</span><span class="p">(</span><span class="n">AllElems</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">include_tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">in_str</span> <span class="ow">in</span> <span class="n">include</span><span class="p">:</span>
+            <span class="n">include_tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">str_to_tag</span><span class="p">(</span><span class="n">in_str</span><span class="p">))</span>
+        <span class="n">include_tags</span> <span class="o">=</span> <span class="n">LazySet</span><span class="p">(</span><span class="n">include_tags</span><span class="p">)</span>
+    <span class="n">exclude_tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">in_str</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+        <span class="n">exclude_tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">str_to_tag</span><span class="p">(</span><span class="n">in_str</span><span class="p">))</span>
+    <span class="n">exclude_tags</span> <span class="o">=</span> <span class="n">LazySet</span><span class="p">(</span><span class="n">exclude_tags</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">LazySet</span><span class="p">(</span><span class="n">AllElems</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">LazySet</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">])</span>
+    <span class="n">kw_regex</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">kw_regex</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">elem_filter</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">keyword</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">exclude_private</span> <span class="ow">and</span> <span class="n">tag</span><span class="o">.</span><span class="n">group</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">exclude_tags</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">tag</span><span class="o">.</span><span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include</span> <span class="ow">and</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">include_tags</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">kw_regex</span><span class="p">:</span>
+            <span class="n">keyword</span> <span class="o">=</span> <span class="n">keyword_for_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">keyword</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">kw_regex</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">include</span> <span class="ow">and</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">include_tags</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">include_tags</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="n">elem_filter</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;dcm_files&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">readable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">nargs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--out-format&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output format: plain/json&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--plain-fmt&quot;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{elem}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Format string applied to each element for &#39;plain&#39; output. Can &quot;</span>
+    <span class="s2">&quot;reference &#39;elem&#39; (the pydicom Element) and &#39;ds&#39; (the pydicom Dataset) &quot;</span>
+    <span class="s2">&quot;objects in the format string.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--include&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+    <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Include specific elements by keyword or tag&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;--group&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Include elements by group number&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--kw-regex&quot;</span><span class="p">,</span>
+    <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Include elements where the keyword matches a regex&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--exclude&quot;</span><span class="p">,</span> <span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Exclude elements by keyword or tag&quot;</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--exclude-private&quot;</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Exclude all private elements&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">,</span>
+    <span class="n">dcm_files</span><span class="p">,</span>
+    <span class="n">out_format</span><span class="p">,</span>
+    <span class="n">plain_fmt</span><span class="p">,</span>
+    <span class="n">include</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">,</span>
+    <span class="n">kw_regex</span><span class="p">,</span>
+    <span class="n">exclude</span><span class="p">,</span>
+    <span class="n">exclude_private</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump contents of DICOM files to stdout</span>
+
+<span class="sd">    Default is to include all elements, but this can be overridden by various options.</span>
+
+<span class="sd">    The `--out-format` can be `plain` or `json`. If it is `plain` each included element</span>
+<span class="sd">    is used to format a string which can be overridden with `--plain-fmt`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">elem_filter</span> <span class="o">=</span> <span class="n">_make_elem_filter</span><span class="p">(</span><span class="n">include</span><span class="p">,</span> <span class="n">exclude</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">kw_regex</span><span class="p">,</span> <span class="n">exclude_private</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">out_format</span> <span class="o">==</span> <span class="s2">&quot;plain&quot;</span><span class="p">:</span>
+        <span class="n">print_cb</span> <span class="o">=</span> <span class="n">make_print_cb</span><span class="p">(</span><span class="n">plain_fmt</span><span class="p">,</span> <span class="n">elem_filter</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pth</span> <span class="ow">in</span> <span class="n">dcm_files</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">dcmread</span><span class="p">(</span><span class="n">pth</span><span class="p">)</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">print_cb</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">out_format</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">pth</span> <span class="ow">in</span> <span class="n">dcm_files</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">dcmread</span><span class="p">(</span><span class="n">pth</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">normalize</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">elem_filter</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cli_error</span><span class="p">(</span><span class="s2">&quot;Unknown out-format: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">out_format</span><span class="p">)</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_obj</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">diff</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Show differences between two data sets&quot;&quot;&quot;</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">dcmread</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">dcmread</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+    <span class="n">diffs</span> <span class="o">=</span> <span class="n">diff_data_sets</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">diffs</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+
+
+<span class="c1"># Add our subcommands ot the CLI</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">echo</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">sync</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">dump</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+
+
+<span class="c1"># Entry point</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">cli</span><span class="p">()</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Brendan Moloney
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    </body>
+</html>

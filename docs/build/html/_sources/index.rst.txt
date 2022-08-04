@@ -11,6 +11,7 @@ Welcome to dcm's documentation!
    :caption: Contents:
    
    README<readme>
+   API<modules>
 
 
 Indices and tables

@@ -1,0 +1,552 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>dcm.util - dcm 0.1.0-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">dcm 0.1.0-dev documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  
+  <span class="sidebar-brand-text">dcm 0.1.0-dev documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../dcm.html">dcm package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../dcm.store.html">dcm.store package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.base.html">dcm.store.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.local_dir.html">dcm.store.local_dir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../dcm.store.net_repo.html">dcm.store.net_repo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.cli.html">dcm.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.conf.html">dcm.conf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.diff.html">dcm.diff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.filt.html">dcm.filt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.info.html">dcm.info module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.lazyset.html">dcm.lazyset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.net.html">dcm.net module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.normalize.html">dcm.normalize module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.query.html">dcm.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.report.html">dcm.report module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.route.html">dcm.route module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.sync.html">dcm.sync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../dcm.util.html">dcm.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for dcm.util</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Various utility functions&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">asyncio</span><span class="o">,</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">is_dataclass</span><span class="p">,</span> <span class="n">asdict</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">asynccontextmanager</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AsyncGenerator</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">AsyncIterator</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">KeysView</span><span class="p">,</span>
+    <span class="n">ValuesView</span><span class="p">,</span>
+    <span class="n">ItemsView</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Protocol</span>
+
+<span class="kn">from</span> <span class="nn">pydicom</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">pydicom.tag</span> <span class="kn">import</span> <span class="n">BaseTag</span><span class="p">,</span> <span class="n">Tag</span><span class="p">,</span> <span class="n">TagType</span>
+<span class="kn">from</span> <span class="nn">pydicom.datadict</span> <span class="kn">import</span> <span class="n">tag_for_keyword</span>
+<span class="kn">from</span> <span class="nn">rich.progress</span> <span class="kn">import</span> <span class="n">Progress</span><span class="p">,</span> <span class="n">Task</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dict_to_ds"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.dict_to_ds">[docs]</a><span class="k">def</span> <span class="nf">dict_to_ds</span><span class="p">(</span><span class="n">data_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dataset</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert a dict to a pydicom.Dataset&quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ds</span></div>
+
+
+<div class="viewcode-block" id="str_to_tag"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.str_to_tag">[docs]</a><span class="k">def</span> <span class="nf">str_to_tag</span><span class="p">(</span><span class="n">in_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTag</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert string representation to pydicom Tag</span>
+
+<span class="sd">    The string can be a keyword, or two numbers separated by a comma</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">in_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">tag_for_keyword</span><span class="p">(</span><span class="n">in_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid element ID: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">in_str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Tag</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">group_num</span><span class="p">,</span> <span class="n">elem_num</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">in_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid element ID: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">in_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Tag</span><span class="p">(</span><span class="n">group_num</span><span class="p">,</span> <span class="n">elem_num</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DicomDataError"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.DicomDataError">[docs]</a><span class="k">class</span> <span class="nc">DicomDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for exceptions from erroneous dicom data&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="DuplicateDataError"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.DuplicateDataError">[docs]</a><span class="k">class</span> <span class="nc">DuplicateDataError</span><span class="p">(</span><span class="n">DicomDataError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A duplicate dataset was found&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="JsonSerializable"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.JsonSerializable">[docs]</a><span class="k">class</span> <span class="nc">JsonSerializable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for JSON serializable objects</span>
+
+<span class="sd">    Classes can inherit from this to get reasonable defaults for many objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="JsonSerializable.to_json_dict"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.JsonSerializable.to_json_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_json_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;to_json_dict&quot;</span><span class="p">):</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_json_dict</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="JsonSerializable.from_json_dict"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.JsonSerializable.from_json_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">JsonSerializable</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">json_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_JsonSerializer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Defines class decorator for registering JSON serializable objects</span>
+
+<span class="sd">    Adapted from: https://stackoverflow.com/questions/51975664/serialize-and-deserialize-objects-from-user-defined-classes&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classname_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;__class__&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">classname_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">JsonSerializable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="s2">&quot;to_json_dict&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="s2">&quot;from_json_dict&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classes</span><span class="p">[</span><span class="n">class_</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_</span>
+        <span class="k">return</span> <span class="n">class_</span>
+
+    <span class="k">def</span> <span class="nf">decoder_hook</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">JsonSerializable</span><span class="p">]:</span>
+        <span class="n">classname</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">classname</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classes</span><span class="p">[</span><span class="n">classname</span><span class="p">]</span><span class="o">.</span><span class="n">from_json_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">encoder_default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JsonSerializable</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;to_json_dict&quot;</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">to_json_dict</span><span class="p">()</span>
+            <span class="n">d</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">return</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">JsonSerializable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder_default</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JsonSerializable</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder_hook</span><span class="p">)</span>
+
+
+<span class="n">json_serializer</span> <span class="o">=</span> <span class="n">_JsonSerializer</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot;Class decorator for registering JSON serializable objects&quot;&quot;&quot;</span>
+
+<span class="n">TC_Type</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TC_Type&quot;</span><span class="p">,</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TomlConfigurable"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.TomlConfigurable">[docs]</a><span class="k">class</span> <span class="nc">TomlConfigurable</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">TC_Type</span><span class="p">],</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for objects that are configurable through TOML&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TomlConfigurable.from_toml_dict"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.TomlConfigurable.from_toml_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_toml_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">toml_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TC_Type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">toml_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
+
+<div class="viewcode-block" id="TomlConfigurable.from_toml_val"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.TomlConfigurable.from_toml_val">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_toml_val</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TC_Type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_toml_dict</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="InlineConfigurable"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.InlineConfigurable">[docs]</a><span class="k">class</span> <span class="nc">InlineConfigurable</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">TC_Type</span><span class="p">],</span> <span class="n">TomlConfigurable</span><span class="p">[</span><span class="n">TC_Type</span><span class="p">],</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Protocol for objects that are TOML and inline configurable&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InlineConfigurable.inline_to_dict"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.InlineConfigurable.inline_to_dict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">inline_to_dict</span><span class="p">(</span><span class="n">in_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="InlineConfigurable.from_toml_val"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.InlineConfigurable.from_toml_val">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_toml_val</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">TC_Type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">inline_to_dict</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_toml_dict</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div></div>
+
+
+<span class="n">PathInputType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;os.PathLike&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="aclosing"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.aclosing">[docs]</a><span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">aclosing</span><span class="p">(</span>
+    <span class="n">thing</span><span class="p">:</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Context manager that ensures that an async iterator is closed</span>
+
+<span class="sd">    See PEP 533 for an explanation on why this is (unfortunately) needed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">thing</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">thing</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="fstr_eval"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.fstr_eval">[docs]</a><span class="k">def</span> <span class="nf">fstr_eval</span><span class="p">(</span>
+    <span class="n">f_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">context</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">raw_string</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate a string as an f-string literal.</span>
+
+<span class="sd">    Adapted from: https://stackoverflow.com/questions/54700826/how-to-evaluate-a-variable-as-a-python-f-string</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f_str</span>
+<span class="sd">        The string to interpolate</span>
+
+<span class="sd">    context</span>
+<span class="sd">        The variables available when evaluating the string</span>
+
+<span class="sd">    raw_string:</span>
+<span class="sd">        Evaluate as a raw literal (don&#39;t escape \\). Defaults to False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Prefix all local variables with _ to reduce collisions in case</span>
+    <span class="c1"># eval is called in the local namespace.</span>
+    <span class="n">ta</span> <span class="o">=</span> <span class="s2">&quot;&#39;&#39;&#39;&quot;</span>  <span class="c1"># triple-apostrophes constant, for readability</span>
+    <span class="k">if</span> <span class="n">ta</span> <span class="ow">in</span> <span class="n">f_str</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Triple-apostrophes &#39;&#39;&#39; are forbidden. &quot;</span> <span class="o">+</span> <span class="s1">&#39;Consider using &quot;&quot;&quot; instead.&#39;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Strip apostrophes from the end of _s and store them in _ra.</span>
+    <span class="c1"># There are at most two since triple-apostrophes are forbidden.</span>
+    <span class="k">if</span> <span class="n">f_str</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">):</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="s2">&quot;&#39;&#39;&quot;</span>
+        <span class="n">f_str</span> <span class="o">=</span> <span class="n">f_str</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">f_str</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">):</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="s2">&quot;&#39;&quot;</span>
+        <span class="n">f_str</span> <span class="o">=</span> <span class="n">f_str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;rf&quot;</span> <span class="k">if</span> <span class="n">raw_string</span> <span class="k">else</span> <span class="s2">&quot;f&quot;</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">ta</span> <span class="o">+</span> <span class="n">f_str</span> <span class="o">+</span> <span class="n">ta</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">ra</span></div>
+
+
+<div class="viewcode-block" id="FallbackFormatter"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.FallbackFormatter">[docs]</a><span class="k">class</span> <span class="nc">FallbackFormatter</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;String formatter that uses plain str conversion when formatting fails&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FallbackFormatter.format_field"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.FallbackFormatter.format_field">[docs]</a>    <span class="k">def</span> <span class="nf">format_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format_field</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
+
+
+<span class="n">fallback_fmt</span> <span class="o">=</span> <span class="n">FallbackFormatter</span><span class="p">()</span>
+
+
+<span class="n">_default_thread_shutdown</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="make_done_callback"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.make_done_callback">[docs]</a><span class="k">def</span> <span class="nf">make_done_callback</span><span class="p">(</span>
+    <span class="n">shutdown</span><span class="p">:</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">done_callback</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ex</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">exception</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">loop</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_loop</span><span class="p">()</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">call_exception_handler</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;unhandled exception from task&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">ex</span><span class="p">,</span>
+                        <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">shutdown</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">done_callback</span></div>
+
+
+<div class="viewcode-block" id="create_thread_task"><a class="viewcode-back" href="../../dcm.util.html#dcm.util.create_thread_task">[docs]</a><span class="k">def</span> <span class="nf">create_thread_task</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">loop</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">thread_pool</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ThreadPoolExecutor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">shutdown</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Helper to turn threads into tasks with clean shutdown option</span>
+
+<span class="sd">    Canceling a thread is not generally possible, so we pass an additional</span>
+<span class="sd">    kwarg `shutdown` to `func` which will point to an event that can be</span>
+<span class="sd">    monitored periodically for shutdown events.</span>
+
+<span class="sd">    Worker threads are also prone to hiding exceptions, so we automatically</span>
+<span class="sd">    add a callback to report exceptions in a timely manner and make sure the shutdown</span>
+<span class="sd">    event is set, so any other threads sharing that event will also shutdown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">shutdown</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shutdown</span> <span class="o">=</span> <span class="n">_default_thread_shutdown</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;shutdown&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shutdown</span>
+    <span class="n">pfunc</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="n">thread_pool</span><span class="p">,</span> <span class="n">pfunc</span><span class="p">))</span>
+    <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">make_done_callback</span><span class="p">(</span><span class="n">shutdown</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">task</span></div>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Brendan Moloney
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    </body>
+</html>
