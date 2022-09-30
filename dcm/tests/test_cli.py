@@ -1,12 +1,14 @@
-import time, json
+import csv, time, json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import pytest
 from pytest import mark
 from click.testing import CliRunner
 import pydicom
+
+from dcm.query import QueryLevel
 
 from ..cli import cli
 from ..util import json_serializer
@@ -57,6 +59,24 @@ def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
     assert result.exit_code == 0
     res_qr = json_serializer.loads(result.output)
     assert remote.init_qr.equivalent(res_qr)
+    # Test batch query
+    batch_dicts = []
+    for p in remote.init_qr.level_paths(QueryLevel.STUDY):
+        sinfo = remote.init_qr.path_info(p)
+        batch_dicts.append(
+            {"PatientID": sinfo["PatientID"], "StudyDate": sinfo["StudyDate"]}
+        )
+    print(batch_dicts)
+    with NamedTemporaryFile("w+t") as csv_f:
+        csv_writer = csv.DictWriter(csv_f, fieldnames=batch_dicts[0].keys())
+        csv_writer.writerows(batch_dicts)
+        csv_f.flush()
+        args += ["--batch-csv", csv_f.name]
+        print(args)
+        result = runner.invoke(cli, args)
+        assert result.exit_code == 0
+        res_qr = json_serializer.loads(result.output)
+        assert remote.init_qr.equivalent(res_qr)
 
 
 @mark.parametrize("node_type", (pytest.param("dcmtk", marks=has_dcmtk), "pnd"))

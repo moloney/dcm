@@ -1,3 +1,5 @@
+"""Define set classes that can contain everything, or everything except specific elems
+"""
 from __future__ import annotations
 from enum import Enum
 from typing import (
@@ -42,7 +44,7 @@ class _BaseLazySet(Generic[T]):
 
     _elems: Union[Set[T], FrozenSet[T], _AllElems]
 
-    _exclude: Union[Set[T], FrozenSet[T], _AllElems]
+    _exclude: Union[Set[T], FrozenSet[T]]
 
     def __init__(
         self,
@@ -59,9 +61,7 @@ class _BaseLazySet(Generic[T]):
                     self._elems = elems._elems.copy()
                 else:
                     self._elems = self._set_type(elems._elems)
-                if elems._exclude is AllElems:
-                    self._exclude = elems._exclude
-                elif isinstance(elems._exclude, self._set_type):
+                if isinstance(elems._exclude, self._set_type):
                     self._exclude = elems._exclude.copy()
                 else:
                     self._exclude = self._set_type(elems._exclude)
@@ -93,7 +93,6 @@ class _BaseLazySet(Generic[T]):
 
     def __contains__(self, elem: T) -> bool:
         if self._elems is AllElems:
-            assert self._exclude is not AllElems
             return elem not in self._exclude
         return elem in self._elems
 
@@ -104,8 +103,7 @@ class _BaseLazySet(Generic[T]):
         if self._elems is AllElems:
             res = "All Elements"
             if self._exclude:
-                assert self._exclude is not AllElems
-                res += "exclude %s" % set(self._exclude)
+                res += " excluding %s" % set(self._exclude)
         else:
             res = str(set(self._elems))
         return res
@@ -114,35 +112,27 @@ class _BaseLazySet(Generic[T]):
         if other._elems is AllElems:
             assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
                 return type(self)(AllElems, self._exclude | other._exclude)
             return type(self)(self._elems - other._exclude)
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
             return type(self)(other._elems - self._exclude)
         return type(self)(self._elems & other._elems)
 
     def __or__(self: S, other: _BaseLazySet[T]) -> S:
         if other._elems is AllElems:
-            assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
                 return type(self)(AllElems, self._exclude & other._exclude)
             return type(self)(AllElems, other._exclude - self._elems)
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
             return type(self)(AllElems, self._exclude - other._elems)
         return type(self)(self._elems | other._elems)
 
     def __sub__(self: S, other: _BaseLazySet[T]) -> S:
         if other._elems is AllElems:
-            assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                return type(self)(AllElems, self._exclude | other._exclude)
+                return type(self)(other._exclude - self._exclude)
             return type(self)(self._elems & other._exclude)
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
             return type(self)(AllElems, self._exclude | other._elems)
         return type(self)(self._elems - other._elems)
 
@@ -166,8 +156,6 @@ class _BaseLazySet(Generic[T]):
         return self._elems == o_elems and self._exclude == o_exclude
 
     def excludes(self) -> Iterator[T]:
-        if self._exclude is AllElems:
-            raise LazyEnumerationError
         for elem in self._exclude:
             yield elem
 
@@ -186,17 +174,39 @@ class LazySet(_BaseLazySet[T]):
 
     _set_type = set
 
+    _elems: Union[Set[T], _AllElems]
+
+    _exclude: Set[T]
+
+    def add(self, elem: T) -> None:
+        if self._elems is AllElems:
+            self._exclude.discard(elem)
+        else:
+            self._elems.add(elem)
+
+    def remove(self, elem: T):
+        if self._elems is AllElems:
+            if elem in self._exclude:
+                raise KeyError(elem)
+            self._exclude.add(elem)
+        else:
+            self._elems.remove(elem)
+
+    def discard(self, elem: T):
+        if self._elems is AllElems:
+            self._exclude.add(elem)
+        else:
+            self._elems.discard(elem)
+
     def __iand__(self, other: _BaseLazySet[T]) -> LazySet[T]:
         if other._elems is AllElems:
-            assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
                 self._exclude |= other._exclude
             else:
+                assert self._elems is not AllElems
                 self._elems -= other._exclude
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
-            self._elems = other._elems - self._exclude
+            self._elems = self._set_type(other._elems) - self._exclude
             self._exclude = set()
         else:
             self._elems &= other._elems
@@ -204,15 +214,12 @@ class LazySet(_BaseLazySet[T]):
 
     def __ior__(self, other: _BaseLazySet[T]) -> LazySet[T]:
         if other._elems is AllElems:
-            assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
                 self._exclude = self._exclude & other._exclude
             else:
-                self._exclude = other._exclude - self._elems
+                self._exclude = self._set_type(other._exclude) - self._elems
                 self._elems = AllElems
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
             self._exclude -= other._elems
         else:
             self._elems |= other._elems
@@ -220,14 +227,12 @@ class LazySet(_BaseLazySet[T]):
 
     def __isub__(self, other: _BaseLazySet[T]) -> LazySet[T]:
         if other._elems is AllElems:
-            assert other._exclude is not AllElems
             if self._elems is AllElems:
-                assert self._exclude is not AllElems
-                self._exclude |= other._exclude
+                self._elems = self._set_type(other._exclude) - self._exclude
+                self._exclude = self._set_type()
             else:
                 self._elems &= other._exclude
         elif self._elems is AllElems:
-            assert self._exclude is not AllElems
             self._exclude |= other._elems
         else:
             self._elems -= other._elems
