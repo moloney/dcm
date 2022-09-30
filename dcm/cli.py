@@ -1,5 +1,6 @@
 """Command line interface"""
 from __future__ import annotations
+import csv
 import sys, os, logging, json, re, signal
 import asyncio
 from contextlib import ExitStack
@@ -17,6 +18,8 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
+
+from dcm.query import QueryResult
 
 from . import __version__
 from .conf import DcmConfig, _default_conf, NoLocalNodeError
@@ -291,6 +294,7 @@ def _build_query(query_strs, since, before):
     type=click.File("rb"),
     help="A result from a previous query to refine",
 )
+@click.option("--batch-csv", help="Run batch of queries from CSV")
 @click.option("--since", help="Only return studies since this date")
 @click.option("--before", help="Only return studies before this date")
 @click.option("--local", help="Local DICOM network node properties")
@@ -308,6 +312,7 @@ def query(
     query,
     level,
     query_res,
+    batch_csv,
     since,
     before,
     local,
@@ -324,10 +329,13 @@ def query(
                 break
         else:
             cli_error("Invalid level: %s" % level)
-    if query_res is None and not sys.stdin.isatty():
+
+    if query_res is None and not sys.stdin.isatty() and batch_csv is None:
         log.debug("Reading query_res from stdin")
         query_res = sys.stdin
     if query_res is not None:
+        if batch_csv is not None:
+            cli_error("Can't combine '--query-res' and '--batch-csv' options")
         in_str = query_res.read()
         if in_str:
             query_res = json_serializer.loads(in_str)
@@ -347,33 +355,67 @@ def query(
     remote_node = params["config"].get_remote_node(remote)
     net_ent = LocalEntity(local)
     qdat = _build_query(query, since, before)
-    if len(qdat) == 0 and query_res is None and not assume_yes:
+    if len(qdat) == 0 and query_res is None and batch_csv is None and not assume_yes:
         if not click.confirm(
             "This query hasn't been limited in any "
             "way and may generate a huge result, "
             "continue?"
         ):
             return
+    if batch_csv:
+        queries = []
+        with open(batch_csv, "rt", newline="") as csvfile:
+            dialect = csv.Sniffer().sniff(csvfile.read(4096))
+            csvfile.seek(0)
+            reader = csv.DictReader(csvfile, dialect=dialect)
+            for row_data in reader:
+                q = deepcopy(qdat)
+                for k, v in row_data.items():
+                    setattr(q, k, v)
+                queries.append(q)
+    else:
+        queries = [qdat]
     with ExitStack() as estack:
         if not no_progress:
-            prog = RichProgressHook(
+            prog_hook = RichProgressHook(
                 estack.enter_context(
                     Progress(console=params["rich_con"], transient=True)
                 )
             )
-            report = MultiListReport(description="query", prog_hook=prog)
         else:
-            report = MultiListReport(description="query")
+            prog_hook = None
+        if len(queries) > 1:
+            batch_report = MultiListReport(
+                description="batch-queries",
+                prog_hook=prog_hook,
+                n_expected=len(queries),
+            )
+            batch_qr = QueryResult(level)
+        else:
+            batch_report = None
+            batch_qr = None
 
-        qr = asyncio.run(
-            net_ent.query(remote_node, level, qdat, query_res, report=report)
-        )
+        for q in queries:
+            report = MultiListReport(description="query", prog_hook=prog_hook)
+            if batch_report is not None:
+                batch_report.append(report)
+            qr = asyncio.run(
+                net_ent.query(remote_node, level, qdat, query_res, report=report)
+            )
+            if batch_qr is not None:
+                batch_qr |= qr
+        if batch_report is not None:
+            batch_report.done = True
+            qr = batch_qr
     if out_format == "tree":
         out = qr.to_tree()
     elif out_format == "json":
         out = json_serializer.dumps(qr, indent=4)
     click.echo(out)
-    report.log_issues()
+    if batch_report is not None:
+        batch_report.log_issues()
+    else:
+        report.log_issues()
 
 
 @click.command()
