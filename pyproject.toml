@@ -91,7 +91,7 @@ ignore_errors = true
 [tool.pytest.ini_options]
 testpaths = "dcm/"
 required_plugins = ["pytest-asyncio", "pytest-mypy", "pytest-black"]
-addopts = "--mypy --black --cov=dcm/ --cov-report=xml"
+addopts = "--mypy --black --cov=dcm/ --cov-report=term --cov-report=xml"
 
 [tool.tox]
 legacy_tox_ini = """
