@@ -228,7 +228,7 @@ class LazySet(_BaseLazySet[T]):
     def __isub__(self, other: _BaseLazySet[T]) -> LazySet[T]:
         if other._elems is AllElems:
             if self._elems is AllElems:
-                self._elems = other._exclude - self._exclude
+                self._elems = self._set_type(other._exclude) - self._exclude
                 self._exclude = self._set_type()
             else:
                 self._elems &= other._exclude
