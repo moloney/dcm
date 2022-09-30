@@ -52,11 +52,10 @@ pytest-cov = "^2.11.1"
 types-toml = "^0.1.5"
 types-dateparser = "^1.0.1"
 SQLAlchemy = "^1.4.37"
-poetry-core = "1.1.0b3"
-tox-poetry-dev-dependencies = "^0.0.9"
 Sphinx = "^5.1.1"
 furo = "^2022.6.21"
 autodocsumm = "^0.2.9"
+tox-poetry-installer = {extras = ["poetry"], version = "^0.9.0"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -107,9 +106,7 @@ python =
     3.9: py39
 
 [testenv]
-poetry_add_dev_dependencies = True
-# TODO: Can't enable this until markers are supported: https://github.com/sinoroc/tox-poetry-dev-dependencies/issues/48
-#poetry_experimental_add_locked_dependencies = True
+install_dev_deps = True
 commands =
     pytest dcm/ --slow --disable-backend dcmtk
 """
