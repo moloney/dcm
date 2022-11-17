@@ -251,18 +251,22 @@ class DcmNode(JsonSerializable, InlineConfigurable["DcmNode"]):
 
     def __post_init__(self) -> None:
         res = []
+        seen = set()
         for ts in self.transfer_syntaxes:
             if not isinstance(ts, SOPClass):
                 if ts[0] in "0123456789":
                     ts = uid_to_sop_class(ts)
                 else:
                     for t in ALL_TRANSFER_SYNTAXES:
+                        t = uid_to_sop_class(t)
                         if t.name == ts:
                             ts = t
                             break
                     else:
                         raise ValueError(f"Unknown transfer syntax: {ts}")
-            res.append(ts)
+            if ts not in seen:
+                res.append(ts)
+            seen.add(ts)
         object.__setattr__(self, "transfer_syntaxes", tuple(res))
 
     def __str__(self) -> str:

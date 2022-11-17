@@ -5,11 +5,12 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from pytest import mark
+from pydicom.uid import ImplicitVRLittleEndian, ExplicitVRLittleEndian
 
 from dcm.util import aclosing
 
 from ..query import QueryLevel
-from ..net import LocalEntity, RetrieveReport
+from ..net import LocalEntity, RetrieveReport, DcmNode
 
 from .conftest import (
     has_dcmtk,
@@ -18,6 +19,14 @@ from .conftest import (
     pnd_priv_sop_xfail,
     get_stored_files,
 )
+
+
+def test_make_node():
+    node = DcmNode(
+        "localhost",
+        transfer_syntaxes=["Implicit VR Little Endian", "1.2.840.10008.1.2.1"],
+    )
+    assert node.transfer_syntaxes == (ImplicitVRLittleEndian, ExplicitVRLittleEndian)
 
 
 test_query_subsets = [
