@@ -45,7 +45,7 @@ from pynetdicom import (
     VerificationPresentationContexts,
     sop_class,
 )
-from pynetdicom._globals import ALL_TRANSFER_SYNTAXES
+from pynetdicom._globals import ALL_TRANSFER_SYNTAXES, DEFAULT_TRANSFER_SYNTAXES
 from pynetdicom.status import code_to_category
 from pynetdicom.sop_class import StorageServiceClass, SOPClass, uid_to_sop_class
 
@@ -244,6 +244,26 @@ class DcmNode(JsonSerializable, InlineConfigurable["DcmNode"]):
 
     qr_models: Tuple[str, ...] = ("StudyRoot", "PatientRoot")
     """Supported DICOM QR models for the node"""
+
+    transfer_syntaxes: Tuple[SOPClass, ...] = tuple(
+        uid_to_sop_class(x) for x in ALL_TRANSFER_SYNTAXES
+    )
+
+    def __post_init__(self) -> None:
+        res = []
+        for ts in self.transfer_syntaxes:
+            if not isinstance(ts, SOPClass):
+                if ts[0] in "0123456789":
+                    ts = uid_to_sop_class(ts)
+                else:
+                    for t in ALL_TRANSFER_SYNTAXES:
+                        if t.name == ts:
+                            ts = t
+                            break
+                    else:
+                        raise ValueError(f"Unknown transfer syntax: {ts}")
+            res.append(ts)
+        object.__setattr__(self, "transfer_syntaxes", tuple(res))
 
     def __str__(self) -> str:
         return "%s:%s:%s" % (self.host, self.ae_title, self.port)
@@ -1096,7 +1116,7 @@ def is_specified(query: Dataset, attr: str) -> bool:
     return False
 
 
-SOPList = List[sop_class.SOPClass]
+SOPList = Iterable[sop_class.SOPClass]
 
 
 class _SingletonEntity(type):
@@ -1142,14 +1162,9 @@ class LocalEntity(metaclass=_SingletonEntity):
     def __init__(
         self,
         local: DcmNode,
-        transfer_syntaxes: Optional[SOPList] = None,
         max_threads: int = 32,
     ):
         self._local = local
-        if transfer_syntaxes is None:
-            self._default_ts = [uid_to_sop_class(x) for x in ALL_TRANSFER_SYNTAXES]
-        else:
-            self._default_ts = transfer_syntaxes
         self._ae = AE(ae_title=self._local.ae_title)
         # Certain operations can be slow to start up
         self._ae.dimse_timeout = 180
@@ -1481,7 +1496,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         self._add_qr_meta(report, query_res)
         query_model = self._choose_qr_model(source, "move", query_res.level)
         if transfer_syntax is None:
-            transfer_syntax = self._default_ts
+            transfer_syntax = tuple(
+                set(source.transfer_syntaxes) & set(dest.transfer_syntaxes)
+            )
         # Setup queue args for building reports
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
         dicom_op = DicomOp(provider=source, user=self._local, op_type="c-move")
@@ -1660,7 +1677,9 @@ class LocalEntity(metaclass=_SingletonEntity):
             calling the `log_issues` and `check_errors` methods on the report).
         """
         if transfer_syntax is None:
-            transfer_syntax = self._default_ts
+            transfer_syntax = tuple(
+                set(self._local.transfer_syntaxes) & set(remote.transfer_syntaxes)
+            )
         if report is None:
             extern_report = False
             report = DicomOpReport()
@@ -1817,7 +1836,9 @@ class LocalEntity(metaclass=_SingletonEntity):
         ae.dimse_timeout = 180
         for context in presentation_contexts:
             assert context.abstract_syntax is not None
-            ae.add_supported_context(context.abstract_syntax, self._default_ts)
+            ae.add_supported_context(
+                context.abstract_syntax, self._local.transfer_syntaxes
+            )
         self._listen_mgr = ae.start_server(
             (self._local.host, self._local.port), block=False
         )
