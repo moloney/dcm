@@ -192,9 +192,10 @@ class LocalIncomingReport(IncomingDataReport):
     def n_errors(self) -> int:
         return super().n_errors + len(self.invalid_paths)
 
-    def add_invalid(self, path: PathInputType) -> None:
+    def add_invalid(self, path: PathInputType) -> bool:
         self.count_input()
         self.invalid_paths.append(path)
+        return False
 
     def log_issues(self) -> None:
         """Log any warnings and errors"""

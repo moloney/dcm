@@ -585,9 +585,22 @@ class IncomingDataReport(CountableReport):
         try:
             self.retrieved.add(minimal_copy(data_set))
         except InvalidDicomError:
-            self.invalid.append(get_all_uids(data_set))
-            return IncomingErrorType.INVALID in self._keep_errors
+            return self._add_invalid(data_set)
         return True
+
+    def add_invalid(self, data_set: Dataset) -> bool:
+        """Add an incoming dataset that is known to be invalid by the caller"""
+        assert not self.done
+        self.count_input()
+        return self._add_invalid(data_set)
+
+    def _add_invalid(self, data_set: Dataset) -> bool:
+        try:
+            all_uids = get_all_uids(data_set)
+        except Exception:
+            all_uids = ("NA",)
+        self.invalid.append(all_uids)
+        return IncomingErrorType.INVALID in self._keep_errors
 
     def log_issues(self) -> None:
         """Log any warnings and errors"""
@@ -1581,13 +1594,21 @@ class LocalEntity(metaclass=_SingletonEntity):
                             break
                         else:
                             continue
-                    # Add the data set to our report and handle errors
-                    success = report.add(ds)
+                    # Remove any Group 0x0002 elements that may have been included and
+                    # also parse the dataset and make sure it is valid
+                    try:
+                        ds = ds[0x00030000:]
+                    except Exception as e:
+                        log.warning("Error parsing incoming data set: %s", str(e))
+                        success = report.add_invalid(ds)
+                        continue
+                    else:
+                        # Add the data set to our report and handle other errors
+                        success = report.add(ds)
                     if not success:
                         log.debug("Retrieved data set filtered due to error")
                         continue
-                    # Remove any Group 0x0002 elements that may have been included
-                    ds = ds[0x00030000:]
+
                     # Add the file_meta to the data set and yield it
                     # TODO: Get implementation UID and set it here
                     # file_meta.ImplementationUID = ...
