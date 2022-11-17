@@ -259,7 +259,7 @@ class DcmNode(JsonSerializable, InlineConfigurable["DcmNode"]):
                 else:
                     for t in ALL_TRANSFER_SYNTAXES:
                         t = uid_to_sop_class(t)
-                        if t.name == ts:
+                        if t.name == ts or t.name.replace(" ", "") == ts:
                             ts = t
                             break
                     else:
