@@ -718,7 +718,7 @@ def _make_route_data_cb(
     """Return callback that queues dataset/metadata from incoming events"""
 
     async def callback(event: evt.Event) -> int:
-        # TODO: Do we need to embed the file_meta here?
+        event.dataset.file_meta = event.file_meta
         await res_q.put(event.dataset)
         return 0x0  # Success
 
@@ -726,7 +726,10 @@ def _make_route_data_cb(
 
 
 async def _do_route(
-    local: DcmNode, router: Router, inactive_timeout: Optional[int] = None
+    local: DcmNode, 
+    router: Router, 
+    inactive_timeout: Optional[int] = None,
+    indefinite_mode: bool = False,
 ) -> None:
     local_ent = LocalEntity(local)
     event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
@@ -735,6 +738,7 @@ async def _do_route(
     if inactive_timeout:
         last_update = datetime.now()
         last_reported = 0
+        num_flushed = 0
     async with router.route(report=report) as route_q:
         fwd_cb = _make_route_data_cb(route_q)
         async with local_ent.listen(fwd_cb, event_filter=event_filter):
@@ -751,8 +755,13 @@ async def _do_route(
                             if (
                                 datetime.now() - last_update
                             ).total_seconds() > inactive_timeout:
-                                print("Timeout due to inactivity")
-                                break
+                                if not indefinite_mode:
+                                    print("Timeout due to inactivity")
+                                    break
+                                elif report.n_reported > num_flushed:
+                                    num_flushed = report.n_reported
+                                    report.log_issues()
+                                    report.clear()            
             finally:
                 print("Listener shutting down")
 
@@ -774,10 +783,20 @@ async def _do_route(
 @click.option(
     "--inactive-timeout",
     type=int,
-    help="Stop listening after this many seconds of inactivity",
+    help="Stop listening after this many seconds of inactivity, unless running in "
+    "`--indefinite-mode`. If running in `--indefinite-mode`, then flush any accumulated "
+    "errors/issues after this many seconds of inactivity.",
+)
+@click.option(
+    "--indefinite-mode",
+    is_flag=True,
+    help="Run as a long lived listener. After `--inactive-timeout` seconds "
+    "of inactivity, any issues/errors that have accumulated since the last pause in "
+    "activity will be logged/raised. If no errors are raised, then the listener will "
+    "continue running.",
 )
 def forward(
-    params, dests, edit, edit_json, local, dir_format, out_file_ext, inactive_timeout
+    params, dests, edit, edit_json, local, dir_format, out_file_ext, inactive_timeout, indefinite_mode
 ):
     """Listen for incoming DICOM files on network and forward to dests"""
     local = params["config"].get_local_node(local)
@@ -813,7 +832,7 @@ def forward(
     dests = params["config"].get_routes(dests)
 
     router = Router(dests)
-    asyncio.run(_do_route(local, router, inactive_timeout))
+    asyncio.run(_do_route(local, router, inactive_timeout, indefinite_mode))
 
 
 def make_print_cb(fmt, elem_filter=None):
