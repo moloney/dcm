@@ -1,7 +1,7 @@
 """Command line interface"""
 from __future__ import annotations
 import csv
-import sys, os, logging, json, re, signal
+import sys, os, logging, json, re, signal, itertools
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
@@ -738,7 +738,6 @@ async def _do_route(
     if inactive_timeout:
         last_update = datetime.now()
         last_reported = 0
-        num_flushed = 0
     async with router.route(report=report) as route_q:
         fwd_cb = _make_route_data_cb(route_q)
         async with local_ent.listen(fwd_cb, event_filter=event_filter):
@@ -746,7 +745,7 @@ async def _do_route(
             try:
                 while True:
                     await asyncio.sleep(1.0)
-                    if last_update is not None:
+                    if last_update is not None and report.all_reported:
                         n_reported = report.n_reported
                         if n_reported != last_reported:
                             last_update = datetime.now()
@@ -758,10 +757,11 @@ async def _do_route(
                                 if not indefinite_mode:
                                     print("Timeout due to inactivity")
                                     break
-                                elif report.n_reported > num_flushed:
-                                    num_flushed = report.n_reported
+                                elif report.n_sent > 0:
+                                    if any(not store_report.done for store_report in itertools.chain.from_iterable(report.store_reports.values())):
+                                        continue
                                     report.log_issues()
-                                    report.clear()            
+                                    report.clear()
             finally:
                 print("Listener shutting down")
 
