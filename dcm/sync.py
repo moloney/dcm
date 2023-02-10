@@ -570,7 +570,7 @@ class SyncManager:
 
     async def gen_transfers(
         self,
-        query_res: QueryResult = None,
+        query_res: Optional[QueryResult] = None,
     ) -> AsyncIterator[Transfer[Any]]:
         """Generate the needed transfers
 
@@ -705,7 +705,7 @@ class SyncManager:
         else:
             raise TypeError("Not a valid Transfer sub-class: %s" % transfer)
 
-    async def sync(self, query_res: QueryResult = None) -> None:
+    async def sync(self, query_res: Optional[QueryResult] = None) -> None:
         """Generate and exec all transfers for `query_res`"""
         async for trans in self.gen_transfers(query_res):
             await self.exec_transfer(trans)

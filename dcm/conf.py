@@ -9,7 +9,8 @@ import toml
 import click
 
 from .util import TomlConfigurable, InlineConfigurable, PathInputType
-from .net import DcmNode, LocalEntity
+from .node import DcmNode, RemoteNode
+from .net import LocalEntity
 from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .filt import Selector, SingleSelector, MultiSelector, Filter, MultiFilter
@@ -254,7 +255,7 @@ class DcmConfig:
         # Convert remote_nodes section
         try:
             self._remote_nodes = {
-                k: DcmNode.from_toml_val(v) for k, v in raw_remote.items()
+                k: RemoteNode.from_toml_val(v) for k, v in raw_remote.items()
             }
         except Exception as e:
             raise InvalidConfigError(f"Error parsing 'remote_nodes' section: {e}")
@@ -303,30 +304,28 @@ class DcmConfig:
         """The default local DcmNode to use"""
         return self._default_local
 
-    def _get_node(
-        self, in_val: Union[str, Dict[str, Any]], nodes: Dict[str, DcmNode]
-    ) -> DcmNode:
-        """Return named node or convert value to DcmNode"""
-        if isinstance(in_val, str):
-            res = nodes.get(in_val)
-            if res is not None:
-                return res
-        return DcmNode.from_toml_val(in_val)
-
     def get_local_node(self, in_val: Optional[Union[str, Dict[str, Any]]]) -> DcmNode:
         """Get local DcmNode corresponding to `in_val`"""
         if in_val is None:
             if self._default_local is None:
                 raise NoLocalNodeError("No local nodes defined")
             return self._default_local
-        return self._get_node(in_val, self._local_nodes)
+        elif isinstance(in_val, str):
+            res = self._local_nodes.get(in_val)
+            if res is not None:
+                return res
+        return DcmNode.from_toml_val(in_val)
 
-    def get_remote_node(self, in_val: Union[str, Dict[str, Any]]) -> DcmNode:
-        """Get remote DcmNode corresponding to `in_val`"""
+    def get_remote_node(self, in_val: Union[str, Dict[str, Any]]) -> RemoteNode:
+        """Get RemoteNode corresponding to `in_val`"""
         if isinstance(in_val, str) and in_val in self._net_repos:
             repo = self.get_net_repo(in_val)
             return repo.remote
-        return self._get_node(in_val, self._remote_nodes)
+        elif isinstance(in_val, str):
+            res = self._remote_nodes.get(in_val)
+            if res is not None:
+                return res
+        return RemoteNode.from_toml_val(in_val)
 
     def get_selector(self, in_val: Union[str, Dict[str, Any]]) -> Selector:
         """Get a Selector corresponding to `in_val`"""

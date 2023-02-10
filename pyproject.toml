@@ -35,13 +35,15 @@ dateparser = "^1.0.0"
 # Newer tzlocal versions have issues with Ubuntu (at least 16.04?) see https://github.com/regebro/tzlocal/issues/122
 tzlocal = "<3.0"
 importlib-metadata = "^4.12.0"
+attrs = "^22.2.0"
+cattrs = "^22.2.0"
+
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.12.0"
 ipython = "^7.22.0"
 pytest = "^6.2.3"
 black = "^20.8b1"
-mypy = "^0.910"
 psutil = "^5.8.0"
 tox = "^3.23.0"
 pytest-asyncio = "^0.14.0"
@@ -56,6 +58,7 @@ Sphinx = "^5.1.1"
 furo = "^2022.6.21"
 autodocsumm = "^0.2.9"
 tox-poetry-installer = {extras = ["poetry"], version = "^0.9.0"}
+mypy = "^0.991"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

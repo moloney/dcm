@@ -14,7 +14,7 @@ from pytest import fixture, mark
 
 from ..conf import _default_conf, DcmConfig
 from ..query import QueryLevel, QueryResult
-from ..net import DcmNode, _make_default_store_scu_pcs
+from ..node import DcmNode, DicomOpType, DicomRole, RemoteNode
 from ..store.net_repo import NetRepo
 from ..store.local_dir import LocalDir
 
@@ -184,7 +184,7 @@ class TestNode:
 
     node_type: str
 
-    dcm_node: DcmNode
+    dcm_node: RemoteNode
 
     init_qr: QueryResult
 
@@ -332,7 +332,7 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
                 port += 1
             used_ports.add(port)
             ae_title = DCMTK_BASE_NAME + str(node_idx)
-            dcmtk_node = DcmNode("localhost", ae_title, port)
+            dcmtk_node = RemoteNode("localhost", ae_title, port)
             print(f"Building dcmtk node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
             db_dir = node_dir / "db"
@@ -356,7 +356,7 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
                 print("Indexing initial files into dcmtk node...")
                 sp.run([DCMQRIDX_PATH, str(test_store_dir)] + init_files)
                 print("Done")
-                time.sleep(1)
+                time.sleep(0.1)
             # Fire up a dcmqrscp process
             dcmqrscp_args = [DCMQRSCP_PATH, "-c", str(conf_file)]
             dcmqrscp_args += ["-ll", "debug"]
@@ -371,7 +371,8 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
                 "dcmtk", dcmtk_node, init_qr, test_store_dir, proc, sout_f, serr_f
             )
             nodes.append(res)
-            time.sleep(2)
+            while dcmtk_node.port not in _get_used_ports():
+                time.sleep(0.1)
             return res
 
         try:
@@ -451,7 +452,7 @@ def make_pnd_nodes(get_dicom_subset, pytestconfig):
                 port += 1
             used_ports.add(port)
             ae_title = PND_BASE_NAME + str(node_idx)
-            pnd_node = DcmNode("localhost", ae_title, port)
+            pnd_node = RemoteNode("localhost", ae_title, port)
             print(f"Building pynetdicom node: {ae_title}:{port}")
             node_dir = tmp_dir / ae_title
             stdout_path = node_dir / "stdout.log"
@@ -491,15 +492,20 @@ def make_pnd_nodes(get_dicom_subset, pytestconfig):
                 stdout=sout_f,
                 stderr=serr_f,
             )
-            time.sleep(2)
+            while port not in _get_used_ports():
+                time.sleep(0.1)
             # We have to send any initial data as there is no index functionality
             init_qr, init_data = get_dicom_subset(subset)
             init_files = []
+            store_scu_as = pnd_node.get_abstract_syntaxes(
+                DicomOpType.STORE, DicomRole.USER
+            )
+            store_scu_pcs = pnd_node.get_presentation_contexts(store_scu_as)
             init_ae = AE()
             init_assoc = init_ae.associate(
                 "127.0.0.1",
                 pnd_node.port,
-                _make_default_store_scu_pcs(),
+                store_scu_pcs,
                 ae_title=pnd_node.ae_title,
             )
             if not init_assoc.is_established:

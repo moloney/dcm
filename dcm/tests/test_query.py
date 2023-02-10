@@ -2,6 +2,7 @@ import random, itertools
 from pytest import fixture, mark
 from pydicom.dataset import Dataset
 
+from ..util import json_serializer
 from ..query import QueryLevel, QueryProv, QueryResult, req_elems
 
 
@@ -173,8 +174,8 @@ def test_equality(hierarchy_data):
 def test_empty_prov_json():
     for level in QueryLevel:
         prov1 = QueryProv()
-        json_dict = prov1.to_json_dict()
-        prov2 = QueryProv.from_json_dict(json_dict)
+        json_dict = json_serializer.unstructure(prov1)
+        prov2 = json_serializer.structure(json_dict, QueryProv)
         assert prov1 == prov2
 
 
@@ -184,8 +185,8 @@ def test_json(hierarchy_data):
     qr1 = QueryResult(level)
     for ds in data_sets:
         qr1.add(ds)
-    json_dict = qr1.to_json_dict()
-    qr2 = QueryResult.from_json_dict(json_dict)
+    json_dict = json_serializer.unstructure(qr1)
+    qr2 = json_serializer.structure(json_dict, QueryResult)
     assert qr1 == qr2
 
 

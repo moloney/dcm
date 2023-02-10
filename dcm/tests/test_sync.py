@@ -154,7 +154,7 @@ async def test_repo_sync_single_static(make_local_node, make_net_repo, subset_sp
         async for transfer in sm.gen_transfers():
             for route in transfer.method_routes_map[TransferMethod.PROXY]:
                 for dest in route.dests:
-                    print(f"{dest} : {json_serializer.dumps(transfer.chunk.qr)}")
+                    print(f"{dest} : {json_serializer.unstructure(transfer.chunk.qr)}")
             await sm.exec_transfer(transfer)
         print(sm.report)
     found_files = get_stored_files(dest1_node.store_dir)

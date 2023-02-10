@@ -18,25 +18,19 @@ from typing import (
     Callable,
     Union,
     Set,
+    TYPE_CHECKING,
 )
 
 from pydicom.dataset import Dataset
 from tree_format import format_tree
 
-from .util import DicomDataError, JsonSerializable, json_serializer, fallback_fmt
+from ._globals import QueryLevel
+from .util import DicomDataError, CustomJsonSerializable, json_serializer, fallback_fmt
 from .normalize import normalize, make_elem_filter
+from .node import DcmNodeBase, RemoteNode
 
 
 log = logging.getLogger(__name__)
-
-
-class QueryLevel(IntEnum):
-    """Represents the depth for a query, with larger values meaning more detail"""
-
-    PATIENT = 0
-    STUDY = 1
-    SERIES = 2
-    IMAGE = 3
 
 
 uid_elems = {
@@ -254,23 +248,6 @@ def info_to_dataset(level: QueryLevel, info: Dict[str, Any]) -> Dataset:
     return res
 
 
-class InsufficientQueryLevelError(Exception):
-    """Can't perform operation due to the query level being too shallow"""
-
-
-class QueryLevelMismatchError(Exception):
-    """Query levels differ and they need to be the same for this operation"""
-
-
-class InconsistentDataError(DicomDataError):
-    """The data set violates the established patient/study/series heirarchy"""
-
-
-class InvalidDicomError(DicomDataError):
-    """A DICOM dataset is invalid"""
-
-
-@json_serializer
 @dataclass
 class QueryProv:
     """Track how a QueryResult was created
@@ -279,13 +256,13 @@ class QueryProv:
     themselves when chaining operations
     """
 
-    source: Optional[JsonSerializable] = None
+    source: Optional[RemoteNode] = None
     """The source of this query result"""
 
     queried_elems: Optional[Set[str]] = None
     """The attributes that were queried for"""
 
-    removed_existing_on: Optional[JsonSerializable] = None
+    removed_existing_on: Optional[RemoteNode] = None
     """A remote we queried and removed any data that already exists on it"""
 
     def __bool__(self) -> bool:
@@ -308,29 +285,24 @@ class QueryProv:
             result.removed_existing_on = self.removed_existing_on
         return result
 
-    def to_json_dict(self) -> Dict[str, Any]:
-        return {
-            "source": self.source,
-            "queried_elems": list(self.queried_elems)
-            if self.queried_elems is not None
-            else None,
-            "removed_existing_on": self.removed_existing_on,
-        }
 
-    @classmethod
-    def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryProv:
-        queried = json_dict["queried_elems"]
-        if queried:
-            queried = set(queried)
-        return cls(
-            json_dict["source"],
-            queried,
-            json_dict["removed_existing_on"],
-        )
+class InsufficientQueryLevelError(Exception):
+    """Can't perform operation due to the query level being too shallow"""
 
 
-@json_serializer
-class QueryResult:
+class QueryLevelMismatchError(Exception):
+    """Query levels differ and they need to be the same for this operation"""
+
+
+class InconsistentDataError(DicomDataError):
+    """The data set violates the established patient/study/series heirarchy"""
+
+
+class InvalidDicomError(DicomDataError):
+    """A DICOM dataset is invalid"""
+
+
+class QueryResult(CustomJsonSerializable):
     """High level representation of a collection of DICOM data sets
 
     Object is both set-like as it is a set of unique DICOM datasets, and also
@@ -1030,16 +1002,19 @@ class QueryResult:
     def to_json_dict(self) -> Dict[str, Any]:
         """Dump a JSON representation of the heirarchy"""
         return {
-            "level": self._level.name,
+            "level": json_serializer.unstructure(self._level),
             "patients": self._levels[QueryLevel.PATIENT],
-            "prov": self.prov,
+            "prov": json_serializer.unstructure(self.prov),
         }
 
     @classmethod
     def from_json_dict(cls, json_dict: Dict[str, Any]) -> QueryResult:
         """Create a QueryResult from a previous `to_json` call"""
-        level = getattr(QueryLevel, json_dict["level"])
-        res = cls(level, prov=json_dict["prov"])
+        level = json_serializer.structure(json_dict["level"], QueryLevel)
+        prov = json_dict["prov"]
+        if prov is not None:
+            prov = json_serializer.structure(prov, QueryProv)
+        res = cls(level, prov=prov)
         patients = json_dict["patients"]
         visit_q = list(patients.values())
         visited_stack: List[Dict[str, Any]] = []

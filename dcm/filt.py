@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging, operator, re
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Tuple, List, Any, Dict
+from typing import Callable, Optional, Tuple, List, Any, Dict, Union
 from typing_extensions import Protocol
 
 from pydicom import Dataset, DataElement
@@ -458,7 +458,7 @@ class SingleSelector(Selector, InlineConfigurable["SingleSelector"]):
 
     op: str
 
-    rvalue: Any
+    rvalue: Union[str, Tuple[str, ...]]
 
     invert: bool = False
 

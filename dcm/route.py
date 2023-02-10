@@ -742,7 +742,7 @@ class Router:
         self,
         src: DataRepo[Any, Any, Any, Any],
         query: Optional[Dataset] = None,
-        query_res: QueryResult = None,
+        query_res: Optional[QueryResult] = None,
     ) -> Dict[Tuple[StaticRoute, ...], QueryResult]:
         """Pre-calculate any dynamic routing for data on `src`
 

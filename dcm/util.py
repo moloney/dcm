@@ -1,31 +1,34 @@
 """Various utility functions"""
 from __future__ import annotations
-import os, sys, json, time, logging, string
+import os, logging, string
 import asyncio, threading
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import is_dataclass, asdict
 from contextlib import asynccontextmanager
+from enum import Enum, IntEnum
 from typing import (
     AsyncGenerator,
     Any,
     AsyncIterator,
     Dict,
     List,
+    Tuple,
     TypeVar,
     Optional,
     Union,
     Generic,
-    Iterator,
     Iterable,
-    KeysView,
-    ValuesView,
-    ItemsView,
     Type,
     Callable,
+    Literal,
+    get_origin,
+    get_args,
 )
 from typing_extensions import Protocol
 
+import attrs
+import cattrs
+from cattrs.preconf.json import make_converter as make_json_converter
 from pydicom import Dataset
 from pydicom.tag import BaseTag, Tag, TagType
 from pydicom.datadict import tag_for_keyword
@@ -68,69 +71,74 @@ class DuplicateDataError(DicomDataError):
     """A duplicate dataset was found"""
 
 
-class JsonSerializable(Protocol):
-    """Protocol for JSON serializable objects
+json_serializer = make_json_converter()
+"""JSON (de)serializer
 
-    Classes can inherit from this to get reasonable defaults for many objects
-    """
+Handles most classes automatically, otherwise classes should inherit 
+`CustomJsonSerializable` and provide the two required methods, which can in turn use
+this on sub objects.
+"""
 
-    def to_json_dict(self) -> Dict[str, Any]:
-        if is_dataclass(self):
-            return asdict(self)
-        else:
-            res = {}
-            for k, v in self.__dict__.items():
-                if k[0] == "_":
-                    continue
-                if hasattr(v, "to_json_dict"):
-                    res[k] = v.to_json_dict()
-                elif isinstance(v, (str, float, int, bool, list, tuple, dict)):
-                    res[k] = v
-        return res
+
+class CustomJsonSerializable(Protocol):
+    """Base class for objects that need custom JSON (de)serialization"""
 
     @classmethod
-    def from_json_dict(cls, json_dict: Dict[str, Any]) -> JsonSerializable:
-        return cls(**json_dict)  # type: ignore
+    def from_json_dict(cls, json_dict: Dict[str, Any]) -> "CustomJsonSerializable":
+        raise NotImplementedError
+
+    def to_json_dict(self) -> Dict[str, Any]:
+        raise NotImplementedError
 
 
-class _JsonSerializer:
-    """Defines class decorator for registering JSON serializable objects
-
-    Adapted from: https://stackoverflow.com/questions/51975664/serialize-and-deserialize-objects-from-user-defined-classes"""
-
-    def __init__(self, classname_key: str = "__class__"):
-        self._key = classname_key
-        self._classes: Dict[str, Type[JsonSerializable]] = {}
-
-    def __call__(self, class_: Any) -> Any:
-        assert hasattr(class_, "to_json_dict") and hasattr(class_, "from_json_dict")
-        self._classes[class_.__name__] = class_
-        return class_
-
-    def decoder_hook(
-        self, d: Dict[str, Any]
-    ) -> Union[Dict[str, Any], JsonSerializable]:
-        classname = d.pop(self._key, None)
-        if classname:
-            return self._classes[classname].from_json_dict(d)
-        return d
-
-    def encoder_default(self, obj: Union[JsonSerializable, Any]) -> Any:
-        if hasattr(obj, "to_json_dict"):
-            d = obj.to_json_dict()
-            d[self._key] = type(obj).__name__
-            return d
-        return obj
-
-    def dumps(self, obj: JsonSerializable, **kwargs: Any) -> str:
-        return json.dumps(obj, default=self.encoder_default, **kwargs)
-
-    def loads(self, json_str: str) -> JsonSerializable:
-        return json.loads(json_str, object_hook=self.decoder_hook)
+json_serializer.register_structure_hook(
+    CustomJsonSerializable, lambda v, t: t.from_json_dict(v)  # type: ignore
+)
+json_serializer.register_unstructure_hook(
+    CustomJsonSerializable, lambda i: i.to_json_dict()
+)
 
 
-json_serializer = _JsonSerializer()
-"""Class decorator for registering JSON serializable objects"""
+def _flexible_enum_struct(data: Any, cls: Type[Enum]) -> Enum:
+    """More flexible Enum structuring hook allows names as well as values"""
+    for e in cls:
+        if data == e.value:
+            return e
+    if isinstance(data, str):
+        for e in cls:
+            if data.upper() == e.name:
+                return e
+    raise ValueError(f"Unable to convert '{data}' to {cls.__name__}")
+
+
+# TODO: Hopefully this won't be needed with newer versions of cattrs (see issue 278)
+def is_primativish(t: Any) -> bool:
+    """Match types that are primatives, or simple collections of primatives"""
+    if t in (str, bytes, int, float, bool, None, Ellipsis):
+        return True
+    origin = get_origin(t)
+    if origin is Literal:
+        return True
+    if (basetype := cattrs._compat.get_newtype_base(t)) is not None:
+        return is_primativish(basetype)
+    if origin in [Union, Tuple, List]:
+        return all(is_primativish(ty) for ty in get_args(t))
+    return False
+
+
+# Setup any common hooks for JSON / TOML
+for conv in (json_serializer,):
+    # Convert Enums to name and allow name or value as input
+    conv.register_structure_hook(Enum, _flexible_enum_struct)
+    conv.register_unstructure_hook(Enum, lambda v: v.name)
+    conv.register_structure_hook(IntEnum, _flexible_enum_struct)
+    conv.register_unstructure_hook(IntEnum, lambda v: v.name)
+    # Handle pydicom Datasets <-> dict
+    conv.register_structure_hook(Dataset, lambda v, _: dict_to_ds(v))
+    # Workaround cattrs issue 278
+    conv.register_structure_hook_func(is_primativish, lambda v, _: v)
+    # TODO: Need similar unstructure hook here?
+
 
 TC_Type = TypeVar("TC_Type", covariant=True)
 

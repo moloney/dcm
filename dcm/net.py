@@ -39,15 +39,14 @@ from pynetdicom import (
     AE,
     Association,
     evt,
-    build_context,
     QueryRetrievePresentationContexts,
-    StoragePresentationContexts,
     VerificationPresentationContexts,
+    StoragePresentationContexts,
     sop_class,
+    build_context,
 )
-from pynetdicom._globals import ALL_TRANSFER_SYNTAXES, DEFAULT_TRANSFER_SYNTAXES
 from pynetdicom.status import code_to_category
-from pynetdicom.sop_class import StorageServiceClass, SOPClass, uid_to_sop_class
+from pynetdicom.sop_class import SOPClass
 
 # from pynetdicom.pdu_primitives import SOPClassCommonExtendedNegotiation, SOPClassExtendedNegotiation
 from pynetdicom.transport import ThreadedAssociationServer
@@ -55,6 +54,15 @@ from pynetdicom.presentation import PresentationContext
 
 
 from .info import VERSION
+from .node import (
+    DEFAULT_PRIVATE_SOP_CLASSES,
+    DcmNode,
+    DcmNodeBase,
+    DicomRole,
+    QueryModel,
+    RemoteNode,
+    DicomOpType,
+)
 from .query import (
     InvalidDicomError,
     QueryLevel,
@@ -74,12 +82,7 @@ from .report import (
     MultiError,
     ProgressHookBase,
 )
-from .util import (
-    json_serializer,
-    JsonSerializable,
-    InlineConfigurable,
-    create_thread_task,
-)
+from .util import create_thread_task
 
 
 log = logging.getLogger(__name__)
@@ -91,209 +94,7 @@ UID_PREFIX = "2.25"
 IMPLEMENTATION_UID = "%s.84718903" % UID_PREFIX
 
 
-# The DICOM standard only allows an association requestor to propose 128
-# presentation contexts, which is already less than the number of unqiue
-# Storage SOPClasses. We also need to add at least one custom SOPClass (for
-# Siemens non-standard MR data). The "ideal" solution here would be to use
-# extended negotiation to propose more than 128 presentation contexts, but
-# many systems in the wild do not support this. So the "least bad" option for
-# a default is to drop some of the less commonly use SOPClasses. Unfortunately
-# I don't have objective data on which classes these are, so I have simply
-# choosen ones that seen to be unlikely to come up in my domain.
-
-DEFAULT_DROP_CLASS_REGEXES = (
-    "Lensometry",
-    "[Rr]efractionMeasurement",
-    "Keratometry",
-    "Ophthalmic",
-    "VisualAcuity",
-    "Spectacle",
-    "Intraocular",
-    "Macular",
-    "Corneal",
-    "Encapsulated.+Storage",
-)
-
-
-DEFAIULT_PRIVATE_SOP_CLASSES = (("SiemensProprietaryMRStorage", "1.3.12.2.1107.5.9.1"),)
-# This is needed so 'uid_to_service_class' will work when called for incoming
-# data sets
-for cls_name, cls_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
-    sop_class._STORAGE_CLASSES[cls_name] = cls_uid
-
-
-def get_filt_sop_classes(
-    include_patterns: Iterable[str] = None,
-    exclude_patterns: Iterable[str] = None,
-    private_sop_classes: Optional[Tuple[Tuple[str, str], ...]] = None,
-    max_len: Optional[int] = None,
-) -> List[SOPClass]:
-    res: List[SOPClass] = []
-    if private_sop_classes is not None:
-        priv_uids = set(x[1] for x in private_sop_classes)
-        if len(priv_uids) != len(private_sop_classes):
-            raise ValueError("Duplicate private SOPClass UIDs were passed in")
-    else:
-        priv_uids = set()
-    for sop_name, sop_uid in sop_class._STORAGE_CLASSES.items():
-        if sop_uid in priv_uids:
-            continue
-        if exclude_patterns and any(re.search(p, sop_name) for p in exclude_patterns):
-            log.debug("Dropping storage class %s", sop_name)
-            continue
-        if include_patterns and not any(
-            re.search(p, sop_name) for p in include_patterns
-        ):
-            continue
-        if max_len is not None and len(res) == max_len - len(priv_uids):
-            log.warning("Too many storage classes, dropping: %s", sop_name)
-            continue
-        res.append(SOPClass(sop_uid))
-    if private_sop_classes is not None:
-        for sop_name, sop_uid in private_sop_classes:
-            res.append(SOPClass(sop_uid))
-    return res
-
-
-def _make_default_store_scu_pcs(
-    transfer_syntaxes: Optional[List[str]] = None,
-) -> List[PresentationContext]:
-    include_sops = get_filt_sop_classes(
-        exclude_patterns=DEFAULT_DROP_CLASS_REGEXES,
-        private_sop_classes=DEFAIULT_PRIVATE_SOP_CLASSES,
-        max_len=128,
-    )
-    return [build_context(s, transfer_syntaxes) for s in include_sops]
-
-
-def _make_default_store_scp_pcs(
-    transfer_syntaxes: Optional[List[str]] = None,
-) -> List[PresentationContext]:
-    pres_contexts = deepcopy(StoragePresentationContexts)
-    for sop_name, sop_uid in DEFAIULT_PRIVATE_SOP_CLASSES:
-        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
-    return pres_contexts
-
-
-default_store_scu_pcs = _make_default_store_scu_pcs()
-default_store_scp_pcs = _make_default_store_scp_pcs()
-
-
-# TODO: We should have an option to use extended negotiation using the below
-#       code as a basis
-# siemens_mr_sop_neg = SOPClassCommonExtendedNegotiation()
-# siemens_mr_sop_neg.sop_class_uid = '1.3.12.2.1107.5.9.1'
-# siemens_mr_sop_neg.service_class_uid = StorageServiceClass.uid
-# siemens_mr_sop_neg.related_general_sop_class_identification = [MRImageStorage]
-# c_store_ext_sop_negs = [siemens_mr_sop_neg]
-
-
-# TODO: Need to cosider external limits
-
-
-QR_MODELS = {
-    "PatientRoot": {
-        "find": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelFind"]
-        ),
-        "move": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelMove"]
-        ),
-        "get": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientRootQueryRetrieveInformationModelGet"]
-        ),
-    },
-    "StudyRoot": {
-        "find": uid_to_sop_class(
-            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelFind"]
-        ),
-        "move": uid_to_sop_class(
-            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelMove"]
-        ),
-        "get": uid_to_sop_class(
-            sop_class._QR_CLASSES["StudyRootQueryRetrieveInformationModelGet"]
-        ),
-    },
-    "PatientStudyOnly": {
-        "find": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelFind"]
-        ),
-        "move": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelMove"]
-        ),
-        "get": uid_to_sop_class(
-            sop_class._QR_CLASSES["PatientStudyOnlyQueryRetrieveInformationModelGet"]
-        ),
-    },
-}
-
-
-@json_serializer
-@dataclass(frozen=True)
-class DcmNode(JsonSerializable, InlineConfigurable["DcmNode"]):
-    """DICOM network entity info"""
-
-    host: str
-    """Hostname of the node"""
-
-    ae_title: str = "ANYAE"
-    """DICOM AE Title of the node"""
-
-    port: int = 11112
-    """DICOM port for the node"""
-
-    qr_models: Tuple[str, ...] = ("StudyRoot", "PatientRoot")
-    """Supported DICOM QR models for the node"""
-
-    transfer_syntaxes: Tuple[SOPClass, ...] = tuple(
-        uid_to_sop_class(x) for x in ALL_TRANSFER_SYNTAXES
-    )
-
-    def __post_init__(self) -> None:
-        res = []
-        seen = set()
-        for ts in self.transfer_syntaxes:
-            if not isinstance(ts, SOPClass):
-                if ts[0] in "0123456789":
-                    ts = uid_to_sop_class(ts)
-                else:
-                    for t in ALL_TRANSFER_SYNTAXES:
-                        t = uid_to_sop_class(t)
-                        if t.name == ts or t.name.replace(" ", "") == ts:
-                            ts = t
-                            break
-                    else:
-                        raise ValueError(f"Unknown transfer syntax: {ts}")
-            if ts not in seen:
-                res.append(ts)
-            seen.add(ts)
-        object.__setattr__(self, "transfer_syntaxes", tuple(res))
-
-    def __str__(self) -> str:
-        return "%s:%s:%s" % (self.host, self.ae_title, self.port)
-
-    @staticmethod
-    def inline_to_dict(in_str: str) -> Dict[str, Any]:
-        """Parse inline string format 'host[:ae_title][:port]'
-
-        Both the second components are optional
-        """
-        toks = in_str.split(":")
-        if len(toks) > 3:
-            raise ValueError("Too many tokens for node specification: %s" % in_str)
-        res: Dict[str, Union[str, int]] = {"host": toks[0]}
-        if len(toks) == 3:
-            res["ae_title"] = toks[1]
-            res["port"] = int(toks[2])
-        elif len(toks) == 2:
-            try:
-                res["port"] = int(toks[1])
-            except ValueError:
-                res["ae_title"] = toks[1]
-        return res
-
-
-sub_op_attrs = {
+SUB_OP_ATTRS = {
     stat_type.lower(): f"NumberOf{stat_type}Suboperations"
     for stat_type in ("Remaining", "Completed", "Warning", "Failed")
 }
@@ -315,13 +116,13 @@ class BatchDicomOperationError(Exception):
 class DicomOp:
     """Describes a DICOM network operation"""
 
-    provider: Optional[DcmNode] = None
+    provider: Optional[DcmNodeBase] = None
     """The service provider"""
 
-    user: Optional[DcmNode] = None
+    user: Optional[DcmNodeBase] = None
     """The service user"""
 
-    op_type: Optional[str] = None
+    op_type: Optional[DicomOpType] = None
     """The type of operation performed"""
 
     op_data: Dict[str, Any] = field(default_factory=dict)
@@ -376,15 +177,15 @@ class DicomOpReport(CountableReport):
         status_category = code_to_category(status.Status)
         if status_category == "Pending":
             self._has_sub_ops = True
-            remaining = getattr(status, sub_op_attrs["remaining"], None)
+            remaining = getattr(status, SUB_OP_ATTRS["remaining"], None)
             if remaining is None:
                 # We don't have sub-operation counts, so we just count
                 # 'pending' results as success
                 self._n_success += 1
             else:
-                n_success = getattr(status, sub_op_attrs["completed"])
-                n_warn = getattr(status, sub_op_attrs["warning"])
-                n_error = getattr(status, sub_op_attrs["failed"])
+                n_success = getattr(status, SUB_OP_ATTRS["completed"])
+                n_warn = getattr(status, SUB_OP_ATTRS["warning"])
+                n_error = getattr(status, SUB_OP_ATTRS["failed"])
                 if self.n_expected is None:
                     self.n_expected = remaining + 1
                 if n_success != self._n_success:
@@ -406,10 +207,10 @@ class DicomOpReport(CountableReport):
         else:
             if self._has_sub_ops or data_set is None:
                 self._final_status = status
-                n_success = getattr(status, sub_op_attrs["completed"], None)
+                n_success = getattr(status, SUB_OP_ATTRS["completed"], None)
                 if n_success is not None:
-                    n_warn = getattr(status, sub_op_attrs["warning"])
-                    n_error = getattr(status, sub_op_attrs["failed"])
+                    n_warn = getattr(status, SUB_OP_ATTRS["warning"])
+                    n_error = getattr(status, SUB_OP_ATTRS["failed"])
                     if self._n_success is None:
                         self._n_success = n_success
                     else:
@@ -862,7 +663,7 @@ def _query_worker(
     assoc: Association,
     level: QueryLevel,
     queries: Iterator[Dataset],
-    query_model: sop_class.SOPClass,
+    qr_class: SOPClass,
     split_level: Optional[QueryLevel] = None,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
@@ -887,7 +688,7 @@ def _query_worker(
             log.debug("Sending query:\n%s", query)
             res = QueryResult(level)
             missing_attrs: Set[str] = set()
-            for status, rdat in assoc.send_c_find(query, query_model=query_model):
+            for status, rdat in assoc.send_c_find(query, query_model=qr_class):
                 rep_q.put((status, rdat))
                 if rdat is None:
                     break
@@ -950,7 +751,7 @@ def _move_worker(
     assoc: Association,
     dest: DcmNode,
     query_res: QueryResult,
-    query_model: sop_class.SOPClass,
+    qr_class: SOPClass,
     shutdown: Optional[threading.Event] = None,
 ) -> None:
     """Worker function for perfoming move operations in another thread"""
@@ -962,7 +763,7 @@ def _move_worker(
         move_req = _make_move_request(d)
         move_req.QueryRetrieveLevel = query_res.level.name
         log.debug("Worker thread is calling send_c_move")
-        responses = assoc.send_c_move(move_req, dest.ae_title, query_model=query_model)
+        responses = assoc.send_c_move(move_req, dest.ae_title, query_model=qr_class)
         time.sleep(0.05)
         log.debug("Worker is about to iterate responses")
         for r_idx, (status, rdat) in enumerate(responses):
@@ -1015,10 +816,6 @@ def _send_worker(
             rep_q.put((e, ds))
         else:
             rep_q.put((status, ds))
-
-
-class UnsupportedQueryModelError(Exception):
-    """The requested query model isn't supported by the remote entity"""
 
 
 @dataclass(frozen=True)
@@ -1075,9 +872,18 @@ class FilteredListenerLockBase(_FutureType):
         return True
 
 
-default_evt_pc_map = {
+def _make_default_store_scp_pcs(
+    transfer_syntaxes: Optional[List[str]] = None,
+) -> List[PresentationContext]:
+    pres_contexts = deepcopy(StoragePresentationContexts)
+    for sop_name, sop_uid in DEFAULT_PRIVATE_SOP_CLASSES:
+        pres_contexts.append(build_context(sop_uid, transfer_syntaxes))
+    return pres_contexts
+
+
+DEFAULT_EVT_PC_MAP = {
     evt.EVT_C_ECHO: VerificationPresentationContexts,
-    evt.EVT_C_STORE: default_store_scp_pcs,
+    evt.EVT_C_STORE: _make_default_store_scp_pcs(),
     evt.EVT_C_FIND: QueryRetrievePresentationContexts,
 }
 """Map event types to the default presentation contexts the AE needs to accept
@@ -1120,7 +926,7 @@ def is_specified(query: Dataset, attr: str) -> bool:
     return False
 
 
-SOPList = Iterable[sop_class.SOPClass]
+SOPList = Iterable[SOPClass]
 
 
 class _SingletonEntity(type):
@@ -1156,9 +962,6 @@ class LocalEntity(metaclass=_SingletonEntity):
     local
         The local DICOM network node properties
 
-    transfer_syntaxes
-        The transfer syntaxes to use for any data transfers
-
     max_threads
         Size of thread pool
     """
@@ -1186,14 +989,14 @@ class LocalEntity(metaclass=_SingletonEntity):
         """DcmNode for our local entity"""
         return self._local
 
-    async def echo(self, remote: DcmNode) -> bool:
+    async def echo(self, remote: RemoteNode) -> bool:
         """Perfrom an "echo" against `remote` to test connectivity
 
         Returns True if successful, else False. Throws FailedAssociationError if the
         initial association with the `remote` fails.
         """
         loop = asyncio.get_event_loop()
-        async with self._associate(remote, VerificationPresentationContexts) as assoc:
+        async with self._associate(remote, DicomOpType.ECHO) as assoc:
             status = await loop.run_in_executor(self._thread_pool, assoc.send_c_echo)
         if status and status.Status == 0x0:
             return True
@@ -1201,7 +1004,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def query(
         self,
-        remote: DcmNode,
+        remote: RemoteNode,
         level: Optional[QueryLevel] = None,
         query: Optional[Dataset] = None,
         query_res: Optional[QueryResult] = None,
@@ -1219,7 +1022,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def queries(
         self,
-        remote: DcmNode,
+        remote: RemoteNode,
         level: Optional[QueryLevel] = None,
         query: Optional[Dataset] = None,
         query_res: Optional[QueryResult] = None,
@@ -1266,13 +1069,16 @@ class LocalEntity(metaclass=_SingletonEntity):
             self._add_qr_meta(report, query_res)
 
         # Determine the query model
-        query_model = self._choose_qr_model(remote, "find", level)
+        query_model = remote.get_query_model(level)
+        qr_class = remote.get_abstract_syntaxes(
+            DicomOpType.FIND, query_model=query_model
+        )[0]
 
         # If we are missing some required higher-level identifiers, we perform
         # a recursive pre-query to get those first
         if (
             level == QueryLevel.STUDY
-            and query_model == QR_MODELS["PatientRoot"]["find"]
+            and query_model == QueryModel.PATIENT_ROOT
             and not is_specified(query, "PatientID")
         ):
             if query_res is None:
@@ -1345,7 +1151,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         query_shutdown = threading.Event()
 
         # Setup args for building reports
-        dicom_op = DicomOp(provider=remote, user=self._local, op_type="c-find")
+        dicom_op = DicomOp(provider=remote, user=self._local, op_type=DicomOpType.FIND)
         op_report_attrs = {
             "dicom_op": dicom_op,
             "prog_hook": report._prog_hook,
@@ -1360,16 +1166,14 @@ class LocalEntity(metaclass=_SingletonEntity):
         rep_builder_task = None
         loop = asyncio.get_running_loop()
         try:
-            async with self._associate(
-                remote, QueryRetrievePresentationContexts, query_model
-            ) as assoc:
+            async with self._associate(remote, DicomOpType.FIND, query_model) as assoc:
                 # Fire up a thread to perform the query and produce QueryResult chunks
                 rep_builder_task = asyncio.create_task(
                     self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
                 )
                 query_fut = create_thread_task(
                     _query_worker,
-                    (res_q.sync_q, rep_q.sync_q, assoc, level, queries, query_model),
+                    (res_q.sync_q, rep_q.sync_q, assoc, level, queries, qr_class),
                     loop=loop,
                     thread_pool=self._thread_pool,
                     shutdown=query_shutdown,
@@ -1447,11 +1251,11 @@ class LocalEntity(metaclass=_SingletonEntity):
             log.debug("Building list of default presentation contexts")
             presentation_contexts = []
             if event_filter.event_types is None:
-                for p_contexts in default_evt_pc_map.values():
+                for p_contexts in DEFAULT_EVT_PC_MAP.values():
                     presentation_contexts += p_contexts
             else:
                 for event_type in event_filter.event_types:
-                    presentation_contexts += default_evt_pc_map[event_type]
+                    presentation_contexts += DEFAULT_EVT_PC_MAP[event_type]
         LockType = self._get_lock_type(event_filter)
         log.debug("About to wait on listener lock")
         async with self._listener_lock(LockType):
@@ -1481,11 +1285,11 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def move(
         self,
-        source: DcmNode,
-        dest: DcmNode,
+        source: RemoteNode,
+        dest: DcmNodeBase,
         query_res: QueryResult,
-        transfer_syntax: Optional[SOPList] = None,
-        report: MultiListReport[DicomOpReport] = None,
+        transfer_syntaxes: Optional[SOPList] = None,
+        report: Optional[MultiListReport[DicomOpReport]] = None,
     ) -> None:
         """Move DICOM files from one network entity to another"""
         if report is None:
@@ -1498,14 +1302,14 @@ class LocalEntity(metaclass=_SingletonEntity):
         report._meta_data["source"] = source
         report._meta_data["dest"] = dest
         self._add_qr_meta(report, query_res)
-        query_model = self._choose_qr_model(source, "move", query_res.level)
-        if transfer_syntax is None:
-            transfer_syntax = tuple(
-                set(source.transfer_syntaxes) & set(dest.transfer_syntaxes)
-            )
+        query_model = source.get_query_model(query_res.level)
+        qr_class = source.get_abstract_syntaxes(
+            DicomOpType.MOVE, query_model=query_model
+        )[0]
+
         # Setup queue args for building reports
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue()
-        dicom_op = DicomOp(provider=source, user=self._local, op_type="c-move")
+        dicom_op = DicomOp(provider=source, user=self._local, op_type=DicomOpType.MOVE)
         op_report_attrs = {
             "dicom_op": dicom_op,
             "prog_hook": report._prog_hook,
@@ -1521,7 +1325,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         loop = asyncio.get_running_loop()
         try:
             async with self._associate(
-                source, QueryRetrievePresentationContexts, query_model
+                source, DicomOpType.MOVE, query_model, transfer_syntaxes
             ) as assoc:
                 rep_builder_task = asyncio.create_task(
                     self._multi_report_builder(rep_q.async_q, report, op_report_attrs)
@@ -1529,7 +1333,7 @@ class LocalEntity(metaclass=_SingletonEntity):
                 try:
                     worker_task = create_thread_task(
                         _move_worker,
-                        (rep_q.sync_q, assoc, dest, query_res, query_model),
+                        (rep_q.sync_q, assoc, dest, query_res, qr_class),
                         thread_pool=self._thread_pool,
                         loop=loop,
                         shutdown=move_shutdown,
@@ -1558,9 +1362,9 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def retrieve(
         self,
-        remote: DcmNode,
+        remote: RemoteNode,
         query_res: QueryResult,
-        report: RetrieveReport = None,
+        report: Optional[RetrieveReport] = None,
         keep_errors: Optional[Union[bool, Tuple[IncomingErrorType, ...]]] = None,
     ) -> AsyncIterator[Dataset]:
         """Generate data sets from `remote` based on `query_res`.
@@ -1654,8 +1458,8 @@ class LocalEntity(metaclass=_SingletonEntity):
     @asynccontextmanager
     async def send(
         self,
-        remote: DcmNode,
-        transfer_syntax: Optional[SOPList] = None,
+        remote: RemoteNode,
+        transfer_syntaxes: Optional[SOPList] = None,
         report: Optional[DicomOpReport] = None,
     ) -> AsyncIterator[janus._AsyncQueueProxy[Dataset]]:
         """Produces a queue where you can put data sets to be sent to `remote`
@@ -1665,7 +1469,7 @@ class LocalEntity(metaclass=_SingletonEntity):
         remote
             The remote node we are sending the data to
 
-        transfer_syntax
+        transfer_syntaxes
             The DICOM transfer syntax to use for the transfer
 
         report
@@ -1680,23 +1484,23 @@ class LocalEntity(metaclass=_SingletonEntity):
             as it is assumed the caller will handle this themselves (e.g. by
             calling the `log_issues` and `check_errors` methods on the report).
         """
-        if transfer_syntax is None:
-            transfer_syntax = tuple(
-                set(self._local.transfer_syntaxes) & set(remote.transfer_syntaxes)
-            )
         if report is None:
             extern_report = False
-            report = DicomOpReport()
+            report = DicomOpReport(
+                dicom_op=DicomOp(remote, self._local, DicomOpType.STORE)
+            )
         else:
             extern_report = True
         report.dicom_op.provider = remote
         report.dicom_op.user = self._local
-        report.dicom_op.op_type = "c-store"
+        report.dicom_op.op_type = DicomOpType.STORE
         send_q: janus.Queue[Optional[Dataset]] = janus.Queue(10)
         rep_q: janus.Queue[Optional[Tuple[Dataset, Dataset]]] = janus.Queue(10)
 
         log.debug(f"About to associate with {remote} to send data")
-        async with self._associate(remote, default_store_scu_pcs) as assoc:
+        async with self._associate(
+            remote, DicomOpType.STORE, transfer_syntaxes=transfer_syntaxes
+        ) as assoc:
             try:
                 rep_builder_task = asyncio.create_task(
                     self._single_report_builder(rep_q.async_q, report)
@@ -1725,7 +1529,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def download(
         self,
-        remote: DcmNode,
+        remote: RemoteNode,
         query_res: QueryResult,
         dest_dir: Union[str, Path],
         report: Optional[RetrieveReport] = None,
@@ -1746,7 +1550,7 @@ class LocalEntity(metaclass=_SingletonEntity):
 
     async def upload(
         self,
-        remote: DcmNode,
+        remote: RemoteNode,
         src_paths: List[str],
         transfer_syntax: Optional[SOPList] = None,
     ) -> None:
@@ -1763,10 +1567,19 @@ class LocalEntity(metaclass=_SingletonEntity):
     @asynccontextmanager
     async def _associate(
         self,
-        remote: DcmNode,
-        pres_contexts: List[PresentationContext],
-        query_model: Optional[SOPClass] = None,
+        remote: RemoteNode,
+        op_type: DicomOpType,
+        query_model: Optional[QueryModel] = None,
+        transfer_syntaxes: Optional[SOPList] = None,
     ) -> AsyncIterator[Association]:
+        # Create presentation contexts
+        abs_syntaxes = remote.get_abstract_syntaxes(
+            op_type, DicomRole.USER, query_model
+        )
+        pres_contexts = remote.get_presentation_contexts(
+            abs_syntaxes, transfer_syntaxes
+        )
+
         loop = asyncio.get_event_loop()
         assoc = await loop.run_in_executor(
             self._thread_pool,
@@ -1785,10 +1598,11 @@ class LocalEntity(metaclass=_SingletonEntity):
             yield assoc
         except (KeyboardInterrupt, GeneratorExit, asyncio.CancelledError):
             if query_model is not None and assoc.is_established:
+                assert len(abs_syntaxes) == 1
                 log.debug("Sending c-cancel to remote: %s", remote)
                 try:
                     await loop.run_in_executor(
-                        self._thread_pool, assoc.send_c_cancel, 1, None, query_model
+                        self._thread_pool, assoc.send_c_cancel, 1, None, abs_syntaxes[0]
                     )
                 except Exception as e:
                     log.info("Exception occured when sending c-cancel: %s", e)
@@ -1840,14 +1654,12 @@ class LocalEntity(metaclass=_SingletonEntity):
         ae.dimse_timeout = 180
         for context in presentation_contexts:
             assert context.abstract_syntax is not None
-            ae.add_supported_context(
-                context.abstract_syntax, self._local.transfer_syntaxes
-            )
+            ae.add_supported_context(context.abstract_syntax, context.transfer_syntax)
         self._listen_mgr = ae.start_server(
             (self._local.host, self._local.port), block=False
         )
         assert self._listen_mgr is not None
-        for evt_type in default_evt_pc_map.keys():
+        for evt_type in DEFAULT_EVT_PC_MAP.keys():
             log.debug(f"Binding to event {evt_type}")
             self._listen_mgr.bind(evt_type, sync_cb)
 
@@ -1913,26 +1725,6 @@ class LocalEntity(metaclass=_SingletonEntity):
                 report.append(curr_op_report)
             status, data_set = res
             curr_op_report.add(status, data_set)
-
-    def _choose_qr_model(
-        self, remote: DcmNode, op_type: str, level: QueryLevel
-    ) -> sop_class.SOPClass:
-        """Pick an appropriate query model"""
-        if level == QueryLevel.PATIENT:
-            for query_model in ("PatientRoot", "PatientStudyOnly"):
-                if query_model in remote.qr_models:
-                    return QR_MODELS[query_model][op_type]
-            raise UnsupportedQueryModelError()
-        elif level == QueryLevel.STUDY:
-            for query_model in ("StudyRoot", "PatientRoot", "PatientStudyOnly"):
-                if query_model in remote.qr_models:
-                    return QR_MODELS[query_model][op_type]
-            raise UnsupportedQueryModelError()
-        else:
-            for query_model in ("StudyRoot", "PatientRoot"):
-                if query_model in remote.qr_models:
-                    return QR_MODELS[query_model][op_type]
-            raise UnsupportedQueryModelError()
 
     def _add_qr_meta(self, report: BaseReport, query_res: QueryResult) -> None:
         report._meta_data["qr_level"] = query_res.level

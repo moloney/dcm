@@ -12,6 +12,7 @@ from dcm.query import QueryLevel
 
 from ..cli import cli
 from ..util import json_serializer
+from ..query import QueryResult
 
 from .conftest import has_dcmtk
 
@@ -57,7 +58,7 @@ def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
     print(args)
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
-    res_qr = json_serializer.loads(result.output)
+    res_qr = json_serializer.structure(json.loads(result.output), QueryResult)
     assert remote.init_qr.equivalent(res_qr)
     # Test batch query
     batch_dicts = []
@@ -75,7 +76,7 @@ def test_query(make_local_node, make_remote_nodes, make_dcm_config_file):
         print(args)
         result = runner.invoke(cli, args)
         assert result.exit_code == 0
-        res_qr = json_serializer.loads(result.output)
+        res_qr = json_serializer.structure(json.loads(result.output), QueryResult)
         assert remote.init_qr.equivalent(res_qr)
 
 

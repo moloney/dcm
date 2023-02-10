@@ -25,8 +25,8 @@ import pydicom
 from pydicom import Dataset
 
 from ..query import QueryLevel, QueryResult, uid_elems
+from ..node import RemoteNode
 from ..net import (
-    DcmNode,
     DicomOpReport,
     IncomingDataReport,
     IncomingDataError,
@@ -276,9 +276,7 @@ T_qreport = TypeVar(
     "T_qreport", bound=Union[CountableReport, SummaryReport[Any]], contravariant=True
 )
 T_rreport = TypeVar("T_rreport", bound=CountableReport, contravariant=True)
-T_sreport = TypeVar(
-    "T_sreport", bound=Union[CountableReport, SummaryReport[Any]], covariant=True
-)
+T_sreport = TypeVar("T_sreport", bound=Union[CountableReport, SummaryReport[Any]])
 T_oob_chunk = TypeVar("T_oob_chunk", bound=DataChunk, contravariant=True)
 T_oob_report = TypeVar("T_oob_report", bound=Union[CountableReport, SummaryReport[Any]])
 
@@ -376,13 +374,19 @@ class OobCapable(Generic[T_oob_chunk, T_oob_report], Protocol):
     """Protocol for stores that are capable of doing out-of-band transfers"""
 
     async def oob_transfer(
-        self, method: TransferMethod, chunk: T_oob_chunk, report: T_oob_report = None
+        self,
+        method: TransferMethod,
+        chunk: T_oob_chunk,
+        report: Optional[T_oob_report] = None,
     ) -> None:
         """Perform out-of-band transfer instead of proxying data"""
         raise NotImplementedError
 
     async def oob_send(
-        self, method: TransferMethod, chunk: T_oob_chunk, report: T_oob_report = None
+        self,
+        method: TransferMethod,
+        chunk: T_oob_chunk,
+        report: Optional[T_oob_report] = None,
     ) -> AsyncIterator["janus._AsyncQueueProxy[Dataset]"]:
         """Produce queue for streaming out-of-band transfer"""
         raise NotImplementedError
@@ -406,7 +410,7 @@ class DcmRepo(
     )
 
     @property
-    def remote(self) -> DcmNode:
+    def remote(self) -> RemoteNode:
         raise NotImplementedError
 
     @asynccontextmanager
