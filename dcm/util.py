@@ -26,7 +26,6 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-import attrs
 import cattrs
 from cattrs.preconf.json import make_converter as make_json_converter
 from pydicom import Dataset

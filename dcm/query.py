@@ -133,6 +133,7 @@ opt_elems: Dict[QueryLevel, List[str]] = {
         "StudyDescription",
         "AccessionNumber",
         "ModalitiesInStudy",
+        "SOPClassesInStudy",
         "NumberOfStudyRelatedSeries",
         "NumberOfStudyRelatedInstances",
     ],

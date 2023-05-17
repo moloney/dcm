@@ -58,6 +58,11 @@ class QueryModel(enum.Enum):
     PATIENT_STUDY_ONLY = enum.auto()
 
 
+_verification = VerificationPresentationContexts[0].abstract_syntax
+assert _verification is not None
+VERIFICATION_AS = SOPClass(_verification)
+
+
 QR_MODELS = {
     QueryModel.PATIENT_ROOT: {
         DicomOpType.FIND: uid_to_sop_class(
@@ -113,7 +118,7 @@ class SOPClassExpression(InlineConfigurable):
         """Return true if the expression matches the SOPClass"""
         if self.expr[0] in string.digits:
             return sop_class == self.expr
-        return bool(re.search(self.expr, sop_class.name))
+        return bool(re.search(self.expr, sop_class.keyword))
 
 
 def _make_all_expr(
@@ -222,6 +227,10 @@ class UnsupportedQueryModelError(Exception):
     """The requested query model isn't supported by the remote entity"""
 
 
+class UnsupportedOperationError(Exception):
+    """The requested DICOM operation isn't supported by the remote entity"""
+
+
 @frozen(slots=False)
 class DcmNode(DcmNodeBase, InlineConfigurable["DcmNode"]):
     pass
@@ -283,7 +292,9 @@ class RemoteNode(DcmNodeBase, CustomJsonSerializable, InlineConfigurable["Remote
                 if query_model in self.query_models:
                     return query_model
         elif level == QueryLevel.STUDY:
-            return self.query_models[0]
+            for query_model in (QueryModel.STUDY_ROOT, QueryModel.PATIENT_STUDY_ONLY):
+                if query_model in self.query_models:
+                    return query_model
         else:
             for query_model in (QueryModel.STUDY_ROOT, QueryModel.PATIENT_ROOT):
                 if query_model in self.query_models:
@@ -296,10 +307,12 @@ class RemoteNode(DcmNodeBase, CustomJsonSerializable, InlineConfigurable["Remote
         role: Optional[DicomRole] = None,
         query_model: Optional[QueryModel] = None,
     ) -> List[SOPClass]:
+        if op not in self.supported_ops:
+            raise UnsupportedOperationError(
+                f"Remote {self} doesn't support {op} operation"
+            )
         if op == DicomOpType.ECHO:
-            verfication_as = VerificationPresentationContexts[0].abstract_syntax
-            assert verfication_as is not None
-            return [SOPClass(verfication_as)]
+            return [VERIFICATION_AS]
         elif op in (DicomOpType.FIND, DicomOpType.MOVE, DicomOpType.GET):
             if query_model is None:
                 raise ValueError("The 'query_model' must be provided for this op type")
@@ -338,7 +351,7 @@ class RemoteNode(DcmNodeBase, CustomJsonSerializable, InlineConfigurable["Remote
         abstract_syntaxes: Iterable[SOPClass],
         transfer_syntaxes: Optional[Iterable[SOPClass]] = None,
     ) -> List[PresentationContext]:
-        """Get the presentation contexts to use for given `op` and `role`"""
+        """Get the presentation contexts to use for given `abstract_syntaxes`"""
         if transfer_syntaxes is None:
             transfer_syntaxes = self.transfer_syntaxes
         ts_uids = [str(ts) for ts in transfer_syntaxes]
