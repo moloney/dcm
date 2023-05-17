@@ -21,7 +21,7 @@ classifiers = [
 dcm = 'dcm.cli:cli'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 pynetdicom = "^2.0.2"
 pydicom = "^2.1.2"
 toml = "^0.10.2"
