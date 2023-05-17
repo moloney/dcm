@@ -118,7 +118,8 @@ def is_primativish(t: Any) -> bool:
     origin = get_origin(t)
     if origin is Literal:
         return True
-    if (basetype := cattrs._compat.get_newtype_base(t)) is not None:
+    basetype = cattrs._compat.get_newtype_base(t)
+    if basetype is not None:
         return is_primativish(basetype)
     if origin in [Union, Tuple, List]:
         return all(is_primativish(ty) for ty in get_args(t))
