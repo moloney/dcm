@@ -11,7 +11,8 @@ import janus
 from .base import TransferMethod, DcmNetChunk, DcmRepo
 from ..report import MultiListReport
 from ..query import QueryLevel, QueryResult
-from ..net import DcmNode, LocalEntity, DicomOpReport, RetrieveReport
+from ..node import DcmNode, RemoteNode
+from ..net import LocalEntity, DicomOpReport, RetrieveReport
 from ..util import TomlConfigurable, dict_to_ds
 
 
@@ -26,7 +27,7 @@ class NetRepo(DcmRepo, TomlConfigurable["NetRepo"]):
     def __init__(
         self,
         local: DcmNode,
-        remote: DcmNode,
+        remote: RemoteNode,
         level: Optional[QueryLevel] = None,
         base_query: Optional[Dataset] = None,
         chunk_size: int = 1000,
@@ -67,7 +68,7 @@ class NetRepo(DcmRepo, TomlConfigurable["NetRepo"]):
         return str(self._remote)
 
     @property
-    def remote(self) -> DcmNode:
+    def remote(self) -> RemoteNode:
         return self._remote
 
     @property

@@ -21,7 +21,7 @@ classifiers = [
 dcm = 'dcm.cli:cli'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 pynetdicom = "^2.0.2"
 pydicom = "^2.1.2"
 toml = "^0.10.2"
@@ -35,15 +35,16 @@ dateparser = "^1.0.0"
 # Newer tzlocal versions have issues with Ubuntu (at least 16.04?) see https://github.com/regebro/tzlocal/issues/122
 tzlocal = "<3.0"
 importlib-metadata = "^4.12.0"
+attrs = "^22.2.0"
+cattrs = "^22.2.0"
 
-[tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
 pre-commit = "^2.12.0"
 ipython = "^7.22.0"
 pytest = "^6.2.3"
 black = "^20.8b1"
-mypy = "^0.910"
 psutil = "^5.8.0"
-tox = "^3.23.0"
 pytest-asyncio = "^0.14.0"
 pytest-mypy = "^0.8.1"
 pytest-black = "^0.3.12"
@@ -55,7 +56,9 @@ SQLAlchemy = "^1.4.37"
 Sphinx = "^5.1.1"
 furo = "^2022.6.21"
 autodocsumm = "^0.2.9"
-tox-poetry-installer = {extras = ["poetry"], version = "^0.9.0"}
+mypy = "^0.991"
+tox = "<4.0"
+tox-poetry-installer = {extras = ["poetry"], version = "^0.10.2"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -97,13 +100,14 @@ addopts = "--mypy --black --cov=dcm/ --cov-report=term --cov-report=xml"
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py37,py38,py39
+envlist = py38,py39,py310,py311
 
 [gh-actions]
 python =
-    3.7: py37
     3.8: py38
     3.9: py39
+    3.10: py310
+    3.11: py311
 
 [testenv]
 install_dev_deps = True

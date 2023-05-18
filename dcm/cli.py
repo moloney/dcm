@@ -19,15 +19,14 @@ from rich.progress import Progress
 from rich.logging import RichHandler
 import dateparser
 
-from dcm.query import QueryResult
-
 from . import __version__
 from .conf import DcmConfig, _default_conf, NoLocalNodeError
-from .util import str_to_tag, aclosing, json_serializer
+from .util import str_to_tag, json_serializer
 from .lazyset import AllElems, LazySet
 from .report import MultiListReport, RichProgressHook
+from .query import QueryResult
+from .node import DcmNode, RemoteNode
 from .net import (
-    DcmNode,
     FailedAssociationError,
     LocalEntity,
     QueryLevel,
@@ -37,7 +36,6 @@ from .net import (
 from .filt import make_edit_filter, MultiFilter
 from .route import StaticRoute, DynamicTransferReport, Router
 from .store.base import TransferMethod
-from .store.local_dir import LocalDir
 from .store.net_repo import NetRepo
 from .sync import SyncReport, make_basic_validator, sync_data
 from .normalize import normalize
@@ -338,7 +336,7 @@ def query(
             cli_error("Can't combine '--query-res' and '--batch-csv' options")
         in_str = query_res.read()
         if in_str:
-            query_res = json_serializer.loads(in_str)
+            query_res = json_serializer.structure(json.loads(in_str), QueryResult)
         else:
             query_res = None
 
@@ -357,8 +355,7 @@ def query(
     qdat = _build_query(query, since, before)
     if len(qdat) == 0 and query_res is None and batch_csv is None and not assume_yes:
         if not click.confirm(
-            "This query hasn't been limited in any "
-            "way and may generate a huge result, "
+            "This query hasn't been limited in any way and may generate a huge result, "
             "continue?"
         ):
             return
@@ -410,7 +407,7 @@ def query(
     if out_format == "tree":
         out = qr.to_tree()
     elif out_format == "json":
-        out = json_serializer.dumps(qr, indent=4)
+        out = json.dumps(json_serializer.unstructure(qr), indent=4)
     click.echo(out)
     if batch_report is not None:
         batch_report.log_issues()
@@ -540,7 +537,7 @@ def sync(
     if query_res is not None:
         in_str = query_res.read()
         if in_str:
-            query_res = json_serializer.loads(in_str)
+            query_res = json_serializer.structure(json.loads(in_str), QueryResult)
         else:
             query_res = None
 
