@@ -1,7 +1,7 @@
 """Command line interface"""
 from __future__ import annotations
 import csv
-import sys, os, logging, json, re, signal
+import sys, os, logging, json, re, signal, itertools
 import asyncio
 from contextlib import ExitStack
 from copy import deepcopy
@@ -715,7 +715,7 @@ def _make_route_data_cb(
     """Return callback that queues dataset/metadata from incoming events"""
 
     async def callback(event: evt.Event) -> int:
-        # TODO: Do we need to embed the file_meta here?
+        event.dataset.file_meta = event.file_meta
         await res_q.put(event.dataset)
         return 0x0  # Success
 
@@ -723,7 +723,10 @@ def _make_route_data_cb(
 
 
 async def _do_route(
-    local: DcmNode, router: Router, inactive_timeout: Optional[int] = None
+    local: DcmNode, 
+    router: Router, 
+    inactive_timeout: Optional[int] = None,
+    indefinite_mode: bool = False,
 ) -> None:
     local_ent = LocalEntity(local)
     event_filter = EventFilter(event_types=frozenset((evt.EVT_C_STORE,)))
@@ -739,7 +742,7 @@ async def _do_route(
             try:
                 while True:
                     await asyncio.sleep(1.0)
-                    if last_update is not None:
+                    if last_update is not None and report.all_reported:
                         n_reported = report.n_reported
                         if n_reported != last_reported:
                             last_update = datetime.now()
@@ -748,8 +751,14 @@ async def _do_route(
                             if (
                                 datetime.now() - last_update
                             ).total_seconds() > inactive_timeout:
-                                print("Timeout due to inactivity")
-                                break
+                                if not indefinite_mode:
+                                    print("Timeout due to inactivity")
+                                    break
+                                elif report.n_sent > 0:
+                                    if any(not store_report.done for store_report in itertools.chain.from_iterable(report.store_reports.values())):
+                                        continue
+                                    report.log_issues()
+                                    report.clear()
             finally:
                 print("Listener shutting down")
 
@@ -771,10 +780,20 @@ async def _do_route(
 @click.option(
     "--inactive-timeout",
     type=int,
-    help="Stop listening after this many seconds of inactivity",
+    help="Stop listening after this many seconds of inactivity, unless running in "
+    "`--indefinite-mode`. If running in `--indefinite-mode`, then flush any accumulated "
+    "errors/issues after this many seconds of inactivity.",
+)
+@click.option(
+    "--indefinite-mode",
+    is_flag=True,
+    help="Run as a long lived listener. After `--inactive-timeout` seconds "
+    "of inactivity, any issues/errors that have accumulated since the last pause in "
+    "activity will be logged/raised. If no errors are raised, then the listener will "
+    "continue running.",
 )
 def forward(
-    params, dests, edit, edit_json, local, dir_format, out_file_ext, inactive_timeout
+    params, dests, edit, edit_json, local, dir_format, out_file_ext, inactive_timeout, indefinite_mode
 ):
     """Listen for incoming DICOM files on network and forward to dests"""
     local = params["config"].get_local_node(local)
@@ -810,7 +829,7 @@ def forward(
     dests = params["config"].get_routes(dests)
 
     router = Router(dests)
-    asyncio.run(_do_route(local, router, inactive_timeout))
+    asyncio.run(_do_route(local, router, inactive_timeout, indefinite_mode))
 
 
 def make_print_cb(fmt, elem_filter=None):

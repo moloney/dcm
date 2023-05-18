@@ -548,7 +548,12 @@ class DynamicTransferReport(ProxyReport):
 
     @property
     def n_reported(self) -> int:
-        return self.store_reports.n_input
+        # return self.store_reports.n_input
+        count = 0
+        for store_report_list in self.store_reports.values():
+            for store_report in store_report_list:
+                count += store_report.n_input
+        return count
 
     def add_store_report(
         self, dest: DataBucket[Any, Any], store_report: StoreReportType
@@ -586,6 +591,11 @@ class DynamicTransferReport(ProxyReport):
         #       needed. Not clear if it makes sense to do anything about it
         #       here.
         super().clear()
+        # Must explicitly set the MultiReportList reports as done for them
+        # to be cleared.
+        for report_list in self.store_reports.values():
+            if all(report.done for report in report_list):
+                report_list.done = True
         self.store_reports.clear()
 
 

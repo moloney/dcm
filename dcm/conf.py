@@ -289,7 +289,7 @@ class DcmConfig:
 
     def set_local_dir_kwargs(self, **kwargs: Dict[str, Any]) -> None:
         """Override parameters for any LocalDir built"""
-        self._local_dir_kwargs = kwargs
+        self._local_dir_kwargs = {k: v for k, v in kwargs.items() if v is not None}
 
     def set_static_route_kwargs(self, **kwargs: Dict[str, Any]) -> None:
         """Override parameters for any StaticRoute"""
