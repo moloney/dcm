@@ -373,6 +373,7 @@ def make_dcmtk_nodes(get_dicom_subset, pytestconfig):
             nodes.append(res)
             while dcmtk_node.port not in _get_used_ports():
                 time.sleep(0.1)
+            time.sleep(0.3)
             return res
 
         try:
@@ -494,6 +495,7 @@ def make_pnd_nodes(get_dicom_subset, pytestconfig):
             )
             while port not in _get_used_ports():
                 time.sleep(0.1)
+            time.sleep(0.3)
             # We have to send any initial data as there is no index functionality
             init_qr, init_data = get_dicom_subset(subset)
             init_files = []

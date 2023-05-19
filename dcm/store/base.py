@@ -24,16 +24,19 @@ import janus
 import pydicom
 from pydicom import Dataset
 
+from ..reports.net_report import (
+    DicomOpReport,
+    IncomingDataError,
+    IncomingDataReport,
+    IncomingErrorType,
+)
+
 from ..query import QueryLevel, QueryResult, uid_elems
 from ..node import RemoteNode
-from ..net import (
-    DicomOpReport,
-    IncomingDataReport,
-    IncomingDataError,
-    IncomingErrorType,
+from ..reports.net_report import (
     RetrieveReport,
 )
-from ..report import CountableReport, SummaryReport, MultiListReport, ProgressHookBase
+from ..reports import CountableReport, SummaryReport, MultiListReport, ProgressHookBase
 from ..util import aclosing, PathInputType
 
 

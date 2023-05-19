@@ -74,15 +74,20 @@ files = "dcm/**/*.py"
 
 [[tool.mypy.overrides]]
 module=[
+    "dcm.store.*",
+    "dcm.report.*",
     "dcm.util",
-    "dcm.report",
     "dcm.query",
     "dcm.net",
     "dcm.filt",
-    "dcm.store.*",
     "dcm.route",
+    "dcm.router",
     "dcm.sync",
     "dcm.conf",
+    "dcm.lazyset",
+    "dcm.filt",
+    "dcm.diff",
+    "dcm.node",
 ]
 disallow_untyped_defs = true
 disallow_any_generics = true
@@ -110,7 +115,8 @@ python =
     3.11: py311
 
 [testenv]
-install_dev_deps = True
+poetry_dep_groups = 
+    dev
 commands =
     pytest dcm/ --slow --disable-backend dcmtk
 """

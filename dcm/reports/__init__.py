@@ -71,7 +71,6 @@ class ProgressHookBase(Generic[T]):
 
 @dataclass
 class RichProgressTask(ProgressTaskBase):
-
     _task: Optional[rich.progress.TaskID] = field(default=None, init=False, repr=False)
 
 
@@ -221,19 +220,8 @@ class BaseReport:
 
     def __str__(self) -> str:
         lines = [f"{self.description}:"]
-        for k, v in self._meta_data.items():
-            if not isinstance(v, list):
-                lines.append(f"  * {k}: {v}")
-            else:
-                lines.append(f"  * {k}:")
-                for sub_v in v:
-                    lines.append(f"      {sub_v}")
         done_stat = "COMPLETED" if self._done else "PENDING"
         lines.append(f"  * status: {done_stat}")
-        lines.append(f"  * start time: {self._start_time}")
-        if self._end_time is not None:
-            lines.append(f"  * end time: {self._end_time}")
-            lines.append(f"  * duration: {self._end_time - self._start_time}")
         has_err = self.has_errors
         has_warn = self.has_warnings
         fail_details = ""
@@ -247,7 +235,22 @@ class BaseReport:
         if fail_details:
             lines.append(f"  * success: False ({fail_details})")
         else:
-            lines.append(f"  * success: True")
+            if self._done:
+                lines.append(f"  * success: True")
+            else:
+                lines.append(f"  * success: PENDING")
+        # TODO: Improve indentation of multiline meta
+        for k, v in self._meta_data.items():
+            if not isinstance(v, list):
+                lines.append(f"  * {k}: {v}")
+            else:
+                lines.append(f"  * {k}:")
+                for sub_v in v:
+                    lines.append(f"      {sub_v}")
+        lines.append(f"  * start time: {self._start_time}")
+        if self._end_time is not None:
+            lines.append(f"  * end time: {self._end_time}")
+            lines.append(f"  * duration: {self._end_time - self._start_time}")
         return "\n".join(lines)
 
     def _auto_descr(self) -> str:
@@ -257,10 +260,8 @@ class BaseReport:
         return res
 
     def _set_done(self, val: bool) -> None:
-        if not val:
-            raise ValueError("Setting `done` to False is not allowed")
-        if self._done:
-            raise ValueError("Report was already marked done")
+        if self._done or not val:
+            return
         self._done = True
         self._end_time = datetime.now()
 
@@ -302,9 +303,16 @@ class MultiReport(BaseReport):
     @property
     def has_warnings(self) -> bool:
         """True if any warnings were reported"""
-        return any(r.has_errors for r in self.gen_reports())
+        n_pending = 0
+        if self._done:
+            n_pending = sum(1 for r in self.gen_reports() if not r._done)
+        return any(r.has_warnings for r in self.gen_reports()) or bool(n_pending)
 
     def log_issues(self) -> None:
+        if self._done:
+            n_pending = sum(1 for r in self.gen_reports() if not r._done)
+            if n_pending:
+                log.warning(f"Report marked done with {n_pending} pending sub-reports")
         for r in self.gen_reports():
             r.log_issues()
 
@@ -320,22 +328,11 @@ class MultiReport(BaseReport):
 
     def __str__(self) -> str:
         lines = [super().__str__()]
-        lines.append("\n  Sub-Reports:")
+        lines.append("  * sub operations:")
         for rep in self.gen_reports():
             rep_str = str(rep).replace("\n", "\n    ")
             lines.append(f"    * {rep_str}")
         return "\n".join(lines)
-
-    def _set_done(self, val: bool) -> None:
-        super()._set_done(val)
-        for sub_report in self.gen_reports():
-            if not sub_report.done:
-                log.warning(
-                    "Sub-report '%s' not marked done before parent '%s'",
-                    sub_report.description,
-                    self.description,
-                )
-            # TODO: Raise here?
 
     def _set_depth(self, val: int) -> None:
         if val != self._depth:
@@ -441,6 +438,8 @@ class CountableReport(BaseReport):
             lines.append(f"  * n_warnings: {self.n_warnings}")
         if self.n_errors > 0:
             lines.append(f"  * n_errors: {self.n_errors}")
+        if self.n_expected is not None:
+            lines.append(f"  * n_expected: {self.n_success}")
         return "\n".join(lines)
 
     def _set_done(self, val: bool) -> None:
@@ -494,6 +493,18 @@ class SummaryReport(MultiReport, CountableReport, Generic[R]):
         return sum(1 for r in self.gen_reports() if r.has_errors)
 
     @property
+    def n_sub_input(self) -> int:
+        total = 0
+        for r in self.gen_reports():
+            if hasattr(r, "n_sub_input"):
+                total += r.n_sub_input
+            elif hasattr(r, "n_input"):
+                total += r.n_input
+            elif r.all_success:
+                total += 1
+        return total
+
+    @property
     def n_sub_success(self) -> int:
         total = 0
         for r in self.gen_reports():
@@ -531,6 +542,7 @@ class SummaryReport(MultiReport, CountableReport, Generic[R]):
 
     def __str__(self) -> str:
         lines = [BaseReport.__str__(self)]
+        lines.append(f"  * n_input: {self.n_input} ({self.n_sub_input} sub-ops)")
         lines.append(f"  * n_success: {self.n_success} ({self.n_sub_success} sub-ops)")
         if self.n_warnings > 0:
             lines.append(
@@ -538,8 +550,10 @@ class SummaryReport(MultiReport, CountableReport, Generic[R]):
             )
         if self.n_errors > 0:
             lines.append(f"  * n_errors: {self.n_errors} ({self.n_sub_errors} sub-ops)")
+        if self.n_expected:
+            lines.append(f"  * n_expected: {self.n_expected}")
         if not self.all_success:
-            lines.append("\n  Sub-Reports:")
+            lines.append("  * sub operations:")
             for rep in self.gen_reports():
                 if rep.all_success:
                     continue

@@ -22,7 +22,6 @@ from typing import (
     cast,
     Generic,
 )
-from typing_extensions import Protocol
 from contextlib import AsyncExitStack, asynccontextmanager
 
 from pydicom import Dataset
@@ -41,217 +40,27 @@ from .store.base import (
     DataBucket,
     OobCapable,
     DataRepo,
-    LocalIncomingReport,
 )
 from .filt import get_transform, Filter
-from .route import (
-    Route,
-    StaticRoute,
-    Router,
-    ProxyTransferError,
-    ProxyReport,
-    StoreReportType,
+from .route import Route, StaticRoute, NoValidTransferMethodError
+from .reports.xfer_report import (
     DynamicTransferReport,
-    NoValidTransferMethodError,
+    StaticProxyTransferReport,
+    StaticStoreReport,
+    StaticTransferReport,
 )
+from .router import Router
 from .diff import diff_data_sets, DataDiff
-from .net import (
-    IncomingDataReport,
-    IncomingDataError,
-    IncomingErrorType,
-    DicomOpReport,
-    RetrieveReport,
-)
-from .report import (
-    BaseReport,
-    MultiAttrReport,
-    MultiListReport,
-    MultiDictReport,
-    MultiKeyedError,
-    ProgressHookBase,
+from .reports.net_report import IncomingErrorType, DicomOpReport
+from .reports import MultiListReport, MultiDictReport
+from .reports.sync_report import (
+    DestType,
+    SyncReport,
 )
 from .util import dict_to_ds
 
 
 log = logging.getLogger(__name__)
-
-
-class StaticStoreReport(MultiDictReport[DataBucket[Any, Any], StoreReportType]):
-    """Transfer report that only captures storage"""
-
-
-IncomingReportType = Union[IncomingDataReport, RetrieveReport, LocalIncomingReport]
-
-
-class StaticProxyTransferReport(ProxyReport):
-    """Static proxy transfer report"""
-
-    def __init__(
-        self,
-        description: Optional[str] = None,
-        meta_data: Optional[Dict[str, Any]] = None,
-        depth: int = 0,
-        n_expected: Optional[int] = None,
-        prog_hook: Optional[ProgressHookBase[Any]] = None,
-        keep_errors: Union[bool, Tuple[IncomingErrorType, ...]] = False,
-    ):
-        self.store_reports: StaticStoreReport = StaticStoreReport(prog_hook=prog_hook)
-        super().__init__(
-            description, meta_data, depth, prog_hook, n_expected, keep_errors
-        )
-
-    @property
-    def n_success(self) -> int:
-        return super().n_success + self.store_reports.n_success
-
-    @property
-    def n_errors(self) -> int:
-        return super().n_errors + self.store_reports.n_errors
-
-    @property
-    def n_warnings(self) -> int:
-        return super().n_warnings + self.store_reports.n_warnings
-
-    @property
-    def n_reported(self) -> int:
-        return self.store_reports.n_input
-
-    def add_store_report(
-        self, dest: DataBucket[Any, Any], store_report: StoreReportType
-    ) -> None:
-        """Add a DicomOpReport or LocalWriteReport to keep track of"""
-        assert dest not in self.store_reports
-        if self.n_expected is not None and store_report.n_expected is None:
-            store_report.n_expected = self.n_expected
-        self.store_reports[dest] = store_report
-
-    def log_issues(self) -> None:
-        """Produce log messages for any warning/error statuses"""
-        super().log_issues()
-        self.store_reports.log_issues()
-
-    def check_errors(self) -> None:
-        """Raise an exception if any errors have occured so far"""
-        if self.n_errors:
-            err = None
-            try:
-                super().check_errors()
-            except ProxyTransferError as e:
-                err = e
-            else:
-                err = ProxyTransferError()
-            try:
-                self.store_reports.check_errors()
-            except MultiKeyedError as e:
-                err.store_errors = e
-            raise err
-
-    def clear(self) -> None:
-        super().clear()
-        self.store_reports.clear()
-
-    def _set_depth(self, val: int) -> None:
-        if val != self._depth:
-            self._depth = val
-            self.store_reports.depth = val + 1
-
-
-class StaticOobTransferReport(MultiDictReport[TransferMethod, StaticStoreReport]):
-    """Transfer report for out-of-band transfers"""
-
-
-class StaticTransferError(Exception):
-    def __init__(
-        self,
-        proxy_error: Optional[ProxyTransferError] = None,
-        oob_error: Optional[MultiKeyedError] = None,
-    ):
-        self.proxy_error = proxy_error
-        self.oob_error = oob_error
-
-    def __str__(self) -> str:
-        res = ["StaticTransferError:"]
-        if self.proxy_error is not None:
-            res.append("\tProxy Error: %s" % str(self.proxy_error))
-        if self.oob_error is not None:
-            res.append("\tOut-of-band Error: %s" % str(self.oob_error))
-        return "\n".join(res)
-
-
-class StaticTransferReport(MultiAttrReport):
-    """Capture all possible info about a single StaticTranfer"""
-
-    def __init__(
-        self,
-        description: Optional[str] = None,
-        meta_data: Optional[Dict[str, Any]] = None,
-        depth: int = 0,
-        prog_hook: Optional[ProgressHookBase[Any]] = None,
-        incoming_report: Optional[IncomingReportType] = None,
-    ):
-        self._incoming_report = None
-        self._proxy_report: Optional[StaticProxyTransferReport] = None
-        self._oob_report: Optional[StaticOobTransferReport] = None
-        self._report_attrs = ["incoming_report", "_proxy_report", "_oob_report"]
-        super().__init__(description, meta_data, depth, prog_hook)
-        if incoming_report is not None:
-            self.incoming_report = incoming_report
-
-    @property
-    def incoming_report(self) -> Optional[IncomingReportType]:
-        return self._incoming_report
-
-    @incoming_report.setter
-    def incoming_report(self, val: IncomingReportType) -> None:
-        if self._incoming_report is not None:
-            raise ValueError("The incoming report was already set")
-        self._incoming_report = val
-        self._incoming_report.depth = self._depth + 1
-        self._incoming_report.prog_hook = self._prog_hook
-
-    @property
-    def proxy_report(self) -> StaticProxyTransferReport:
-        if self._proxy_report is None:
-            self._proxy_report = StaticProxyTransferReport(
-                depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        if (
-            self._proxy_report.n_expected is None
-            and self._incoming_report is not None
-            and self._incoming_report.n_expected is not None
-        ):
-            self._proxy_report.n_expected = self._incoming_report.n_expected
-        return self._proxy_report
-
-    @property
-    def oob_report(self) -> StaticOobTransferReport:
-        if self._oob_report is None:
-            self._oob_report = StaticOobTransferReport(
-                depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        if (
-            self._oob_report.n_expected is None
-            and self._incoming_report is not None
-            and self._incoming_report.n_expected is not None
-        ):
-            self._oob_report.n_expected = self._incoming_report.n_expected
-        return self._oob_report
-
-    def check_errors(self) -> None:
-        """Raise an exception if any errors have occured so far"""
-        if self.has_errors:
-            err = StaticTransferError()
-            if self.proxy_report is not None:
-                try:
-                    self.proxy_report.check_errors()
-                except ProxyTransferError as e:
-                    err.proxy_error = e
-            if self.oob_report is not None:
-                try:
-                    self.oob_report.check_errors()
-                except MultiKeyedError as e:
-                    err.oob_error = e
-            raise err
 
 
 T_report = TypeVar(
@@ -362,98 +171,8 @@ async def _sync_iter_to_async(sync_gen: Iterator[T]) -> AsyncIterator[T]:
         yield result
 
 
-TransferReportTypes = Union[
-    DynamicTransferReport,
-    StaticTransferReport,
-]
-
-
-DestType = Union[DataBucket, Route]
-
-SourceMissingQueryReportType = MultiListReport[MultiListReport[DicomOpReport]]
-
-DestMissingQueryReportType = MultiDictReport[
-    DataRepo[Any, Any, Any, Any], SourceMissingQueryReportType
-]
-
-
 class RepoRequiredError(Exception):
     """Operation requires a DataRepo but a DataBucket was provided"""
-
-
-class SyncQueriesReport(MultiAttrReport):
-    """Report for queries being performed during sync"""
-
-    def __init__(
-        self,
-        description: Optional[str] = None,
-        meta_data: Optional[Dict[str, Any]] = None,
-        depth: int = 0,
-        prog_hook: Optional[ProgressHookBase[Any]] = None,
-    ):
-        self._init_src_qr_report: Optional[MultiListReport[DicomOpReport]] = None
-        self._missing_src_qr_reports: Optional[
-            MultiListReport[SourceMissingQueryReportType]
-        ] = None
-        self._missing_dest_qr_reports: Optional[
-            MultiListReport[DestMissingQueryReportType]
-        ] = None
-        self._report_attrs = [
-            "_init_src_qr_report",
-            "_missing_src_qr_reports",
-            "_missing_dest_qr_reports",
-        ]
-        super().__init__(description, meta_data, depth, prog_hook)
-
-    @property
-    def init_src_qr_report(self) -> MultiListReport[DicomOpReport]:
-        if self._init_src_qr_report is None:
-            self._init_src_qr_report = MultiListReport(
-                "init-src-qr", depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        return self._init_src_qr_report
-
-    @property
-    def missing_src_qr_reports(self) -> MultiListReport[SourceMissingQueryReportType]:
-        if self._missing_src_qr_reports is None:
-            self._missing_src_qr_reports = MultiListReport(
-                "missing-src-qrs", depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        return self._missing_src_qr_reports
-
-    @property
-    def missing_dest_qr_reports(self) -> MultiListReport[DestMissingQueryReportType]:
-        if self._missing_dest_qr_reports is None:
-            self._missing_dest_qr_reports = MultiListReport(
-                "missing-dest-qrs", depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        return self._missing_dest_qr_reports
-
-
-class SyncReport(MultiAttrReport):
-    """Top level report from a sync operation"""
-
-    def __init__(
-        self,
-        description: Optional[str] = None,
-        meta_data: Optional[Dict[str, Any]] = None,
-        depth: int = 0,
-        prog_hook: Optional[ProgressHookBase[Any]] = None,
-    ):
-        self._queries_report: Optional[SyncQueriesReport] = None
-        self.trans_reports: MultiListReport[TransferReportTypes] = MultiListReport(
-            "transfers", depth=depth + 1, prog_hook=prog_hook
-        )
-        self._report_attrs = ["_queries_report", "trans_reports"]
-        super().__init__(description, meta_data, depth, prog_hook)
-
-    @property
-    def queries_report(self) -> SyncQueriesReport:
-        if self._queries_report is None:
-            self._queries_report = SyncQueriesReport(
-                "sync-queries", depth=self._depth + 1, prog_hook=self._prog_hook
-            )
-        return self._queries_report
 
 
 # TODO: Does it make more sense to allow a query to be passed in here instead
@@ -714,11 +433,10 @@ class SyncManager:
     # implement them as such so we can leverage it in the future without API
     # breakage.
     async def close(self) -> None:
+        self.report.done = True
         if not self._extern_report:
             self.report.log_issues()
             self.report.check_errors()
-        self.report.trans_reports.done = True
-        self.report.done = True
 
     async def __aenter__(self) -> SyncManager:
         return self

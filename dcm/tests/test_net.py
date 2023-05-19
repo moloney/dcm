@@ -10,11 +10,10 @@ from pydicom.uid import (
     ExplicitVRLittleEndian,
     ExplicitVRBigEndian,
 )
-
-from dcm.util import aclosing
-
+from ..reports.net_report import RetrieveReport
+from ..util import aclosing
 from ..query import QueryLevel
-from ..net import LocalEntity, RetrieveReport, DcmNode
+from ..net import LocalEntity, DcmNode
 
 from .conftest import (
     has_dcmtk,
