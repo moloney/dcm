@@ -5,7 +5,8 @@ import pytest
 from pytest import mark
 
 from ..query import QueryLevel
-from ..route import StaticRoute, DynamicRoute, Router
+from ..route import StaticRoute, DynamicRoute
+from ..router import Router
 
 from .conftest import has_dcmtk
 

@@ -23,7 +23,7 @@ from . import __version__
 from .conf import DcmConfig, _default_conf, NoLocalNodeError
 from .util import str_to_tag, json_serializer
 from .lazyset import AllElems, LazySet
-from .report import MultiListReport, RichProgressHook
+from .reports import MultiListReport, RichProgressHook
 from .query import QueryResult
 from .node import DcmNode, RemoteNode
 from .net import (
@@ -34,10 +34,12 @@ from .net import (
     make_queue_data_cb,
 )
 from .filt import make_edit_filter, MultiFilter
-from .route import StaticRoute, DynamicTransferReport, Router
+from .reports.xfer_report import DynamicTransferReport
+from .router import Router
 from .store.base import TransferMethod
 from .store.net_repo import NetRepo
-from .sync import SyncReport, make_basic_validator, sync_data
+from .reports.sync_report import SyncReport
+from .sync import make_basic_validator, sync_data
 from .normalize import normalize
 from .diff import diff_data_sets
 
