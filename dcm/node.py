@@ -1,8 +1,6 @@
 """Capture info abount DICOM network nodes including per-node configuration."""
-import sys, logging, enum, dataclasses
-from dataclasses import dataclass
+import sys, logging, enum
 from attrs import define, frozen, field
-from copy import deepcopy
 import re
 import string
 from typing import FrozenSet, Tuple, List, Dict, Iterable, Union, Optional, Any
@@ -101,7 +99,7 @@ QR_MODELS = {
 
 
 @frozen
-class SOPClassExpression(InlineConfigurable):
+class SOPClassExpression(InlineConfigurable["SOPClassExpression"]):
     """Flexible matching of SOPClass by UID or name (with regex support for names)"""
 
     expr: str = field(converter=str)
@@ -128,7 +126,7 @@ def _make_all_expr(
 
 
 @frozen
-class SOPClassFilter(TomlConfigurable):
+class SOPClassFilter(TomlConfigurable["SOPClassFilter"]):
     """Provide configurable filtering on SOPClasses
 
     The strings in the `include` and `exclude` attributes can be the UIDs or names of

@@ -9,10 +9,11 @@ from pydicom import Dataset
 import janus
 
 from .base import TransferMethod, DcmNetChunk, DcmRepo
-from ..report import MultiListReport
+from ..reports import MultiListReport
 from ..query import QueryLevel, QueryResult
 from ..node import DcmNode, RemoteNode
-from ..net import LocalEntity, DicomOpReport, RetrieveReport
+from ..reports.net_report import DicomOpReport, RetrieveReport
+from ..net import LocalEntity
 from ..util import TomlConfigurable, dict_to_ds
 
 

@@ -184,7 +184,7 @@ class LazySet(_BaseLazySet[T]):
         else:
             self._elems.add(elem)
 
-    def remove(self, elem: T):
+    def remove(self, elem: T) -> None:
         if self._elems is AllElems:
             if elem in self._exclude:
                 raise KeyError(elem)
@@ -192,7 +192,7 @@ class LazySet(_BaseLazySet[T]):
         else:
             self._elems.remove(elem)
 
-    def discard(self, elem: T):
+    def discard(self, elem: T) -> None:
         if self._elems is AllElems:
             self._exclude.add(elem)
         else:
